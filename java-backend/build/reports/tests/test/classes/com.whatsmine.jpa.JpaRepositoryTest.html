@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - JpaRepositoryTest</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>JpaRepositoryTest</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/com.whatsmine.jpa.html">com.whatsmine.jpa</a> &gt; JpaRepositoryTest</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">3</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">0.044s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Tests</a>
+</li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
+</ul>
+<div id="tab0" class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Method name</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">Read-only repository integration check for all 10 core entities</td>
+<td class="success">testAllRepositoriesCanQueryDatabase()</td>
+<td class="success">0.026s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">Verify Plan entity JSON attribute converter mapping</td>
+<td class="success">testPlanEntityMapping()</td>
+<td class="success">0.007s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">Verify User entity mapping and workspace/client scoping query methods</td>
+<td class="success">testUserScopedQueries()</td>
+<td class="success">0.011s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>2026-09-04 15:02:01.890  INFO 18880 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.whatsmine.jpa.JpaRepositoryTest]: JpaRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-04 15:02:01.899  INFO 18880 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.whatsmine.WhatsMineApplication for test class com.whatsmine.jpa.JpaRepositoryTest
+2026-09-04 15:02:01.905 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select u1_0.&quot;id&quot;,u1_0.&quot;avatar&quot;,u1_0.&quot;client_id&quot;,u1_0.&quot;client_role&quot;,u1_0.&quot;created_at&quot;,u1_0.&quot;display_currency&quot;,u1_0.&quot;email&quot;,u1_0.&quot;email_verified_at&quot;,u1_0.&quot;locale&quot;,u1_0.&quot;name&quot;,u1_0.&quot;password&quot;,u1_0.&quot;remember_token&quot;,u1_0.&quot;role&quot;,u1_0.&quot;status&quot;,u1_0.&quot;theme&quot;,u1_0.&quot;timezone&quot;,u1_0.&quot;two_factor_confirmed_at&quot;,u1_0.&quot;two_factor_recovery_codes&quot;,u1_0.&quot;two_factor_secret&quot;,u1_0.&quot;updated_at&quot;,u1_0.&quot;workspace_id&quot; from &quot;users&quot; u1_0 where u1_0.&quot;workspace_id&quot;=?
+Hibernate: select u1_0.&quot;id&quot;,u1_0.&quot;avatar&quot;,u1_0.&quot;client_id&quot;,u1_0.&quot;client_role&quot;,u1_0.&quot;created_at&quot;,u1_0.&quot;display_currency&quot;,u1_0.&quot;email&quot;,u1_0.&quot;email_verified_at&quot;,u1_0.&quot;locale&quot;,u1_0.&quot;name&quot;,u1_0.&quot;password&quot;,u1_0.&quot;remember_token&quot;,u1_0.&quot;role&quot;,u1_0.&quot;status&quot;,u1_0.&quot;theme&quot;,u1_0.&quot;timezone&quot;,u1_0.&quot;two_factor_confirmed_at&quot;,u1_0.&quot;two_factor_recovery_codes&quot;,u1_0.&quot;two_factor_secret&quot;,u1_0.&quot;updated_at&quot;,u1_0.&quot;workspace_id&quot; from &quot;users&quot; u1_0 where u1_0.&quot;workspace_id&quot;=?
+2026-09-04 15:02:01.907 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select u1_0.&quot;id&quot;,u1_0.&quot;avatar&quot;,u1_0.&quot;client_id&quot;,u1_0.&quot;client_role&quot;,u1_0.&quot;created_at&quot;,u1_0.&quot;display_currency&quot;,u1_0.&quot;email&quot;,u1_0.&quot;email_verified_at&quot;,u1_0.&quot;locale&quot;,u1_0.&quot;name&quot;,u1_0.&quot;password&quot;,u1_0.&quot;remember_token&quot;,u1_0.&quot;role&quot;,u1_0.&quot;status&quot;,u1_0.&quot;theme&quot;,u1_0.&quot;timezone&quot;,u1_0.&quot;two_factor_confirmed_at&quot;,u1_0.&quot;two_factor_recovery_codes&quot;,u1_0.&quot;two_factor_secret&quot;,u1_0.&quot;updated_at&quot;,u1_0.&quot;workspace_id&quot; from &quot;users&quot; u1_0 where u1_0.&quot;client_id&quot;=?
+Hibernate: select u1_0.&quot;id&quot;,u1_0.&quot;avatar&quot;,u1_0.&quot;client_id&quot;,u1_0.&quot;client_role&quot;,u1_0.&quot;created_at&quot;,u1_0.&quot;display_currency&quot;,u1_0.&quot;email&quot;,u1_0.&quot;email_verified_at&quot;,u1_0.&quot;locale&quot;,u1_0.&quot;name&quot;,u1_0.&quot;password&quot;,u1_0.&quot;remember_token&quot;,u1_0.&quot;role&quot;,u1_0.&quot;status&quot;,u1_0.&quot;theme&quot;,u1_0.&quot;timezone&quot;,u1_0.&quot;two_factor_confirmed_at&quot;,u1_0.&quot;two_factor_recovery_codes&quot;,u1_0.&quot;two_factor_secret&quot;,u1_0.&quot;updated_at&quot;,u1_0.&quot;workspace_id&quot; from &quot;users&quot; u1_0 where u1_0.&quot;client_id&quot;=?
+2026-09-04 15:02:01.916 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select p1_0.&quot;id&quot;,p1_0.&quot;created_at&quot;,p1_0.&quot;currency_code&quot;,p1_0.&quot;description&quot;,p1_0.&quot;enabled&quot;,p1_0.&quot;featured&quot;,p1_0.&quot;features&quot;,p1_0.&quot;interval&quot;,p1_0.&quot;limits&quot;,p1_0.&quot;monthly_price_cents&quot;,p1_0.&quot;name&quot;,p1_0.&quot;paddle_monthly_id&quot;,p1_0.&quot;paddle_yearly_id&quot;,p1_0.&quot;popular&quot;,p1_0.&quot;price_cents&quot;,p1_0.&quot;slug&quot;,p1_0.&quot;sort_order&quot;,p1_0.&quot;stripe_monthly_id&quot;,p1_0.&quot;stripe_yearly_id&quot;,p1_0.&quot;trial_days&quot;,p1_0.&quot;updated_at&quot;,p1_0.&quot;white_label_enabled&quot;,p1_0.&quot;yearly_price_cents&quot; from &quot;plans&quot; p1_0 where p1_0.&quot;enabled&quot; order by p1_0.&quot;sort_order&quot;
+Hibernate: select p1_0.&quot;id&quot;,p1_0.&quot;created_at&quot;,p1_0.&quot;currency_code&quot;,p1_0.&quot;description&quot;,p1_0.&quot;enabled&quot;,p1_0.&quot;featured&quot;,p1_0.&quot;features&quot;,p1_0.&quot;interval&quot;,p1_0.&quot;limits&quot;,p1_0.&quot;monthly_price_cents&quot;,p1_0.&quot;name&quot;,p1_0.&quot;paddle_monthly_id&quot;,p1_0.&quot;paddle_yearly_id&quot;,p1_0.&quot;popular&quot;,p1_0.&quot;price_cents&quot;,p1_0.&quot;slug&quot;,p1_0.&quot;sort_order&quot;,p1_0.&quot;stripe_monthly_id&quot;,p1_0.&quot;stripe_yearly_id&quot;,p1_0.&quot;trial_days&quot;,p1_0.&quot;updated_at&quot;,p1_0.&quot;white_label_enabled&quot;,p1_0.&quot;yearly_price_cents&quot; from &quot;plans&quot; p1_0 where p1_0.&quot;enabled&quot; order by p1_0.&quot;sort_order&quot;
+2026-09-04 15:02:01.925 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select u1_0.&quot;id&quot;,u1_0.&quot;avatar&quot;,u1_0.&quot;client_id&quot;,u1_0.&quot;client_role&quot;,u1_0.&quot;created_at&quot;,u1_0.&quot;display_currency&quot;,u1_0.&quot;email&quot;,u1_0.&quot;email_verified_at&quot;,u1_0.&quot;locale&quot;,u1_0.&quot;name&quot;,u1_0.&quot;password&quot;,u1_0.&quot;remember_token&quot;,u1_0.&quot;role&quot;,u1_0.&quot;status&quot;,u1_0.&quot;theme&quot;,u1_0.&quot;timezone&quot;,u1_0.&quot;two_factor_confirmed_at&quot;,u1_0.&quot;two_factor_recovery_codes&quot;,u1_0.&quot;two_factor_secret&quot;,u1_0.&quot;updated_at&quot;,u1_0.&quot;workspace_id&quot; from &quot;users&quot; u1_0
+Hibernate: select u1_0.&quot;id&quot;,u1_0.&quot;avatar&quot;,u1_0.&quot;client_id&quot;,u1_0.&quot;client_role&quot;,u1_0.&quot;created_at&quot;,u1_0.&quot;display_currency&quot;,u1_0.&quot;email&quot;,u1_0.&quot;email_verified_at&quot;,u1_0.&quot;locale&quot;,u1_0.&quot;name&quot;,u1_0.&quot;password&quot;,u1_0.&quot;remember_token&quot;,u1_0.&quot;role&quot;,u1_0.&quot;status&quot;,u1_0.&quot;theme&quot;,u1_0.&quot;timezone&quot;,u1_0.&quot;two_factor_confirmed_at&quot;,u1_0.&quot;two_factor_recovery_codes&quot;,u1_0.&quot;two_factor_secret&quot;,u1_0.&quot;updated_at&quot;,u1_0.&quot;workspace_id&quot; from &quot;users&quot; u1_0
+2026-09-04 15:02:01.925 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select au1_0.&quot;id&quot;,au1_0.&quot;created_at&quot;,au1_0.&quot;email&quot;,au1_0.&quot;name&quot;,au1_0.&quot;password&quot;,au1_0.&quot;remember_token&quot;,au1_0.&quot;status&quot;,au1_0.&quot;two_factor_confirmed_at&quot;,au1_0.&quot;two_factor_recovery_codes&quot;,au1_0.&quot;two_factor_secret&quot;,au1_0.&quot;updated_at&quot; from &quot;admin_users&quot; au1_0
+Hibernate: select au1_0.&quot;id&quot;,au1_0.&quot;created_at&quot;,au1_0.&quot;email&quot;,au1_0.&quot;name&quot;,au1_0.&quot;password&quot;,au1_0.&quot;remember_token&quot;,au1_0.&quot;status&quot;,au1_0.&quot;two_factor_confirmed_at&quot;,au1_0.&quot;two_factor_recovery_codes&quot;,au1_0.&quot;two_factor_secret&quot;,au1_0.&quot;updated_at&quot; from &quot;admin_users&quot; au1_0
+2026-09-04 15:02:01.925 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select c1_0.&quot;id&quot;,c1_0.&quot;address&quot;,c1_0.&quot;base_currency&quot;,c1_0.&quot;created_at&quot;,c1_0.&quot;currency_position&quot;,c1_0.&quot;currency_symbol&quot;,c1_0.&quot;custom_domain&quot;,c1_0.&quot;email&quot;,c1_0.&quot;logo_disk&quot;,c1_0.&quot;logo_path&quot;,c1_0.&quot;name&quot;,c1_0.&quot;phone&quot;,c1_0.&quot;primary_color&quot;,c1_0.&quot;status&quot;,c1_0.&quot;support_email&quot;,c1_0.&quot;tagline&quot;,c1_0.&quot;updated_at&quot; from &quot;clients&quot; c1_0
+Hibernate: select c1_0.&quot;id&quot;,c1_0.&quot;address&quot;,c1_0.&quot;base_currency&quot;,c1_0.&quot;created_at&quot;,c1_0.&quot;currency_position&quot;,c1_0.&quot;currency_symbol&quot;,c1_0.&quot;custom_domain&quot;,c1_0.&quot;email&quot;,c1_0.&quot;logo_disk&quot;,c1_0.&quot;logo_path&quot;,c1_0.&quot;name&quot;,c1_0.&quot;phone&quot;,c1_0.&quot;primary_color&quot;,c1_0.&quot;status&quot;,c1_0.&quot;support_email&quot;,c1_0.&quot;tagline&quot;,c1_0.&quot;updated_at&quot; from &quot;clients&quot; c1_0
+2026-09-04 15:02:01.925 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select w1_0.&quot;id&quot;,w1_0.&quot;client_id&quot;,w1_0.&quot;created_at&quot;,w1_0.&quot;currency_code&quot;,w1_0.&quot;default_locale&quot;,w1_0.&quot;name&quot;,w1_0.&quot;owner_id&quot;,w1_0.&quot;updated_at&quot; from &quot;workspaces&quot; w1_0
+Hibernate: select w1_0.&quot;id&quot;,w1_0.&quot;client_id&quot;,w1_0.&quot;created_at&quot;,w1_0.&quot;currency_code&quot;,w1_0.&quot;default_locale&quot;,w1_0.&quot;name&quot;,w1_0.&quot;owner_id&quot;,w1_0.&quot;updated_at&quot; from &quot;workspaces&quot; w1_0
+2026-09-04 15:02:01.932 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0
+Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0
+2026-09-04 15:02:01.934 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select r1_0.&quot;id&quot;,r1_0.&quot;created_at&quot;,r1_0.&quot;description&quot;,r1_0.&quot;is_system&quot;,r1_0.&quot;key&quot;,r1_0.&quot;name&quot;,r1_0.&quot;updated_at&quot; from &quot;roles&quot; r1_0
+Hibernate: select r1_0.&quot;id&quot;,r1_0.&quot;created_at&quot;,r1_0.&quot;description&quot;,r1_0.&quot;is_system&quot;,r1_0.&quot;key&quot;,r1_0.&quot;name&quot;,r1_0.&quot;updated_at&quot; from &quot;roles&quot; r1_0
+2026-09-04 15:02:01.934 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select p1_0.&quot;id&quot;,p1_0.&quot;category&quot;,p1_0.&quot;created_at&quot;,p1_0.&quot;description&quot;,p1_0.&quot;key&quot;,p1_0.&quot;name&quot;,p1_0.&quot;updated_at&quot; from &quot;permissions&quot; p1_0
+Hibernate: select p1_0.&quot;id&quot;,p1_0.&quot;category&quot;,p1_0.&quot;created_at&quot;,p1_0.&quot;description&quot;,p1_0.&quot;key&quot;,p1_0.&quot;name&quot;,p1_0.&quot;updated_at&quot; from &quot;permissions&quot; p1_0
+2026-09-04 15:02:01.939 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select p1_0.&quot;id&quot;,p1_0.&quot;created_at&quot;,p1_0.&quot;currency_code&quot;,p1_0.&quot;description&quot;,p1_0.&quot;enabled&quot;,p1_0.&quot;featured&quot;,p1_0.&quot;features&quot;,p1_0.&quot;interval&quot;,p1_0.&quot;limits&quot;,p1_0.&quot;monthly_price_cents&quot;,p1_0.&quot;name&quot;,p1_0.&quot;paddle_monthly_id&quot;,p1_0.&quot;paddle_yearly_id&quot;,p1_0.&quot;popular&quot;,p1_0.&quot;price_cents&quot;,p1_0.&quot;slug&quot;,p1_0.&quot;sort_order&quot;,p1_0.&quot;stripe_monthly_id&quot;,p1_0.&quot;stripe_yearly_id&quot;,p1_0.&quot;trial_days&quot;,p1_0.&quot;updated_at&quot;,p1_0.&quot;white_label_enabled&quot;,p1_0.&quot;yearly_price_cents&quot; from &quot;plans&quot; p1_0
+Hibernate: select p1_0.&quot;id&quot;,p1_0.&quot;created_at&quot;,p1_0.&quot;currency_code&quot;,p1_0.&quot;description&quot;,p1_0.&quot;enabled&quot;,p1_0.&quot;featured&quot;,p1_0.&quot;features&quot;,p1_0.&quot;interval&quot;,p1_0.&quot;limits&quot;,p1_0.&quot;monthly_price_cents&quot;,p1_0.&quot;name&quot;,p1_0.&quot;paddle_monthly_id&quot;,p1_0.&quot;paddle_yearly_id&quot;,p1_0.&quot;popular&quot;,p1_0.&quot;price_cents&quot;,p1_0.&quot;slug&quot;,p1_0.&quot;sort_order&quot;,p1_0.&quot;stripe_monthly_id&quot;,p1_0.&quot;stripe_yearly_id&quot;,p1_0.&quot;trial_days&quot;,p1_0.&quot;updated_at&quot;,p1_0.&quot;white_label_enabled&quot;,p1_0.&quot;yearly_price_cents&quot; from &quot;plans&quot; p1_0
+2026-09-04 15:02:01.939 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select cs1_0.&quot;id&quot;,cs1_0.&quot;assigned_by_admin_id&quot;,cs1_0.&quot;billing_cycle&quot;,cs1_0.&quot;client_id&quot;,cs1_0.&quot;created_at&quot;,cs1_0.&quot;ends_at&quot;,cs1_0.&quot;plan_id&quot;,cs1_0.&quot;starts_at&quot;,cs1_0.&quot;status&quot;,cs1_0.&quot;updated_at&quot; from &quot;client_subscriptions&quot; cs1_0
+Hibernate: select cs1_0.&quot;id&quot;,cs1_0.&quot;assigned_by_admin_id&quot;,cs1_0.&quot;billing_cycle&quot;,cs1_0.&quot;client_id&quot;,cs1_0.&quot;created_at&quot;,cs1_0.&quot;ends_at&quot;,cs1_0.&quot;plan_id&quot;,cs1_0.&quot;starts_at&quot;,cs1_0.&quot;status&quot;,cs1_0.&quot;updated_at&quot; from &quot;client_subscriptions&quot; cs1_0
+2026-09-04 15:02:01.939 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select pat1_0.&quot;id&quot;,pat1_0.&quot;abilities&quot;,pat1_0.&quot;created_at&quot;,pat1_0.&quot;expires_at&quot;,pat1_0.&quot;last_used_at&quot;,pat1_0.&quot;name&quot;,pat1_0.&quot;token&quot;,pat1_0.&quot;tokenable_id&quot;,pat1_0.&quot;tokenable_type&quot;,pat1_0.&quot;updated_at&quot; from &quot;personal_access_tokens&quot; pat1_0
+Hibernate: select pat1_0.&quot;id&quot;,pat1_0.&quot;abilities&quot;,pat1_0.&quot;created_at&quot;,pat1_0.&quot;expires_at&quot;,pat1_0.&quot;last_used_at&quot;,pat1_0.&quot;name&quot;,pat1_0.&quot;token&quot;,pat1_0.&quot;tokenable_id&quot;,pat1_0.&quot;tokenable_type&quot;,pat1_0.&quot;updated_at&quot; from &quot;personal_access_tokens&quot; pat1_0
+</pre>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="http://www.gradle.org">Gradle 8.10.2</a> at 04-Sept-2026, 3:02:41 pm</p>
+</div>
+</div>
+</body>
+</html>

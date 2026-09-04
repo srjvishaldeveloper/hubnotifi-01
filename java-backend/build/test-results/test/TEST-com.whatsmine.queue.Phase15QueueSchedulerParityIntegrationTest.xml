@@ -1,0 +1,877 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest" tests="5" skipped="0" failures="1" errors="0" timestamp="2026-09-04T09:31:15" hostname="DESKTOP-13QE2JF" time="1.054">
+  <properties/>
+  <testcase name="testJobRetryAndBackoff()" classname="com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest" time="0.842"/>
+  <testcase name="testSchedulerCronTaskInvocations()" classname="com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest" time="0.036"/>
+  <testcase name="testUnknownJobTypeMovedToFailedJobsTable()" classname="com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest" time="0.072">
+    <failure message="org.springframework.dao.DataIntegrityViolationException: could not execute statement [NULL not allowed for column &quot;failed_at&quot;; SQL statement:&#10;insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default) [23502-232]] [insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default)]; SQL [insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default)]; constraint [null]" type="org.springframework.dao.DataIntegrityViolationException">org.springframework.dao.DataIntegrityViolationException: could not execute statement [NULL not allowed for column &quot;failed_at&quot;; SQL statement:
+insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default) [23502-232]] [insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default)]; SQL [insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default)]; constraint [null]
+	at app//org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:290)
+	at app//org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:241)
+	at app//org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:560)
+	at app//org.springframework.dao.support.ChainedPersistenceExceptionTranslator.translateExceptionIfPossible(ChainedPersistenceExceptionTranslator.java:61)
+	at app//org.springframework.dao.support.DataAccessUtils.translateIfNecessary(DataAccessUtils.java:343)
+	at app//org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:160)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at app//org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:165)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at app//org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:223)
+	at app/jdk.proxy3/jdk.proxy3.$Proxy243.save(Unknown Source)
+	at app//com.whatsmine.queue.QueueWorker.markJobFailed(QueueWorker.java:126)
+	at app//com.whatsmine.queue.QueueWorker.processNextAvailableJob(QueueWorker.java:110)
+	at java.base@21.0.12.1/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base@21.0.12.1/java.lang.reflect.Method.invoke(Unknown Source)
+	at app//org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at app//org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380)
+	at app//org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at app//org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at app//com.whatsmine.queue.QueueWorker$$SpringCGLIB$$0.processNextAvailableJob(&lt;generated&gt;)
+	at app//com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest.testUnknownJobTypeMovedToFailedJobsTable(Phase15QueueSchedulerParityIntegrationTest.java:76)
+	at java.base@21.0.12.1/java.lang.reflect.Method.invoke(Unknown Source)
+	at java.base@21.0.12.1/java.util.ArrayList.forEach(Unknown Source)
+	at java.base@21.0.12.1/java.util.ArrayList.forEach(Unknown Source)
+Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement [NULL not allowed for column &quot;failed_at&quot;; SQL statement:
+insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default) [23502-232]] [insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default)]
+	at app//org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:62)
+	at app//org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at app//org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at app//org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:197)
+	at app//org.hibernate.id.insert.GetGeneratedKeysDelegate.performMutation(GetGeneratedKeysDelegate.java:116)
+	at app//org.hibernate.engine.jdbc.mutation.internal.MutationExecutorSingleNonBatched.performNonBatchedOperations(MutationExecutorSingleNonBatched.java:47)
+	at app//org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.execute(AbstractMutationExecutor.java:55)
+	at app//org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.doStaticInserts(InsertCoordinatorStandard.java:194)
+	at app//org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.coordinateInsert(InsertCoordinatorStandard.java:132)
+	at app//org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.insert(InsertCoordinatorStandard.java:95)
+	at app//org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:85)
+	at app//org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:682)
+	at app//org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:293)
+	at app//org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:274)
+	at app//org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:324)
+	at app//org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:393)
+	at app//org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:307)
+	at app//org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:223)
+	at app//org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:136)
+	at app//org.hibernate.event.internal.DefaultPersistEventListener.entityIsTransient(DefaultPersistEventListener.java:177)
+	at app//org.hibernate.event.internal.DefaultPersistEventListener.persist(DefaultPersistEventListener.java:95)
+	at app//org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:79)
+	at app//org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:55)
+	at app//org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127)
+	at app//org.hibernate.internal.SessionImpl.firePersist(SessionImpl.java:761)
+	at app//org.hibernate.internal.SessionImpl.persist(SessionImpl.java:745)
+	at java.base@21.0.12.1/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base@21.0.12.1/java.lang.reflect.Method.invoke(Unknown Source)
+	at app//org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:320)
+	at app/jdk.proxy3/jdk.proxy3.$Proxy170.persist(Unknown Source)
+	at app//org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:636)
+	at java.base@21.0.12.1/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base@21.0.12.1/java.lang.reflect.Method.invoke(Unknown Source)
+	at app//org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at app//org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:277)
+	at app//org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170)
+	at app//org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at app//org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:515)
+	at app//org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:284)
+	at app//org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:752)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at app//org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:174)
+	at app//org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:149)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at app//org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:69)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at app//org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380)
+	at app//org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at app//org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at app//org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	... 21 more
+Caused by: org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: NULL not allowed for column &quot;failed_at&quot;; SQL statement:
+insert into &quot;failed_jobs&quot; (&quot;connection&quot;,&quot;exception&quot;,&quot;payload&quot;,&quot;queue&quot;,&quot;uuid&quot;,&quot;id&quot;) values (?,?,?,?,?,default) [23502-232]
+	at app//org.h2.message.DbException.getJdbcSQLException(DbException.java:520)
+	at app//org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at app//org.h2.message.DbException.get(DbException.java:223)
+	at app//org.h2.message.DbException.get(DbException.java:199)
+	at app//org.h2.table.Column.validateConvertUpdateSequence(Column.java:402)
+	at app//org.h2.table.Table.convertInsertRow(Table.java:963)
+	at app//org.h2.command.dml.Insert.insertRows(Insert.java:167)
+	at app//org.h2.command.dml.Insert.update(Insert.java:135)
+	at app//org.h2.command.CommandContainer.executeUpdateWithGeneratedKeys(CommandContainer.java:212)
+	at app//org.h2.command.CommandContainer.update(CommandContainer.java:133)
+	at app//org.h2.command.Command.executeUpdate(Command.java:304)
+	at app//org.h2.command.Command.executeUpdate(Command.java:248)
+	at app//org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:213)
+	at app//org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:172)
+	at app//com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at app//com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at app//org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:194)
+	... 67 more
+</failure>
+  </testcase>
+  <testcase name="testDelayedJobIsHeldUntilAvailable()" classname="com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest" time="0.036"/>
+  <testcase name="testQueueDispatchAndWorkerProcessing()" classname="com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest" time="0.061"/>
+  <system-out><![CDATA[15:00:59.935 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest]: Phase15QueueSchedulerParityIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+15:01:00.072 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.whatsmine.WhatsMineApplication for test class com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.3)
+
+2026-09-04 15:01:00.747  INFO 18880 --- [    Test worker] ase15QueueSchedulerParityIntegrationTest : Starting Phase15QueueSchedulerParityIntegrationTest using Java 21.0.12.1 with PID 18880 (started by Ronix in D:\hubnotification\java-backend)
+2026-09-04 15:01:00.753 DEBUG 18880 --- [    Test worker] ase15QueueSchedulerParityIntegrationTest : Running with Spring Boot v3.4.3, Spring v6.2.3
+2026-09-04 15:01:00.753  INFO 18880 --- [    Test worker] ase15QueueSchedulerParityIntegrationTest : The following 1 profile is active: "test"
+2026-09-04 15:01:02.128  INFO 18880 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-04 15:01:02.440  INFO 18880 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 299 ms. Found 66 JPA repository interfaces.
+2026-09-04 15:01:03.163  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'defaultGlobalPropsProvider' of type [com.whatsmine.inertia.DefaultGlobalPropsProvider] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.172  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperConfiguration' of type [org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.177  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration' of type [org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonObjectMapperBuilderConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.184  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$Jackson2ObjectMapperBuilderCustomizerConfiguration' of type [org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$Jackson2ObjectMapperBuilderCustomizerConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.228  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'spring.jackson-org.springframework.boot.autoconfigure.jackson.JacksonProperties' of type [org.springframework.boot.autoconfigure.jackson.JacksonProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.246  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$ParameterNamesModuleConfiguration' of type [org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$ParameterNamesModuleConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.253  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'parameterNamesModule' of type [com.fasterxml.jackson.module.paramnames.ParameterNamesModule] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.267  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonMixinConfiguration' of type [org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$JacksonMixinConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.289  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'jsonMixinModuleEntries' of type [org.springframework.boot.jackson.JsonMixinModuleEntries] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.295  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'jsonMixinModule' of type [org.springframework.boot.jackson.JsonMixinModule] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.295  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration' of type [org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.309  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'jsonComponentModule' of type [org.springframework.boot.jackson.JsonComponentModule] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.316  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'spring.data.web-org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties' of type [org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.316  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration' of type [org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.323  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'springDataWebSettings' of type [org.springframework.data.web.config.SpringDataWebSettings] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.330  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.data.web.config.SpringDataJacksonConfiguration' of type [org.springframework.data.web.config.SpringDataJacksonConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.336  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'jacksonGeoModule' of type [org.springframework.data.geo.GeoModule] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.343  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'pageModule' of type [org.springframework.data.web.config.SpringDataJacksonConfiguration$PageModule] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.343  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'standardJacksonObjectMapperBuilderCustomizer' of type [org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration$Jackson2ObjectMapperBuilderCustomizerConfiguration$StandardJackson2ObjectMapperBuilderCustomizer] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.350  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'jacksonObjectMapperBuilder' of type [org.springframework.http.converter.json.Jackson2ObjectMapperBuilder] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.371  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'jacksonObjectMapper' of type [com.fasterxml.jackson.databind.ObjectMapper] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.406  WARN 18880 --- [    Test worker] trationDelegate$BeanPostProcessorChecker : Bean 'inertiaRenderer' of type [com.whatsmine.inertia.InertiaRenderer] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected/applied to a currently created BeanPostProcessor [inertiaConfig]? Check the corresponding BeanPostProcessor declaration and its dependencies/advisors. If this bean does not have to be post-processed, declare it with ROLE_INFRASTRUCTURE.
+2026-09-04 15:01:03.683  INFO 18880 --- [    Test worker] o.h.jpa.internal.util.LogHelper          : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-04 15:01:03.753  INFO 18880 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.8.Final
+2026-09-04 15:01:03.802  INFO 18880 --- [    Test worker] o.h.c.i.RegionFactoryInitiator           : HHH000026: Second-level cache disabled
+2026-09-04 15:01:04.198  INFO 18880 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-04 15:01:04.239  INFO 18880 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-04 15:01:04.422  INFO 18880 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA
+2026-09-04 15:01:04.426  INFO 18880 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-04 15:01:04.452  WARN 18880 --- [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-09-04 15:01:04.475  INFO 18880 --- [    Test worker] o.hibernate.orm.connections.pooling      : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 2.3.232
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-04 15:01:06.963  INFO 18880 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-04 15:01:06.982 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "admin_users" cascade 
+Hibernate: drop table if exists "admin_users" cascade 
+2026-09-04 15:01:06.993 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ai_chatbots" cascade 
+Hibernate: drop table if exists "ai_chatbots" cascade 
+2026-09-04 15:01:06.993 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ai_kb_chunks" cascade 
+Hibernate: drop table if exists "ai_kb_chunks" cascade 
+2026-09-04 15:01:06.993 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ai_kb_documents" cascade 
+Hibernate: drop table if exists "ai_kb_documents" cascade 
+2026-09-04 15:01:06.995 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ai_knowledge_bases" cascade 
+Hibernate: drop table if exists "ai_knowledge_bases" cascade 
+2026-09-04 15:01:06.995 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ai_provider_configs" cascade 
+Hibernate: drop table if exists "ai_provider_configs" cascade 
+2026-09-04 15:01:06.996 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ai_runs" cascade 
+Hibernate: drop table if exists "ai_runs" cascade 
+2026-09-04 15:01:06.996 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "audit_logs" cascade 
+Hibernate: drop table if exists "audit_logs" cascade 
+2026-09-04 15:01:06.998 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "automation_run_logs" cascade 
+Hibernate: drop table if exists "automation_run_logs" cascade 
+2026-09-04 15:01:06.998 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "automation_runs" cascade 
+Hibernate: drop table if exists "automation_runs" cascade 
+2026-09-04 15:01:07.004 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "automations" cascade 
+Hibernate: drop table if exists "automations" cascade 
+2026-09-04 15:01:07.006 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "billing_events" cascade 
+Hibernate: drop table if exists "billing_events" cascade 
+2026-09-04 15:01:07.006 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "campaign_recipients" cascade 
+Hibernate: drop table if exists "campaign_recipients" cascade 
+2026-09-04 15:01:07.006 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "campaigns" cascade 
+Hibernate: drop table if exists "campaigns" cascade 
+2026-09-04 15:01:07.006 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "channel_accounts" cascade 
+Hibernate: drop table if exists "channel_accounts" cascade 
+2026-09-04 15:01:07.006 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "client_settings" cascade 
+Hibernate: drop table if exists "client_settings" cascade 
+2026-09-04 15:01:07.009 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "client_subscriptions" cascade 
+Hibernate: drop table if exists "client_subscriptions" cascade 
+2026-09-04 15:01:07.010 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "clients" cascade 
+Hibernate: drop table if exists "clients" cascade 
+2026-09-04 15:01:07.010 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "cms_pages" cascade 
+Hibernate: drop table if exists "cms_pages" cascade 
+2026-09-04 15:01:07.011 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "contact_tags" cascade 
+Hibernate: drop table if exists "contact_tags" cascade 
+2026-09-04 15:01:07.012 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "contacts" cascade 
+Hibernate: drop table if exists "contacts" cascade 
+2026-09-04 15:01:07.012 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "conversations" cascade 
+Hibernate: drop table if exists "conversations" cascade 
+2026-09-04 15:01:07.013 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "coupons" cascade 
+Hibernate: drop table if exists "coupons" cascade 
+2026-09-04 15:01:07.013 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ecommerce_carts" cascade 
+Hibernate: drop table if exists "ecommerce_carts" cascade 
+2026-09-04 15:01:07.014 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ecommerce_orders" cascade 
+Hibernate: drop table if exists "ecommerce_orders" cascade 
+2026-09-04 15:01:07.014 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ecommerce_products" cascade 
+Hibernate: drop table if exists "ecommerce_products" cascade 
+2026-09-04 15:01:07.014 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "ecommerce_stores" cascade 
+Hibernate: drop table if exists "ecommerce_stores" cascade 
+2026-09-04 15:01:07.014 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "failed_jobs" cascade 
+Hibernate: drop table if exists "failed_jobs" cascade 
+2026-09-04 15:01:07.016 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "inbox_canned_replies" cascade 
+Hibernate: drop table if exists "inbox_canned_replies" cascade 
+2026-09-04 15:01:07.016 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "inbox_label_conversation" cascade 
+Hibernate: drop table if exists "inbox_label_conversation" cascade 
+2026-09-04 15:01:07.017 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "inbox_labels" cascade 
+Hibernate: drop table if exists "inbox_labels" cascade 
+2026-09-04 15:01:07.017 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "integration_audit_logs" cascade 
+Hibernate: drop table if exists "integration_audit_logs" cascade 
+2026-09-04 15:01:07.018 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "integration_configs" cascade 
+Hibernate: drop table if exists "integration_configs" cascade 
+2026-09-04 15:01:07.018 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "internal_notes" cascade 
+Hibernate: drop table if exists "internal_notes" cascade 
+2026-09-04 15:01:07.019 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "jobs" cascade 
+Hibernate: drop table if exists "jobs" cascade 
+2026-09-04 15:01:07.019 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "lead_scrape_jobs" cascade 
+Hibernate: drop table if exists "lead_scrape_jobs" cascade 
+2026-09-04 15:01:07.020 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "leads" cascade 
+Hibernate: drop table if exists "leads" cascade 
+2026-09-04 15:01:07.020 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "locales" cascade 
+Hibernate: drop table if exists "locales" cascade 
+2026-09-04 15:01:07.020 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "media" cascade 
+Hibernate: drop table if exists "media" cascade 
+2026-09-04 15:01:07.021 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "messages" cascade 
+Hibernate: drop table if exists "messages" cascade 
+2026-09-04 15:01:07.021 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "notification_preferences" cascade 
+Hibernate: drop table if exists "notification_preferences" cascade 
+2026-09-04 15:01:07.022 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "onboarding_steps" cascade 
+Hibernate: drop table if exists "onboarding_steps" cascade 
+2026-09-04 15:01:07.022 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "payment_gateway_configs" cascade 
+Hibernate: drop table if exists "payment_gateway_configs" cascade 
+2026-09-04 15:01:07.023 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "payment_transactions" cascade 
+Hibernate: drop table if exists "payment_transactions" cascade 
+2026-09-04 15:01:07.023 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "permissions" cascade 
+Hibernate: drop table if exists "permissions" cascade 
+2026-09-04 15:01:07.025 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "personal_access_tokens" cascade 
+Hibernate: drop table if exists "personal_access_tokens" cascade 
+2026-09-04 15:01:07.025 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "plans" cascade 
+Hibernate: drop table if exists "plans" cascade 
+2026-09-04 15:01:07.026 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "push_subscriptions" cascade 
+Hibernate: drop table if exists "push_subscriptions" cascade 
+2026-09-04 15:01:07.027 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "roles" cascade 
+Hibernate: drop table if exists "roles" cascade 
+2026-09-04 15:01:07.028 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "segments" cascade 
+Hibernate: drop table if exists "segments" cascade 
+2026-09-04 15:01:07.028 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "social_accounts" cascade 
+Hibernate: drop table if exists "social_accounts" cascade 
+2026-09-04 15:01:07.029 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "social_post_accounts" cascade 
+Hibernate: drop table if exists "social_post_accounts" cascade 
+2026-09-04 15:01:07.029 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "social_posts" cascade 
+Hibernate: drop table if exists "social_posts" cascade 
+2026-09-04 15:01:07.029 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "subscriptions" cascade 
+Hibernate: drop table if exists "subscriptions" cascade 
+2026-09-04 15:01:07.030 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "support_replies" cascade 
+Hibernate: drop table if exists "support_replies" cascade 
+2026-09-04 15:01:07.031 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "support_tickets" cascade 
+Hibernate: drop table if exists "support_tickets" cascade 
+2026-09-04 15:01:07.032 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "system_settings" cascade 
+Hibernate: drop table if exists "system_settings" cascade 
+2026-09-04 15:01:07.033 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "tax_rates" cascade 
+Hibernate: drop table if exists "tax_rates" cascade 
+2026-09-04 15:01:07.034 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "translations" cascade 
+Hibernate: drop table if exists "translations" cascade 
+2026-09-04 15:01:07.035 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "users" cascade 
+Hibernate: drop table if exists "users" cascade 
+2026-09-04 15:01:07.035 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "webhook_deliveries" cascade 
+Hibernate: drop table if exists "webhook_deliveries" cascade 
+2026-09-04 15:01:07.036 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "webhook_endpoints" cascade 
+Hibernate: drop table if exists "webhook_endpoints" cascade 
+2026-09-04 15:01:07.037 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "whatsapp_business_accounts" cascade 
+Hibernate: drop table if exists "whatsapp_business_accounts" cascade 
+2026-09-04 15:01:07.039 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "whatsapp_phone_numbers" cascade 
+Hibernate: drop table if exists "whatsapp_phone_numbers" cascade 
+2026-09-04 15:01:07.040 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "whatsapp_templates" cascade 
+Hibernate: drop table if exists "whatsapp_templates" cascade 
+2026-09-04 15:01:07.042 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "workspace_user" cascade 
+Hibernate: drop table if exists "workspace_user" cascade 
+2026-09-04 15:01:07.044 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : drop table if exists "workspaces" cascade 
+Hibernate: drop table if exists "workspaces" cascade 
+2026-09-04 15:01:07.056 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "admin_users" ("created_at" timestamp(6), "id" bigint generated by default as identity, "two_factor_confirmed_at" timestamp(6), "updated_at" timestamp(6), "status" varchar(20), "remember_token" varchar(100), "two_factor_recovery_codes" varchar(65535), "two_factor_secret" varchar(65535), "email" varchar(255) not null unique, "name" varchar(255) not null, "password" varchar(255) not null, primary key ("id"))
+Hibernate: create table "admin_users" ("created_at" timestamp(6), "id" bigint generated by default as identity, "two_factor_confirmed_at" timestamp(6), "updated_at" timestamp(6), "status" varchar(20), "remember_token" varchar(100), "two_factor_recovery_codes" varchar(65535), "two_factor_secret" varchar(65535), "email" varchar(255) not null unique, "name" varchar(255) not null, "password" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.077 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ai_chatbots" ("enabled" boolean not null, "max_context_chunks" integer, "ai_kb_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "uuid" varchar(36) not null unique, "tone" varchar(64), "name" varchar(128) not null, "fallback_reply" varchar(512), "channels" varchar(255), "system_prompt" clob, primary key ("id"))
+Hibernate: create table "ai_chatbots" ("enabled" boolean not null, "max_context_chunks" integer, "ai_kb_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "uuid" varchar(36) not null unique, "tone" varchar(64), "name" varchar(128) not null, "fallback_reply" varchar(512), "channels" varchar(255), "system_prompt" clob, primary key ("id"))
+2026-09-04 15:01:07.079 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ai_kb_chunks" ("ord" integer not null, "tokens" integer not null, "created_at" timestamp(6), "document_id" bigint not null, "id" bigint generated by default as identity, "kb_id" bigint, "updated_at" timestamp(6), "content" clob not null, "embedding" clob, primary key ("id"))
+Hibernate: create table "ai_kb_chunks" ("ord" integer not null, "tokens" integer not null, "created_at" timestamp(6), "document_id" bigint not null, "id" bigint generated by default as identity, "kb_id" bigint, "updated_at" timestamp(6), "content" clob not null, "embedding" clob, primary key ("id"))
+2026-09-04 15:01:07.086 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ai_kb_documents" ("tokens" integer not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "kb_id" bigint not null, "last_indexed_at" timestamp(6), "updated_at" timestamp(6), "source_type" varchar(32) not null, "status" varchar(32) not null, "uuid" varchar(36) not null unique, "title" varchar(256), "source_ref" varchar(512), primary key ("id"))
+Hibernate: create table "ai_kb_documents" ("tokens" integer not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "kb_id" bigint not null, "last_indexed_at" timestamp(6), "updated_at" timestamp(6), "source_type" varchar(32) not null, "status" varchar(32) not null, "uuid" varchar(36) not null unique, "title" varchar(256), "source_ref" varchar(512), primary key ("id"))
+2026-09-04 15:01:07.088 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ai_knowledge_bases" ("dimensions" integer, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "status" varchar(32), "uuid" varchar(36) not null unique, "embedding_model" varchar(64), "name" varchar(128) not null, primary key ("id"))
+Hibernate: create table "ai_knowledge_bases" ("dimensions" integer, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "status" varchar(32), "uuid" varchar(36) not null unique, "embedding_model" varchar(64), "name" varchar(128) not null, primary key ("id"))
+2026-09-04 15:01:07.088 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ai_provider_configs" ("enabled" boolean not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "provider" varchar(32) not null, "default_model_chat" varchar(64), "default_model_embed" varchar(64), "credentials" varchar(255), primary key ("id"))
+Hibernate: create table "ai_provider_configs" ("enabled" boolean not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "provider" varchar(32) not null, "default_model_chat" varchar(64), "default_model_embed" varchar(64), "credentials" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.095 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ai_runs" ("completion_tokens" integer not null, "cost_cents" integer not null, "latency_ms" integer not null, "prompt_tokens" integer not null, "chatbot_id" bigint, "conversation_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "status" varchar(32) not null, "model" varchar(64), primary key ("id"))
+Hibernate: create table "ai_runs" ("completion_tokens" integer not null, "cost_cents" integer not null, "latency_ms" integer not null, "prompt_tokens" integer not null, "chatbot_id" bigint, "conversation_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "status" varchar(32) not null, "model" varchar(64), primary key ("id"))
+2026-09-04 15:01:07.096 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "audit_logs" ("auditable_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "user_id" bigint, "workspace_id" bigint, "ip_address" varchar(45), "event" varchar(128) not null, "url" varchar(500), "user_agent" varchar(512), "new_values" varchar(65535), "old_values" varchar(65535), "auditable_type" varchar(255), primary key ("id"))
+Hibernate: create table "audit_logs" ("auditable_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "user_id" bigint, "workspace_id" bigint, "ip_address" varchar(45), "event" varchar(128) not null, "url" varchar(500), "user_agent" varchar(512), "new_values" varchar(65535), "old_values" varchar(65535), "auditable_type" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.099 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "automation_run_logs" ("created_at" timestamp(6), "id" bigint generated by default as identity, "run_id" bigint not null, "updated_at" timestamp(6), "result" varchar(32), "node_id" varchar(64), "node_type" varchar(64), "output" varchar(255), "message" clob, primary key ("id"))
+Hibernate: create table "automation_run_logs" ("created_at" timestamp(6), "id" bigint generated by default as identity, "run_id" bigint not null, "updated_at" timestamp(6), "result" varchar(32), "node_id" varchar(64), "node_type" varchar(64), "output" varchar(255), "message" clob, primary key ("id"))
+2026-09-04 15:01:07.102 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "automation_runs" ("automation_id" bigint not null, "completed_at" timestamp(6), "contact_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "started_at" timestamp(6), "updated_at" timestamp(6), "status" varchar(32) not null, "current_node_id" varchar(64), "resume_node_id" varchar(64), "context" varchar(255), "error" clob, primary key ("id"))
+Hibernate: create table "automation_runs" ("automation_id" bigint not null, "completed_at" timestamp(6), "contact_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "started_at" timestamp(6), "updated_at" timestamp(6), "status" varchar(32) not null, "current_node_id" varchar(64), "resume_node_id" varchar(64), "context" varchar(255), "error" clob, primary key ("id"))
+2026-09-04 15:01:07.106 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "automations" ("run_count" integer not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "status" varchar(32) not null, "uuid" varchar(36) not null unique, "trigger_type" varchar(64), "trigger_token" varchar(128), "edges" varchar(255), "name" varchar(255) not null, "nodes" varchar(255), "trigger_config" varchar(255), primary key ("id"))
+Hibernate: create table "automations" ("run_count" integer not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "status" varchar(32) not null, "uuid" varchar(36) not null unique, "trigger_type" varchar(64), "trigger_token" varchar(128), "edges" varchar(255), "name" varchar(255) not null, "nodes" varchar(255), "trigger_config" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.109 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "billing_events" ("attempts" integer not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "processed_at" timestamp(6), "updated_at" timestamp(6), "gateway" varchar(50) not null, "error" varchar(65535), "payload" varchar(65535), "event_id" varchar(255) not null unique, "event_type" varchar(255) not null, primary key ("id"))
+Hibernate: create table "billing_events" ("attempts" integer not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "processed_at" timestamp(6), "updated_at" timestamp(6), "gateway" varchar(50) not null, "error" varchar(65535), "payload" varchar(65535), "event_id" varchar(255) not null unique, "event_type" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.111 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "campaign_recipients" ("campaign_id" bigint not null, "clicked_at" timestamp(6), "contact_id" bigint not null, "created_at" timestamp(6), "delivered_at" timestamp(6), "id" bigint generated by default as identity, "opted_out_at" timestamp(6), "read_at" timestamp(6), "sent_at" timestamp(6), "updated_at" timestamp(6), "status" varchar(32) not null, "tracking_token" varchar(64), "unsubscribe_token" varchar(64), "provider_message_id" varchar(128), "failed_reason" clob, primary key ("id"))
+Hibernate: create table "campaign_recipients" ("campaign_id" bigint not null, "clicked_at" timestamp(6), "contact_id" bigint not null, "created_at" timestamp(6), "delivered_at" timestamp(6), "id" bigint generated by default as identity, "opted_out_at" timestamp(6), "read_at" timestamp(6), "sent_at" timestamp(6), "updated_at" timestamp(6), "status" varchar(32) not null, "tracking_token" varchar(64), "unsubscribe_token" varchar(64), "provider_message_id" varchar(128), "failed_reason" clob, primary key ("id"))
+2026-09-04 15:01:07.114 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "campaigns" ("created_at" timestamp(6), "created_by" bigint, "id" bigint generated by default as identity, "schedule_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint not null, "audience_type" varchar(32) not null, "channel" varchar(32) not null, "status" varchar(32) not null, "uuid" varchar(36) not null unique, "timezone" varchar(64), "whatsapp_phone_number_id" varchar(64), "name" varchar(128) not null, "payload_json" varchar(65535), "template_ref" varchar(65535), "totals_json" varchar(65535), "audience_ref" varchar(255), primary key ("id"))
+Hibernate: create table "campaigns" ("created_at" timestamp(6), "created_by" bigint, "id" bigint generated by default as identity, "schedule_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint not null, "audience_type" varchar(32) not null, "channel" varchar(32) not null, "status" varchar(32) not null, "uuid" varchar(36) not null unique, "timezone" varchar(64), "whatsapp_phone_number_id" varchar(64), "name" varchar(128) not null, "payload_json" varchar(65535), "template_ref" varchar(65535), "totals_json" varchar(65535), "audience_ref" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.117 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "channel_accounts" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "channel" varchar(32) not null, "provider" varchar(32), "status" varchar(32) not null, "credentials" varchar(65535), "meta_json" varchar(65535), "business_account_id" varchar(255), "display_name" varchar(255), "phone_number_id" varchar(255), primary key ("id"))
+Hibernate: create table "channel_accounts" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "channel" varchar(32) not null, "provider" varchar(32), "status" varchar(32) not null, "credentials" varchar(65535), "meta_json" varchar(65535), "business_account_id" varchar(255), "display_name" varchar(255), "phone_number_id" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.118 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "client_settings" ("client_id" bigint not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "key" varchar(191) not null, "value" varchar(65535), primary key ("id"))
+Hibernate: create table "client_settings" ("client_id" bigint not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "key" varchar(191) not null, "value" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.119 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "client_subscriptions" ("assigned_by_admin_id" bigint, "client_id" bigint not null, "created_at" timestamp(6), "ends_at" timestamp(6), "id" bigint generated by default as identity, "plan_id" bigint not null, "starts_at" timestamp(6), "updated_at" timestamp(6), "billing_cycle" varchar(16) not null, "status" varchar(32), primary key ("id"))
+Hibernate: create table "client_subscriptions" ("assigned_by_admin_id" bigint, "client_id" bigint not null, "created_at" timestamp(6), "ends_at" timestamp(6), "id" bigint generated by default as identity, "plan_id" bigint not null, "starts_at" timestamp(6), "updated_at" timestamp(6), "billing_cycle" varchar(16) not null, "status" varchar(32), primary key ("id"))
+2026-09-04 15:01:07.121 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "clients" ("primary_color" varchar(7), "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "base_currency" varchar(10), "currency_symbol" varchar(16), "currency_position" varchar(32), "status" varchar(32), "phone" varchar(64), "address" varchar(65535), "custom_domain" varchar(255), "email" varchar(255), "logo_disk" varchar(255), "logo_path" varchar(255), "name" varchar(255) not null, "support_email" varchar(255), "tagline" varchar(255), primary key ("id"))
+Hibernate: create table "clients" ("primary_color" varchar(7), "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "base_currency" varchar(10), "currency_symbol" varchar(16), "currency_position" varchar(32), "status" varchar(32), "phone" varchar(64), "address" varchar(65535), "custom_domain" varchar(255), "email" varchar(255), "logo_disk" varchar(255), "logo_path" varchar(255), "name" varchar(255) not null, "support_email" varchar(255), "tagline" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.124 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "cms_pages" ("published" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "slug" varchar(191) not null unique, "content" varchar(65535), "title" varchar(255) not null, primary key ("id"))
+Hibernate: create table "cms_pages" ("published" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "slug" varchar(191) not null unique, "content" varchar(65535), "title" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.127 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "contact_tags" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "color" varchar(32), "name" varchar(255) not null, primary key ("id"))
+Hibernate: create table "contact_tags" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "color" varchar(32), "name" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.129 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "contacts" ("opt_in_email" boolean, "opt_in_sms" boolean, "opt_in_whatsapp" boolean, "country" varchar(8), "created_at" timestamp(6), "deleted_at" timestamp(6), "id" bigint generated by default as identity, "language" varchar(8), "last_seen_at" timestamp(6), "lead_id" bigint, "updated_at" timestamp(6), "workspace_id" bigint not null, "phone_e164" varchar(32), "uuid" varchar(36) not null unique, "source" varchar(64), "first_name" varchar(128), "last_name" varchar(128), "avatar" varchar(512), "custom_fields" varchar(65535), "email" varchar(255), primary key ("id"))
+Hibernate: create table "contacts" ("opt_in_email" boolean, "opt_in_sms" boolean, "opt_in_whatsapp" boolean, "country" varchar(8), "created_at" timestamp(6), "deleted_at" timestamp(6), "id" bigint generated by default as identity, "language" varchar(8), "last_seen_at" timestamp(6), "lead_id" bigint, "updated_at" timestamp(6), "workspace_id" bigint not null, "phone_e164" varchar(32), "uuid" varchar(36) not null unique, "source" varchar(64), "first_name" varchar(128), "last_name" varchar(128), "avatar" varchar(512), "custom_fields" varchar(65535), "email" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.134 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "conversations" ("unread_count" integer, "assigned_user_id" bigint, "channel_account_id" bigint, "contact_id" bigint not null, "created_at" timestamp(6), "first_response_at" timestamp(6), "handover_at" timestamp(6), "id" bigint generated by default as identity, "last_inbound_at" timestamp(6), "last_message_at" timestamp(6), "resolved_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint not null, "assigned_to" varchar(32), "status" varchar(32) not null, "uuid" varchar(36) not null unique, "external_thread_id" varchar(255), primary key ("id"))
+Hibernate: create table "conversations" ("unread_count" integer, "assigned_user_id" bigint, "channel_account_id" bigint, "contact_id" bigint not null, "created_at" timestamp(6), "first_response_at" timestamp(6), "handover_at" timestamp(6), "id" bigint generated by default as identity, "last_inbound_at" timestamp(6), "last_message_at" timestamp(6), "resolved_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint not null, "assigned_to" varchar(32), "status" varchar(32) not null, "uuid" varchar(36) not null unique, "external_thread_id" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.137 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "coupons" ("amount" numeric(10,2) not null, "duration_in_months" integer, "enabled" boolean not null, "max_redemptions" integer, "times_redeemed" integer not null, "created_at" timestamp(6), "expires_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "duration" varchar(20) not null, "kind" varchar(20) not null, "code" varchar(64) not null unique, "stripe_coupon_id" varchar(255), "applies_to_plan_ids" varchar(65535) array, primary key ("id"))
+Hibernate: create table "coupons" ("amount" numeric(10,2) not null, "duration_in_months" integer, "enabled" boolean not null, "max_redemptions" integer, "times_redeemed" integer not null, "created_at" timestamp(6), "expires_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "duration" varchar(20) not null, "kind" varchar(20) not null, "code" varchar(64) not null unique, "stripe_coupon_id" varchar(255), "applies_to_plan_ids" varchar(65535) array, primary key ("id"))
+2026-09-04 15:01:07.139 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ecommerce_carts" ("total" numeric(12,2) not null, "abandoned_at" timestamp(6), "contact_id" bigint, "created_at" timestamp(6), "currency" varchar(8), "id" bigint generated by default as identity, "recovered_at" timestamp(6), "recovery_triggered_at" timestamp(6), "store_id" bigint not null, "updated_at" timestamp(6), "workspace_id" bigint not null, "recovery_url" varchar(1024), "external_id" varchar(255) not null, "line_items" varchar(255), primary key ("id"))
+Hibernate: create table "ecommerce_carts" ("total" numeric(12,2) not null, "abandoned_at" timestamp(6), "contact_id" bigint, "created_at" timestamp(6), "currency" varchar(8), "id" bigint generated by default as identity, "recovered_at" timestamp(6), "recovery_triggered_at" timestamp(6), "store_id" bigint not null, "updated_at" timestamp(6), "workspace_id" bigint not null, "recovery_url" varchar(1024), "external_id" varchar(255) not null, "line_items" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.142 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ecommerce_orders" ("total" numeric(12,2) not null, "contact_id" bigint, "created_at" timestamp(6), "currency" varchar(8), "id" bigint generated by default as identity, "placed_at" timestamp(6), "store_id" bigint not null, "updated_at" timestamp(6), "workspace_id" bigint not null, "platform" varchar(20) not null, "financial_status" varchar(40), "fulfillment_status" varchar(40), "status" varchar(40), "tracking_url" varchar(512), "external_order_id" varchar(255) not null, "line_items" varchar(255), "number" varchar(255), "raw" varchar(255), "tracking_number" varchar(255), primary key ("id"))
+Hibernate: create table "ecommerce_orders" ("total" numeric(12,2) not null, "contact_id" bigint, "created_at" timestamp(6), "currency" varchar(8), "id" bigint generated by default as identity, "placed_at" timestamp(6), "store_id" bigint not null, "updated_at" timestamp(6), "workspace_id" bigint not null, "platform" varchar(20) not null, "financial_status" varchar(40), "fulfillment_status" varchar(40), "status" varchar(40), "tracking_url" varchar(512), "external_order_id" varchar(255) not null, "line_items" varchar(255), "number" varchar(255), "raw" varchar(255), "tracking_number" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.144 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ecommerce_products" ("inventory_quantity" integer, "price" numeric(12,2) not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "store_id" bigint not null, "updated_at" timestamp(6), "workspace_id" bigint not null, "platform" varchar(20) not null, "status" varchar(40), "image_url" varchar(1024), "external_id" varchar(255) not null, "name" varchar(255) not null, "raw" varchar(255), "sku" varchar(255), primary key ("id"))
+Hibernate: create table "ecommerce_products" ("inventory_quantity" integer, "price" numeric(12,2) not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "store_id" bigint not null, "updated_at" timestamp(6), "workspace_id" bigint not null, "platform" varchar(20) not null, "status" varchar(40), "image_url" varchar(1024), "external_id" varchar(255) not null, "name" varchar(255) not null, "raw" varchar(255), "sku" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.145 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "ecommerce_stores" ("created_at" timestamp(6), "customers_synced_at" timestamp(6), "id" bigint generated by default as identity, "last_tested_at" timestamp(6), "orders_synced_at" timestamp(6), "products_synced_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint not null, "last_test_status" varchar(20), "platform" varchar(20) not null, "status" varchar(20) not null, "uuid" varchar(36) not null unique, "webhook_secret" varchar(64), "last_test_message" varchar(512), "credentials" varchar(255), "domain" varchar(255) not null, "external_meta" varchar(255), "name" varchar(255), primary key ("id"))
+Hibernate: create table "ecommerce_stores" ("created_at" timestamp(6), "customers_synced_at" timestamp(6), "id" bigint generated by default as identity, "last_tested_at" timestamp(6), "orders_synced_at" timestamp(6), "products_synced_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint not null, "last_test_status" varchar(20), "platform" varchar(20) not null, "status" varchar(20) not null, "uuid" varchar(36) not null unique, "webhook_secret" varchar(64), "last_test_message" varchar(512), "credentials" varchar(255), "domain" varchar(255) not null, "external_meta" varchar(255), "name" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.146 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "failed_jobs" ("failed_at" timestamp(6) not null, "id" bigint generated by default as identity, "connection" varchar(65535) not null, "exception" varchar(65535) not null, "payload" varchar(65535) not null, "queue" varchar(65535) not null, "uuid" varchar(255) not null unique, primary key ("id"))
+Hibernate: create table "failed_jobs" ("failed_at" timestamp(6) not null, "id" bigint generated by default as identity, "connection" varchar(65535) not null, "exception" varchar(65535) not null, "payload" varchar(65535) not null, "queue" varchar(65535) not null, "uuid" varchar(255) not null unique, primary key ("id"))
+2026-09-04 15:01:07.146 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "inbox_canned_replies" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "shortcut" varchar(64) not null, "body" varchar(65535) not null, primary key ("id"))
+Hibernate: create table "inbox_canned_replies" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "shortcut" varchar(64) not null, "body" varchar(65535) not null, primary key ("id"))
+2026-09-04 15:01:07.150 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "inbox_label_conversation" ("conversation_id" bigint not null, "label_id" bigint not null)
+Hibernate: create table "inbox_label_conversation" ("conversation_id" bigint not null, "label_id" bigint not null)
+2026-09-04 15:01:07.151 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "inbox_labels" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "color" varchar(16) not null, "name" varchar(64) not null, primary key ("id"))
+Hibernate: create table "inbox_labels" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "color" varchar(16) not null, "name" varchar(64) not null, primary key ("id"))
+2026-09-04 15:01:07.153 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "integration_audit_logs" ("created_at" timestamp(6), "id" bigint generated by default as identity, "workspace_id" bigint, "provider" varchar(64) not null, "action" varchar(128) not null, "details" varchar(65535), primary key ("id"))
+Hibernate: create table "integration_audit_logs" ("created_at" timestamp(6), "id" bigint generated by default as identity, "workspace_id" bigint, "provider" varchar(64) not null, "action" varchar(128) not null, "details" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.155 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "integration_configs" ("enabled" boolean, "is_default" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint, "mode" varchar(32), "provider" varchar(64) not null, "credentials" varchar(65535), "settings" varchar(65535), primary key ("id"))
+Hibernate: create table "integration_configs" ("enabled" boolean, "is_default" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint, "mode" varchar(32), "provider" varchar(64) not null, "credentials" varchar(65535), "settings" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.156 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "internal_notes" ("conversation_id" bigint not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "body" varchar(65535) not null, "mentioned_user_ids" varchar(65535), primary key ("id"))
+Hibernate: create table "internal_notes" ("conversation_id" bigint not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "body" varchar(65535) not null, "mentioned_user_ids" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.157 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "jobs" ("attempts" integer not null, "available_at" bigint not null, "created_at" bigint not null, "id" bigint generated by default as identity, "reserved_at" bigint, "payload" varchar(65535) not null, "queue" varchar(255) not null, primary key ("id"))
+Hibernate: create table "jobs" ("attempts" integer not null, "available_at" bigint not null, "created_at" bigint not null, "id" bigint generated by default as identity, "reserved_at" bigint, "payload" varchar(65535) not null, "queue" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.159 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "lead_scrape_jobs" ("leads_found" integer not null, "radius_meters" integer not null, "completed_at" timestamp(6), "created_at" timestamp(6) not null, "id" bigint generated by default as identity, "started_at" timestamp(6), "updated_at" timestamp(6) not null, "workspace_id" bigint not null, "status" varchar(32) not null, "keyword" varchar(256) not null, "location" varchar(256) not null, "error" varchar(65535), primary key ("id"))
+Hibernate: create table "lead_scrape_jobs" ("leads_found" integer not null, "radius_meters" integer not null, "completed_at" timestamp(6), "created_at" timestamp(6) not null, "id" bigint generated by default as identity, "started_at" timestamp(6), "updated_at" timestamp(6) not null, "workspace_id" bigint not null, "status" varchar(32) not null, "keyword" varchar(256) not null, "location" varchar(256) not null, "error" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.159 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "leads" ("lat" numeric(10,7), "lng" numeric(10,7), "pushed_to_contacts" boolean not null, "rating" numeric(3,1), "review_count" integer not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "phone" varchar(32), "whatsapp_status" varchar(32) not null, "country" varchar(64), "category" varchar(128), "city" varchar(128), "google_place_id" varchar(128) unique, "email" varchar(256), "name" varchar(256), "address" varchar(512), "website" varchar(512), primary key ("id"))
+Hibernate: create table "leads" ("lat" numeric(10,7), "lng" numeric(10,7), "pushed_to_contacts" boolean not null, "rating" numeric(3,1), "review_count" integer not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "phone" varchar(32), "whatsapp_status" varchar(32) not null, "country" varchar(64), "category" varchar(128), "city" varchar(128), "google_place_id" varchar(128) unique, "email" varchar(256), "name" varchar(256), "address" varchar(512), "website" varchar(512), primary key ("id"))
+2026-09-04 15:01:07.162 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "locales" ("enabled" boolean, "is_default" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "code" varchar(10) not null unique, "flag" varchar(10), "name" varchar(64) not null, primary key ("id"))
+Hibernate: create table "locales" ("enabled" boolean, "is_default" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "code" varchar(10) not null unique, "flag" varchar(10), "name" varchar(64) not null, primary key ("id"))
+2026-09-04 15:01:07.164 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "media" ("created_at" timestamp(6), "id" bigint generated by default as identity, "mediable_id" bigint not null, "size_bytes" bigint not null, "updated_at" timestamp(6), "collection" varchar(64), "disk" varchar(64) not null, "mime_type" varchar(128) not null, "path" varchar(1000) not null, "meta" varchar(65535), "filename" varchar(255) not null, "mediable_type" varchar(255) not null, primary key ("id"))
+Hibernate: create table "media" ("created_at" timestamp(6), "id" bigint generated by default as identity, "mediable_id" bigint not null, "size_bytes" bigint not null, "updated_at" timestamp(6), "collection" varchar(64), "disk" varchar(64) not null, "mime_type" varchar(128) not null, "path" varchar(1000) not null, "meta" varchar(65535), "filename" varchar(255) not null, "mediable_type" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.165 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "messages" ("conversation_id" bigint not null, "created_at" timestamp(6), "direction" varchar(8) not null, "id" bigint generated by default as identity, "sent_at" timestamp(6), "updated_at" timestamp(6), "user_id" bigint, "channel" varchar(32) not null, "sent_by" varchar(32), "status" varchar(32) not null, "type" varchar(32) not null, "body" varchar(65535), "error_json" varchar(65535), "payload" varchar(65535), "media_id" varchar(255), "provider_message_id" varchar(255), primary key ("id"))
+Hibernate: create table "messages" ("conversation_id" bigint not null, "created_at" timestamp(6), "direction" varchar(8) not null, "id" bigint generated by default as identity, "sent_at" timestamp(6), "updated_at" timestamp(6), "user_id" bigint, "channel" varchar(32) not null, "sent_by" varchar(32), "status" varchar(32) not null, "type" varchar(32) not null, "body" varchar(65535), "error_json" varchar(65535), "payload" varchar(65535), "media_id" varchar(255), "provider_message_id" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.166 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "notification_preferences" ("enabled" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "channel" varchar(32) not null, "event" varchar(100) not null, primary key ("id"))
+Hibernate: create table "notification_preferences" ("enabled" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "channel" varchar(32) not null, "event" varchar(100) not null, primary key ("id"))
+2026-09-04 15:01:07.168 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "onboarding_steps" ("completed" boolean, "completed_at" timestamp(6), "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "step_key" varchar(64) not null, primary key ("id"))
+Hibernate: create table "onboarding_steps" ("completed" boolean, "completed_at" timestamp(6), "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "step_key" varchar(64) not null, primary key ("id"))
+2026-09-04 15:01:07.170 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "payment_gateway_configs" ("enabled" boolean not null, "test_mode" boolean not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "gateway" varchar(50) not null unique, "credentials" varchar(65535), primary key ("id"))
+Hibernate: create table "payment_gateway_configs" ("enabled" boolean not null, "test_mode" boolean not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "gateway" varchar(50) not null unique, "credentials" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.171 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "payment_transactions" ("amount_cents" integer not null, "refunded_cents" integer, "tax_amount_cents" integer, "coupon_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "refunded_at" timestamp(6), "subscription_id" bigint, "updated_at" timestamp(6), "user_id" bigint not null, "currency" varchar(10), "currency_code" varchar(10) not null, "gateway" varchar(50) not null, "status" varchar(50) not null, "payload" varchar(65535), "gateway_transaction_id" varchar(255), "invoice_path" varchar(255), "refund_reason" varchar(255), primary key ("id"))
+Hibernate: create table "payment_transactions" ("amount_cents" integer not null, "refunded_cents" integer, "tax_amount_cents" integer, "coupon_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "refunded_at" timestamp(6), "subscription_id" bigint, "updated_at" timestamp(6), "user_id" bigint not null, "currency" varchar(10), "currency_code" varchar(10) not null, "gateway" varchar(50) not null, "status" varchar(50) not null, "payload" varchar(65535), "gateway_transaction_id" varchar(255), "invoice_path" varchar(255), "refund_reason" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.173 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "permissions" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "description" varchar(65535), "category" varchar(255) not null, "key" varchar(255) not null unique, "name" varchar(255) not null, primary key ("id"))
+Hibernate: create table "permissions" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "description" varchar(65535), "category" varchar(255) not null, "key" varchar(255) not null unique, "name" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.174 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "personal_access_tokens" ("created_at" timestamp(6), "expires_at" timestamp(6), "id" bigint generated by default as identity, "last_used_at" timestamp(6), "tokenable_id" bigint not null, "updated_at" timestamp(6), "token" varchar(64) not null unique, "abilities" varchar(65535), "name" varchar(65535) not null, "tokenable_type" varchar(255) not null, primary key ("id"))
+Hibernate: create table "personal_access_tokens" ("created_at" timestamp(6), "expires_at" timestamp(6), "id" bigint generated by default as identity, "last_used_at" timestamp(6), "tokenable_id" bigint not null, "updated_at" timestamp(6), "token" varchar(64) not null unique, "abilities" varchar(65535), "name" varchar(65535) not null, "tokenable_type" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.177 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "plans" ("enabled" boolean, "featured" boolean, "popular" boolean, "sort_order" integer, "trial_days" integer, "white_label_enabled" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "monthly_price_cents" bigint, "price_cents" bigint not null, "updated_at" timestamp(6), "yearly_price_cents" bigint, "currency_code" varchar(10) not null, "interval" varchar(20), "description" varchar(65535), "features" varchar(65535), "limits" varchar(65535), "name" varchar(255) not null, "paddle_monthly_id" varchar(255), "paddle_yearly_id" varchar(255), "slug" varchar(255) not null unique, "stripe_monthly_id" varchar(255), "stripe_yearly_id" varchar(255), primary key ("id"))
+Hibernate: create table "plans" ("enabled" boolean, "featured" boolean, "popular" boolean, "sort_order" integer, "trial_days" integer, "white_label_enabled" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "monthly_price_cents" bigint, "price_cents" bigint not null, "updated_at" timestamp(6), "yearly_price_cents" bigint, "currency_code" varchar(10) not null, "interval" varchar(20), "description" varchar(65535), "features" varchar(65535), "limits" varchar(65535), "name" varchar(255) not null, "paddle_monthly_id" varchar(255), "paddle_yearly_id" varchar(255), "slug" varchar(255) not null unique, "stripe_monthly_id" varchar(255), "stripe_yearly_id" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.179 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "push_subscriptions" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "ua" varchar(512), "auth_key" varchar(65535) not null, "endpoint" varchar(65535) not null, "p256dh_key" varchar(65535) not null, primary key ("id"))
+Hibernate: create table "push_subscriptions" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "ua" varchar(512), "auth_key" varchar(65535) not null, "endpoint" varchar(65535) not null, "p256dh_key" varchar(65535) not null, primary key ("id"))
+2026-09-04 15:01:07.181 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "roles" ("is_system" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "description" varchar(65535), "key" varchar(255) not null unique, "name" varchar(255) not null, primary key ("id"))
+Hibernate: create table "roles" ("is_system" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "description" varchar(65535), "key" varchar(255) not null unique, "name" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.183 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "segments" ("contact_count" integer, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "rules_json" varchar(65535), "name" varchar(255) not null, "type" varchar(255) not null, primary key ("id"))
+Hibernate: create table "segments" ("contact_count" integer, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "rules_json" varchar(65535), "name" varchar(255) not null, "type" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.184 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "social_accounts" ("created_at" timestamp(6), "expires_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "provider" varchar(32) not null, "refresh_token" varchar(65535), "token" varchar(65535), "name" varchar(255), "provider_user_id" varchar(255), primary key ("id"))
+Hibernate: create table "social_accounts" ("created_at" timestamp(6), "expires_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "provider" varchar(32) not null, "refresh_token" varchar(65535), "token" varchar(65535), "name" varchar(255), "provider_user_id" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.185 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "social_post_accounts" ("id" bigint generated by default as identity, "social_account_id" bigint not null, "social_post_id" bigint not null, "status" varchar(32), "error" varchar(65535), "post_id_external" varchar(255), primary key ("id"))
+Hibernate: create table "social_post_accounts" ("id" bigint generated by default as identity, "social_account_id" bigint not null, "social_post_id" bigint not null, "status" varchar(32), "error" varchar(65535), "post_id_external" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.187 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "social_posts" ("created_at" timestamp(6), "id" bigint generated by default as identity, "published_at" timestamp(6), "scheduled_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint not null, "status" varchar(32), "content" varchar(65535) not null, "media_urls" varchar(65535) array, primary key ("id"))
+Hibernate: create table "social_posts" ("created_at" timestamp(6), "id" bigint generated by default as identity, "published_at" timestamp(6), "scheduled_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint not null, "status" varchar(32), "content" varchar(65535) not null, "media_urls" varchar(65535) array, primary key ("id"))
+2026-09-04 15:01:07.188 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "subscriptions" ("created_at" timestamp(6), "ends_at" timestamp(6), "id" bigint generated by default as identity, "plan_id" bigint not null, "renews_at" timestamp(6), "starts_at" timestamp(6), "trial_ends_at" timestamp(6), "updated_at" timestamp(6), "user_id" bigint not null, "billing_cycle" varchar(16), "gateway" varchar(32) not null, "status" varchar(32) not null, "gateway_subscription_id" varchar(255), primary key ("id"))
+Hibernate: create table "subscriptions" ("created_at" timestamp(6), "ends_at" timestamp(6), "id" bigint generated by default as identity, "plan_id" bigint not null, "renews_at" timestamp(6), "starts_at" timestamp(6), "trial_ends_at" timestamp(6), "updated_at" timestamp(6), "user_id" bigint not null, "billing_cycle" varchar(16), "gateway" varchar(32) not null, "status" varchar(32) not null, "gateway_subscription_id" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.190 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "support_replies" ("is_staff" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "ticket_id" bigint not null, "updated_at" timestamp(6), "user_id" bigint, "message" varchar(65535) not null, "author_name" varchar(255) not null, primary key ("id"))
+Hibernate: create table "support_replies" ("is_staff" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "ticket_id" bigint not null, "updated_at" timestamp(6), "user_id" bigint, "message" varchar(65535) not null, "author_name" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.192 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "support_tickets" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint, "priority" varchar(32), "status" varchar(32), "message" varchar(65535) not null, "email" varchar(255) not null, "name" varchar(255) not null, "subject" varchar(255) not null, primary key ("id"))
+Hibernate: create table "support_tickets" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint, "priority" varchar(32), "status" varchar(32), "message" varchar(65535) not null, "email" varchar(255) not null, "name" varchar(255) not null, "subject" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.193 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "system_settings" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "type" varchar(32), "group" varchar(64), "key" varchar(191) not null unique, "value" varchar(65535), primary key ("id"))
+Hibernate: create table "system_settings" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "type" varchar(32), "group" varchar(64), "key" varchar(191) not null unique, "value" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.195 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "tax_rates" ("country" varchar(2) not null, "enabled" boolean not null, "inclusive" boolean not null, "percentage" numeric(5,2) not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "name" varchar(100) not null, "region" varchar(100), "stripe_tax_rate_id" varchar(255), primary key ("id"))
+Hibernate: create table "tax_rates" ("country" varchar(2) not null, "enabled" boolean not null, "inclusive" boolean not null, "percentage" numeric(5,2) not null, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "name" varchar(100) not null, "region" varchar(100), "stripe_tax_rate_id" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.196 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "translations" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "locale_code" varchar(10) not null, "group" varchar(64), "value" varchar(65535), "key" varchar(255) not null, primary key ("id"))
+Hibernate: create table "translations" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "locale_code" varchar(10) not null, "group" varchar(64), "value" varchar(65535), "key" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.198 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "users" ("client_id" bigint, "created_at" timestamp(6), "email_verified_at" timestamp(6), "id" bigint generated by default as identity, "two_factor_confirmed_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint, "display_currency" varchar(10), "locale" varchar(10), "theme" varchar(10), "client_role" varchar(32), "role" varchar(32), "status" varchar(32), "timezone" varchar(64), "remember_token" varchar(100), "two_factor_recovery_codes" varchar(65535), "two_factor_secret" varchar(65535), "avatar" varchar(255), "email" varchar(255) not null unique, "name" varchar(255) not null, "password" varchar(255) not null, primary key ("id"))
+Hibernate: create table "users" ("client_id" bigint, "created_at" timestamp(6), "email_verified_at" timestamp(6), "id" bigint generated by default as identity, "two_factor_confirmed_at" timestamp(6), "updated_at" timestamp(6), "workspace_id" bigint, "display_currency" varchar(10), "locale" varchar(10), "theme" varchar(10), "client_role" varchar(32), "role" varchar(32), "status" varchar(32), "timezone" varchar(64), "remember_token" varchar(100), "two_factor_recovery_codes" varchar(65535), "two_factor_secret" varchar(65535), "avatar" varchar(255), "email" varchar(255) not null unique, "name" varchar(255) not null, "password" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.200 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "webhook_deliveries" ("response_status" integer, "created_at" timestamp(6), "delivered_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "webhook_endpoint_id" bigint not null, "event" varchar(100) not null, "payload" varchar(65535), "response_body" varchar(65535), primary key ("id"))
+Hibernate: create table "webhook_deliveries" ("response_status" integer, "created_at" timestamp(6), "delivered_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "webhook_endpoint_id" bigint not null, "event" varchar(100) not null, "payload" varchar(65535), "response_body" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.201 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "webhook_endpoints" ("enabled" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "secret" varchar(128) not null, "url" varchar(500) not null, "events" varchar(65535), "description" varchar(255), primary key ("id"))
+Hibernate: create table "webhook_endpoints" ("enabled" boolean, "created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "secret" varchar(128) not null, "url" varchar(500) not null, "events" varchar(65535), "description" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.202 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "whatsapp_business_accounts" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "status" varchar(32) not null, "waba_id" varchar(64) not null unique, "webhook_verify_token_hash" varchar(64), "webhook_verify_token" varchar(512), "credentials" varchar(65535), "meta_json" varchar(65535), primary key ("id"))
+Hibernate: create table "whatsapp_business_accounts" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "workspace_id" bigint not null, "status" varchar(32) not null, "waba_id" varchar(64) not null unique, "webhook_verify_token_hash" varchar(64), "webhook_verify_token" varchar(512), "credentials" varchar(65535), "meta_json" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.204 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "whatsapp_phone_numbers" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "waba_id_fk" bigint not null, "account_mode" varchar(32), "display_phone" varchar(32), "quality_rating" varchar(32), "messaging_limit_tier" varchar(64), "name_status" varchar(64), "phone_number_id" varchar(64) not null unique, "requested_verified_name" varchar(128), "verified_name" varchar(128), "code_verification_status" varchar(255), primary key ("id"))
+Hibernate: create table "whatsapp_phone_numbers" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "waba_id_fk" bigint not null, "account_mode" varchar(32), "display_phone" varchar(32), "quality_rating" varchar(32), "messaging_limit_tier" varchar(64), "name_status" varchar(64), "phone_number_id" varchar(64) not null unique, "requested_verified_name" varchar(128), "verified_name" varchar(128), "code_verification_status" varchar(255), primary key ("id"))
+2026-09-04 15:01:07.206 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "whatsapp_templates" ("created_at" timestamp(6), "id" bigint generated by default as identity, "language" varchar(8) not null, "updated_at" timestamp(6), "workspace_id" bigint not null, "category" varchar(32) not null, "status" varchar(32) not null, "meta_template_id" varchar(64), "waba_id" varchar(64) not null, "name" varchar(128) not null, "components" varchar(65535), "rejection_reason" varchar(65535), primary key ("id"))
+Hibernate: create table "whatsapp_templates" ("created_at" timestamp(6), "id" bigint generated by default as identity, "language" varchar(8) not null, "updated_at" timestamp(6), "workspace_id" bigint not null, "category" varchar(32) not null, "status" varchar(32) not null, "meta_template_id" varchar(64), "waba_id" varchar(64) not null, "name" varchar(128) not null, "components" varchar(65535), "rejection_reason" varchar(65535), primary key ("id"))
+2026-09-04 15:01:07.208 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "workspace_user" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "workspace_id" bigint not null, "role" varchar(32), primary key ("id"), unique ("workspace_id", "user_id"))
+Hibernate: create table "workspace_user" ("created_at" timestamp(6), "id" bigint generated by default as identity, "updated_at" timestamp(6), "user_id" bigint not null, "workspace_id" bigint not null, "role" varchar(32), primary key ("id"), unique ("workspace_id", "user_id"))
+2026-09-04 15:01:07.209 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create table "workspaces" ("client_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "owner_id" bigint, "updated_at" timestamp(6), "currency_code" varchar(10), "default_locale" varchar(10), "name" varchar(255) not null, primary key ("id"))
+Hibernate: create table "workspaces" ("client_id" bigint, "created_at" timestamp(6), "id" bigint generated by default as identity, "owner_id" bigint, "updated_at" timestamp(6), "currency_code" varchar(10), "default_locale" varchar(10), "name" varchar(255) not null, primary key ("id"))
+2026-09-04 15:01:07.211 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : create index "jobs_queue_index" on "jobs" ("queue")
+Hibernate: create index "jobs_queue_index" on "jobs" ("queue")
+2026-09-04 15:01:07.213 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "ai_chatbots" add constraint "FK5bfxdifp886wch0bxwbxtvobk" foreign key ("ai_kb_id") references "ai_knowledge_bases"
+Hibernate: alter table if exists "ai_chatbots" add constraint "FK5bfxdifp886wch0bxwbxtvobk" foreign key ("ai_kb_id") references "ai_knowledge_bases"
+2026-09-04 15:01:07.228 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "ai_kb_documents" add constraint "FK4waqybqdt3doae8cd3r3a78s" foreign key ("kb_id") references "ai_knowledge_bases"
+Hibernate: alter table if exists "ai_kb_documents" add constraint "FK4waqybqdt3doae8cd3r3a78s" foreign key ("kb_id") references "ai_knowledge_bases"
+2026-09-04 15:01:07.230 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "automation_run_logs" add constraint "FKkn1n0ynxkmv92jrm5vy9vb6wu" foreign key ("run_id") references "automation_runs"
+Hibernate: alter table if exists "automation_run_logs" add constraint "FKkn1n0ynxkmv92jrm5vy9vb6wu" foreign key ("run_id") references "automation_runs"
+2026-09-04 15:01:07.231 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "automation_runs" add constraint "FKc1xix2kxhofeyp2gcntc1mgb2" foreign key ("automation_id") references "automations"
+Hibernate: alter table if exists "automation_runs" add constraint "FKc1xix2kxhofeyp2gcntc1mgb2" foreign key ("automation_id") references "automations"
+2026-09-04 15:01:07.233 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "campaign_recipients" add constraint "FK9jo0r3t0ng9c1v54a6q9t25am" foreign key ("contact_id") references "contacts"
+Hibernate: alter table if exists "campaign_recipients" add constraint "FK9jo0r3t0ng9c1v54a6q9t25am" foreign key ("contact_id") references "contacts"
+2026-09-04 15:01:07.235 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "conversations" add constraint "FK5kylet6ubg247fp0bfuhddmdq" foreign key ("assigned_user_id") references "users"
+Hibernate: alter table if exists "conversations" add constraint "FK5kylet6ubg247fp0bfuhddmdq" foreign key ("assigned_user_id") references "users"
+2026-09-04 15:01:07.236 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "conversations" add constraint "FKkeo09itpd88e9r729wwjesgo8" foreign key ("channel_account_id") references "channel_accounts"
+Hibernate: alter table if exists "conversations" add constraint "FKkeo09itpd88e9r729wwjesgo8" foreign key ("channel_account_id") references "channel_accounts"
+2026-09-04 15:01:07.237 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "conversations" add constraint "FK8dhglk7mvnqkcxtythwqxarr" foreign key ("contact_id") references "contacts"
+Hibernate: alter table if exists "conversations" add constraint "FK8dhglk7mvnqkcxtythwqxarr" foreign key ("contact_id") references "contacts"
+2026-09-04 15:01:07.238 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "ecommerce_orders" add constraint "FKn6rp8pdqp0rb8anhadtyhy3ce" foreign key ("contact_id") references "contacts"
+Hibernate: alter table if exists "ecommerce_orders" add constraint "FKn6rp8pdqp0rb8anhadtyhy3ce" foreign key ("contact_id") references "contacts"
+2026-09-04 15:01:07.241 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "ecommerce_orders" add constraint "FKgnqpe28mrx2ea1ccsk9nlatwo" foreign key ("store_id") references "ecommerce_stores"
+Hibernate: alter table if exists "ecommerce_orders" add constraint "FKgnqpe28mrx2ea1ccsk9nlatwo" foreign key ("store_id") references "ecommerce_stores"
+2026-09-04 15:01:07.243 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "ecommerce_products" add constraint "FKh4iniojjfti4qix6mrnxv88g9" foreign key ("store_id") references "ecommerce_stores"
+Hibernate: alter table if exists "ecommerce_products" add constraint "FKh4iniojjfti4qix6mrnxv88g9" foreign key ("store_id") references "ecommerce_stores"
+2026-09-04 15:01:07.248 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "inbox_label_conversation" add constraint "FKepasp68s7fy55l0lwbkaja81o" foreign key ("label_id") references "inbox_labels"
+Hibernate: alter table if exists "inbox_label_conversation" add constraint "FKepasp68s7fy55l0lwbkaja81o" foreign key ("label_id") references "inbox_labels"
+2026-09-04 15:01:07.250 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "inbox_label_conversation" add constraint "FK2o8bpiabq5732ij6g8pgj0qke" foreign key ("conversation_id") references "conversations"
+Hibernate: alter table if exists "inbox_label_conversation" add constraint "FK2o8bpiabq5732ij6g8pgj0qke" foreign key ("conversation_id") references "conversations"
+2026-09-04 15:01:07.251 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : alter table if exists "internal_notes" add constraint "FKq9srho9yv9o9kobwtyy4jioyu" foreign key ("user_id") references "users"
+Hibernate: alter table if exists "internal_notes" add constraint "FKq9srho9yv9o9kobwtyy4jioyu" foreign key ("user_id") references "users"
+2026-09-04 15:01:07.255  INFO 18880 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-04 15:01:08.204  INFO 18880 --- [    Test worker] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-04 15:01:12.804  WARN 18880 --- [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-04 15:01:12.926  WARN 18880 --- [    Test worker] r$InitializeUserDetailsManagerConfigurer : Found 2 UserDetailsService beans, with names [adminUserDetailsService, customUserDetailsService]. Global Authentication Manager will not use a UserDetailsService for username/password login. Consider publishing a single UserDetailsService bean.
+2026-09-04 15:01:14.188  INFO 18880 --- [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-09-04 15:01:15.206  INFO 18880 --- [    Test worker] ase15QueueSchedulerParityIntegrationTest : Started Phase15QueueSchedulerParityIntegrationTest in 14.965 seconds (process running for 16.316)
+2026-09-04 15:01:15.211 DEBUG 18880 --- [   scheduling-1] c.w.scheduler.SystemSchedulerTasks       : Scheduler heartbeat executed at 2026-09-04T09:31:15.211686200Z
+2026-09-04 15:01:15.344 DEBUG 18880 --- [   scheduling-1] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+2026-09-04 15:01:15.926 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+2026-09-04 15:01:15.933 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+Hibernate: select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+2026-09-04 15:01:15.994 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+Hibernate: insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+2026-09-04 15:01:16.021 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+2026-09-04 15:01:16.065 ERROR 18880 --- [    Test worker] com.whatsmine.queue.QueueWorker          : Job 1 execution failed
+
+java.lang.RuntimeException: Simulated execution failure
+	at com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest$1.handle(Phase15QueueSchedulerParityIntegrationTest.java:95)
+	at com.whatsmine.queue.QueueWorker.processNextAvailableJob(QueueWorker.java:83)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.whatsmine.queue.QueueWorker$$SpringCGLIB$$0.processNextAvailableJob(<generated>)
+	at com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest.testJobRetryAndBackoff(Phase15QueueSchedulerParityIntegrationTest.java:101)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.processAllTestClasses(JUnitPlatformTestClassProcessor.java:124)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.access$000(JUnitPlatformTestClassProcessor.java:99)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.stop(JUnitPlatformTestClassProcessor.java:94)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.stop(SuiteTestClassProcessor.java:63)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:92)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:200)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:132)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:121)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:71)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+
+2026-09-04 15:01:16.069  INFO 18880 --- [    Test worker] com.whatsmine.queue.QueueWorker          : Job 1 released with 120s backoff (attempt 1/3)
+2026-09-04 15:01:16.072 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : update "jobs" set "attempts"=?,"available_at"=?,"created_at"=?,"payload"=?,"queue"=?,"reserved_at"=? where "id"=?
+Hibernate: update "jobs" set "attempts"=?,"available_at"=?,"created_at"=?,"payload"=?,"queue"=?,"reserved_at"=? where "id"=?
+2026-09-04 15:01:16.141 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select count(*) from "failed_jobs" fj1_0
+Hibernate: select count(*) from "failed_jobs" fj1_0
+2026-09-04 15:01:16.148 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select count(*) from "jobs" j1_0
+Hibernate: select count(*) from "jobs" j1_0
+2026-09-04 15:01:16.155 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+2026-09-04 15:01:16.183 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+2026-09-04 15:01:16.190 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : delete from "jobs" where "id"=?
+Hibernate: delete from "jobs" where "id"=?
+2026-09-04 15:01:16.190 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+Hibernate: select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+2026-09-04 15:01:16.190 DEBUG 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Scheduler heartbeat executed at 2026-09-04T09:31:16.190501600Z
+2026-09-04 15:01:16.190  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Launching scheduled campaigns
+2026-09-04 15:01:16.190 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+Hibernate: insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+2026-09-04 15:01:16.197  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Syncing WhatsApp templates
+2026-09-04 15:01:16.197 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+Hibernate: insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+2026-09-04 15:01:16.197  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Dispatching scheduled social posts
+2026-09-04 15:01:16.197 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+Hibernate: insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+2026-09-04 15:01:16.197  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Refreshing expiring social tokens
+2026-09-04 15:01:16.203 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+Hibernate: insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+2026-09-04 15:01:16.204  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Resetting monthly usage meters
+2026-09-04 15:01:16.206  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Pruning old webhook events
+2026-09-04 15:01:16.206  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Syncing billing status
+2026-09-04 15:01:16.206  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Expiring billing trials
+2026-09-04 15:01:16.206  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Charging recurring subscriptions
+2026-09-04 15:01:16.206  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Sending trial ending notifications
+2026-09-04 15:01:16.206  INFO 18880 --- [    Test worker] c.w.scheduler.SystemSchedulerTasks       : Cron: Sending weekly digest reports
+2026-09-04 15:01:16.206 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select count(*) from "jobs" j1_0
+Hibernate: select count(*) from "jobs" j1_0
+2026-09-04 15:01:16.218 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+2026-09-04 15:01:16.225 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : delete from "jobs" where "id"=?
+Hibernate: delete from "jobs" where "id"=?
+2026-09-04 15:01:16.225 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : delete from "jobs" where "id"=?
+Hibernate: delete from "jobs" where "id"=?
+2026-09-04 15:01:16.225 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : delete from "jobs" where "id"=?
+Hibernate: delete from "jobs" where "id"=?
+2026-09-04 15:01:16.225 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : delete from "jobs" where "id"=?
+Hibernate: delete from "jobs" where "id"=?
+2026-09-04 15:01:16.232 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+Hibernate: select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+2026-09-04 15:01:16.234 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+Hibernate: insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+2026-09-04 15:01:16.239 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select count(*) from "jobs" j1_0
+Hibernate: select count(*) from "jobs" j1_0
+2026-09-04 15:01:16.239 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+2026-09-04 15:01:16.239  WARN 18880 --- [    Test worker] com.whatsmine.queue.QueueWorker          : No handler registered for job type: NonExistentUnknownJob. Failing job.
+2026-09-04 15:01:16.245 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)
+Hibernate: insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)
+2026-09-04 15:01:16.245  WARN 18880 --- [    Test worker] o.h.e.jdbc.spi.SqlExceptionHelper        : SQL Error: 23502, SQLState: 23502
+2026-09-04 15:01:16.245 ERROR 18880 --- [    Test worker] o.h.e.jdbc.spi.SqlExceptionHelper        : NULL not allowed for column "failed_at"; SQL statement:
+insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default) [23502-232]
+2026-09-04 15:01:16.253 ERROR 18880 --- [    Test worker] com.whatsmine.queue.QueueWorker          : Job 6 execution failed
+
+org.springframework.dao.DataIntegrityViolationException: could not execute statement [NULL not allowed for column "failed_at"; SQL statement:
+insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default) [23502-232]] [insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)]; SQL [insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)]; constraint [null]
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:290)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:241)
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:560)
+	at org.springframework.dao.support.ChainedPersistenceExceptionTranslator.translateExceptionIfPossible(ChainedPersistenceExceptionTranslator.java:61)
+	at org.springframework.dao.support.DataAccessUtils.translateIfNecessary(DataAccessUtils.java:343)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:160)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:165)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:223)
+	at jdk.proxy3/jdk.proxy3.$Proxy243.save(Unknown Source)
+	at com.whatsmine.queue.QueueWorker.markJobFailed(QueueWorker.java:126)
+	at com.whatsmine.queue.QueueWorker.processNextAvailableJob(QueueWorker.java:78)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.whatsmine.queue.QueueWorker$$SpringCGLIB$$0.processNextAvailableJob(<generated>)
+	at com.whatsmine.queue.Phase15QueueSchedulerParityIntegrationTest.testUnknownJobTypeMovedToFailedJobsTable(Phase15QueueSchedulerParityIntegrationTest.java:76)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.processAllTestClasses(JUnitPlatformTestClassProcessor.java:124)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.access$000(JUnitPlatformTestClassProcessor.java:99)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.stop(JUnitPlatformTestClassProcessor.java:94)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.stop(SuiteTestClassProcessor.java:63)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:92)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:200)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:132)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:121)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:71)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement [NULL not allowed for column "failed_at"; SQL statement:
+insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default) [23502-232]] [insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)]
+	at org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:62)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:197)
+	at org.hibernate.id.insert.GetGeneratedKeysDelegate.performMutation(GetGeneratedKeysDelegate.java:116)
+	at org.hibernate.engine.jdbc.mutation.internal.MutationExecutorSingleNonBatched.performNonBatchedOperations(MutationExecutorSingleNonBatched.java:47)
+	at org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.execute(AbstractMutationExecutor.java:55)
+	at org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.doStaticInserts(InsertCoordinatorStandard.java:194)
+	at org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.coordinateInsert(InsertCoordinatorStandard.java:132)
+	at org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.insert(InsertCoordinatorStandard.java:95)
+	at org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:85)
+	at org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:682)
+	at org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:293)
+	at org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:274)
+	at org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:324)
+	at org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:393)
+	at org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:307)
+	at org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:223)
+	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:136)
+	at org.hibernate.event.internal.DefaultPersistEventListener.entityIsTransient(DefaultPersistEventListener.java:177)
+	at org.hibernate.event.internal.DefaultPersistEventListener.persist(DefaultPersistEventListener.java:95)
+	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:79)
+	at org.hibernate.event.internal.DefaultPersistEventListener.onPersist(DefaultPersistEventListener.java:55)
+	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127)
+	at org.hibernate.internal.SessionImpl.firePersist(SessionImpl.java:761)
+	at org.hibernate.internal.SessionImpl.persist(SessionImpl.java:745)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.orm.jpa.SharedEntityManagerCreator$SharedEntityManagerInvocationHandler.invoke(SharedEntityManagerCreator.java:320)
+	at jdk.proxy3/jdk.proxy3.$Proxy170.persist(Unknown Source)
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.save(SimpleJpaRepository.java:636)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:277)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170)
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158)
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:515)
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:284)
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:752)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:174)
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:149)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:69)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	... 99 common frames omitted
+Caused by: org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: NULL not allowed for column "failed_at"; SQL statement:
+insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default) [23502-232]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:520)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.table.Column.validateConvertUpdateSequence(Column.java:402)
+	at org.h2.table.Table.convertInsertRow(Table.java:963)
+	at org.h2.command.dml.Insert.insertRows(Insert.java:167)
+	at org.h2.command.dml.Insert.update(Insert.java:135)
+	at org.h2.command.CommandContainer.executeUpdateWithGeneratedKeys(CommandContainer.java:212)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:133)
+	at org.h2.command.Command.executeUpdate(Command.java:304)
+	at org.h2.command.Command.executeUpdate(Command.java:248)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdateInternal(JdbcPreparedStatement.java:213)
+	at org.h2.jdbc.JdbcPreparedStatement.executeUpdate(JdbcPreparedStatement.java:172)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:194)
+	... 145 common frames omitted
+
+2026-09-04 15:01:16.262 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)
+Hibernate: insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)
+2026-09-04 15:01:16.262  WARN 18880 --- [    Test worker] o.h.e.jdbc.spi.SqlExceptionHelper        : SQL Error: 23502, SQLState: 23502
+2026-09-04 15:01:16.262 ERROR 18880 --- [    Test worker] o.h.e.jdbc.spi.SqlExceptionHelper        : NULL not allowed for column "failed_at"; SQL statement:
+insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default) [23502-232]
+2026-09-04 15:01:16.267 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)
+Hibernate: insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default)
+2026-09-04 15:01:16.269  WARN 18880 --- [    Test worker] o.h.e.jdbc.spi.SqlExceptionHelper        : SQL Error: 23502, SQLState: 23502
+2026-09-04 15:01:16.269 ERROR 18880 --- [    Test worker] o.h.e.jdbc.spi.SqlExceptionHelper        : NULL not allowed for column "failed_at"; SQL statement:
+insert into "failed_jobs" ("connection","exception","payload","queue","uuid","id") values (?,?,?,?,?,default) [23502-232]
+2026-09-04 15:01:16.294 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+2026-09-04 15:01:16.294 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : delete from "jobs" where "id"=?
+Hibernate: delete from "jobs" where "id"=?
+2026-09-04 15:01:16.300 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+Hibernate: select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+2026-09-04 15:01:16.303 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+Hibernate: insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+2026-09-04 15:01:16.308 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select count(*) from "jobs" j1_0
+Hibernate: select count(*) from "jobs" j1_0
+2026-09-04 15:01:16.311 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+2026-09-04 15:01:16.313 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select count(*) from "jobs" j1_0
+Hibernate: select count(*) from "jobs" j1_0
+2026-09-04 15:01:16.331 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0
+2026-09-04 15:01:16.336 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : delete from "jobs" where "id"=?
+Hibernate: delete from "jobs" where "id"=?
+2026-09-04 15:01:16.338 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+Hibernate: select fj1_0."id",fj1_0."connection",fj1_0."exception",fj1_0."failed_at",fj1_0."payload",fj1_0."queue",fj1_0."uuid" from "failed_jobs" fj1_0
+2026-09-04 15:01:16.344 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+Hibernate: insert into "jobs" ("attempts","available_at","created_at","payload","queue","reserved_at","id") values (?,?,?,?,?,?,default)
+2026-09-04 15:01:16.356 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select count(*) from "jobs" j1_0
+Hibernate: select count(*) from "jobs" j1_0
+2026-09-04 15:01:16.358 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+2026-09-04 15:01:16.361  INFO 18880 --- [    Test worker] c.w.q.h.DispatchWebhookJobHandler        : Executing DispatchWebhookJob for endpointId=1, event=user.created
+2026-09-04 15:01:16.374 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select we1_0."id",we1_0."created_at",we1_0."description",we1_0."enabled",we1_0."events",we1_0."secret",we1_0."updated_at",we1_0."url",we1_0."user_id" from "webhook_endpoints" we1_0 where we1_0."id"=?
+Hibernate: select we1_0."id",we1_0."created_at",we1_0."description",we1_0."enabled",we1_0."events",we1_0."secret",we1_0."updated_at",we1_0."url",we1_0."user_id" from "webhook_endpoints" we1_0 where we1_0."id"=?
+2026-09-04 15:01:16.377  INFO 18880 --- [    Test worker] com.whatsmine.queue.QueueWorker          : Job 8 [DispatchWebhookJob] completed successfully
+2026-09-04 15:01:16.377 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : delete from "jobs" where "id"=?
+Hibernate: delete from "jobs" where "id"=?
+2026-09-04 15:01:16.379 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select count(*) from "jobs" j1_0
+Hibernate: select count(*) from "jobs" j1_0
+]]></system-out>
+  <system-err><![CDATA[Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build what is described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\Ronix\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.15.11\a38b16385e867f59a641330f0362ebe742788ed8\byte-buddy-agent-1.15.11.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

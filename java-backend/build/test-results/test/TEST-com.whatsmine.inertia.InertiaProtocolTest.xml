@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.whatsmine.inertia.InertiaProtocolTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-04T09:32:01" hostname="DESKTOP-13QE2JF" time="0.075">
+  <properties/>
+  <testcase name="1. Initial page load (no X-Inertia header) should return HTML bootstrap template with data-page attribute" classname="com.whatsmine.inertia.InertiaProtocolTest" time="0.011"/>
+  <testcase name="4. Non-GET Inertia redirect should convert HTTP 302 to 303 See Other" classname="com.whatsmine.inertia.InertiaProtocolTest" time="0.01"/>
+  <testcase name="5. Partial reload request should filter props according to X-Inertia-Partial-Data header" classname="com.whatsmine.inertia.InertiaProtocolTest" time="0.01"/>
+  <testcase name="2. Inertia AJAX request (X-Inertia: true) should return JSON payload with X-Inertia response header" classname="com.whatsmine.inertia.InertiaProtocolTest" time="0.009"/>
+  <testcase name="6. Flash message should be passed in shared props and consumed after initial load" classname="com.whatsmine.inertia.InertiaProtocolTest" time="0.02"/>
+  <testcase name="3. Asset version mismatch on GET should return 409 Conflict with X-Inertia-Location header" classname="com.whatsmine.inertia.InertiaProtocolTest" time="0.011"/>
+  <system-out><![CDATA[2026-09-04 15:02:01.800  INFO 18880 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.whatsmine.inertia.InertiaProtocolTest]: InertiaProtocolTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-04 15:02:01.807  INFO 18880 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.whatsmine.WhatsMineApplication for test class com.whatsmine.inertia.InertiaProtocolTest
+2026-09-04 15:02:01.814 DEBUG 18880 --- [   scheduling-1] org.hibernate.SQL                        : select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+Hibernate: select j1_0."id",j1_0."attempts",j1_0."available_at",j1_0."created_at",j1_0."payload",j1_0."queue",j1_0."reserved_at" from "jobs" j1_0 where j1_0."available_at"<=? and (j1_0."reserved_at" is null or j1_0."reserved_at"<=?) order by j1_0."id" fetch first ? rows only
+2026-09-04 15:02:01.817 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+Hibernate: select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+2026-09-04 15:02:01.828 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+Hibernate: select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+2026-09-04 15:02:01.842 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+Hibernate: select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+2026-09-04 15:02:01.849 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+Hibernate: select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+2026-09-04 15:02:01.862 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+Hibernate: select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+2026-09-04 15:02:01.862 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+Hibernate: select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+2026-09-04 15:02:01.869 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+Hibernate: select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+2026-09-04 15:02:01.876 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+Hibernate: select wu1_0."id",wu1_0."created_at",wu1_0."role",wu1_0."updated_at",wu1_0."user_id",wu1_0."workspace_id" from "workspace_user" wu1_0 where wu1_0."workspace_id"=? and wu1_0."user_id"=?
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
