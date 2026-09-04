@@ -135,10 +135,13 @@ public class InertiaRenderer {
                     }
                 } catch (Exception ignored) {}
 
+                String jsPath = jsFile.startsWith("/") ? jsFile : (jsFile.startsWith("build/") ? "/" + jsFile : "/build/" + jsFile);
+                String cssPath = cssFile.startsWith("/") ? cssFile : (cssFile.startsWith("build/") ? "/" + cssFile : "/build/" + cssFile);
+
                 headAssetTags = """
-                    <link rel="stylesheet" href="/build/%s">
-                    <script type="module" src="/build/%s"></script>
-                    """.formatted(cssFile, jsFile);
+                    <link rel="stylesheet" href="%s">
+                    <script type="module" src="%s"></script>
+                    """.formatted(cssPath, jsPath);
             }
 
             return """
@@ -148,7 +151,7 @@ public class InertiaRenderer {
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1">
                     <meta name="csrf-token" content="%s">
-                    <title>%s - WhatsMine</title>
+                    <title>%s - Hub Notification</title>
                     <link rel="icon" type="image/svg+xml" href="/whatsmine-icon.svg">
                     <link rel="preconnect" href="https://fonts.bunny.net">
                     <link href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700&display=swap" rel="stylesheet" />

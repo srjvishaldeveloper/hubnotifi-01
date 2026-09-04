@@ -19,7 +19,7 @@ public class PublicCmsPageController {
         this.cmsPageRepository = cmsPageRepository;
     }
 
-    @GetMapping("/pages/{slug}")
+    @GetMapping("/p/{slug}")
     public Object show(@PathVariable String slug) {
         CmsPage page = cmsPageRepository.findBySlug(slug).orElse(null);
         if (page == null || !Boolean.TRUE.equals(page.getPublished())) {

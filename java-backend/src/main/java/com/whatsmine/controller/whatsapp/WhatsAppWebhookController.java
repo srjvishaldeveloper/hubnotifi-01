@@ -1,8 +1,12 @@
 package com.whatsmine.controller.whatsapp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whatsmine.model.WhatsappBusinessAccount;
 import com.whatsmine.repository.WhatsappBusinessAccountRepository;
 import com.whatsmine.service.whatsapp.WhatsAppApiClient;
+import com.whatsmine.service.whatsapp.WhatsappInboundProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,12 +25,22 @@ import java.util.Optional;
 @RequestMapping("/webhooks/whatsapp")
 public class WhatsAppWebhookController {
 
+    private static final Logger log = LoggerFactory.getLogger(WhatsAppWebhookController.class);
+
     private final WhatsAppApiClient apiClient;
     private final WhatsappBusinessAccountRepository wabaRepository;
+    private final WhatsappInboundProcessor inboundProcessor;
+    private final ObjectMapper objectMapper;
 
-    public WhatsAppWebhookController(WhatsAppApiClient apiClient, WhatsappBusinessAccountRepository wabaRepository) {
+    public WhatsAppWebhookController(
+            WhatsAppApiClient apiClient,
+            WhatsappBusinessAccountRepository wabaRepository,
+            WhatsappInboundProcessor inboundProcessor,
+            ObjectMapper objectMapper) {
         this.apiClient = apiClient;
         this.wabaRepository = wabaRepository;
+        this.inboundProcessor = inboundProcessor;
+        this.objectMapper = objectMapper;
     }
 
     // GET /webhooks/whatsapp/global
@@ -48,6 +62,12 @@ public class WhatsAppWebhookController {
             @RequestBody String rawBody,
             @RequestHeader(name = "X-Hub-Signature-256", required = false) String signature) {
 
+        if (!apiClient.verifyHmacSignature(rawBody, signature, null)) {
+            log.warn("whatsapp.webhook.global.signature_mismatch");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid signature"));
+        }
+
+        processPayload(rawBody);
         return ResponseEntity.ok(Map.of("status", "ok"));
     }
 
@@ -91,6 +111,22 @@ public class WhatsAppWebhookController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Invalid verify token"));
         }
 
+        if (!apiClient.verifyHmacSignature(rawBody, signature, null)) {
+            log.warn("whatsapp.webhook.signature_mismatch workspace_id={}", waba.get().getWorkspaceId());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid signature"));
+        }
+
+        processPayload(rawBody);
         return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void processPayload(String rawBody) {
+        try {
+            Map<String, Object> payload = objectMapper.readValue(rawBody, Map.class);
+            inboundProcessor.process(payload);
+        } catch (Exception e) {
+            log.error("Failed to parse/process WhatsApp webhook payload: {}", e.getMessage(), e);
+        }
     }
 }

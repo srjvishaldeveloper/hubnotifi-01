@@ -19,7 +19,7 @@ public class SystemSettingsController {
     private final Map<String, Object> systemSettings = new HashMap<>();
 
     public SystemSettingsController() {
-        systemSettings.put("app_name", "WhatsMine");
+        systemSettings.put("app_name", "Hub Notification");
         systemSettings.put("default_locale", "en");
         systemSettings.put("base_currency", "USD");
         systemSettings.put("allow_registration", true);

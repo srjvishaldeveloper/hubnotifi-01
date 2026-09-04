@@ -20,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
@@ -132,6 +133,9 @@ public class SecurityConfig {
         requestHandler.setCsrfRequestAttributeName(null);
 
         http
+                .securityContext(sc -> sc
+                        .securityContextRepository(new HttpSessionSecurityContextRepository())
+                )
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(requestHandler)
@@ -155,14 +159,26 @@ public class SecurityConfig {
                                 "/build/**",
                                 "/storage/**",
                                 "/images/**",
+                                "/i18n/**",
+                                "/whatsmine-logo.png",
                                 "/whatsmine-icon.svg",
+                                "/*.png",
+                                "/*.svg",
+                                "/*.ico",
                                 "/api/ziggy.js",
                                 "/favicon.ico",
                                 "/webhooks/**",
                                 "/widgets/**",
-                                "/pages/**"
+                                "/pages/**",
+                                "/p/**",
+                                "/pricing",
+                                "/faq",
+                                "/use-cases",
+                                "/integrations",
+                                "/about",
+                                "/contact"
                         ).permitAll()
-                        .requestMatchers("/app/**", "/client/**").hasRole("CLIENT")
+                        .requestMatchers("/app/**", "/client/**", "/dashboard", "/dashboard/**", "/contacts/**", "/inbox/**", "/profile/**", "/billing/**", "/social/**", "/whatsapp/**", "/broadcasting/**", "/ecommerce/**").hasRole("CLIENT")
                         .anyRequest().authenticated()
                 )
                 .addFilterAfter(workspaceSecurityFilter, UsernamePasswordAuthenticationFilter.class)

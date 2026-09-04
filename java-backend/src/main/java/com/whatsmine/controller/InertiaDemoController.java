@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 public class InertiaDemoController {
 
-    @GetMapping("/app/dashboard")
+    @GetMapping({"/dashboard", "/app/dashboard"})
     public InertiaResponse dashboard(@AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> props = new HashMap<>();
         props.put("title", "Workspace Dashboard");
@@ -27,7 +27,7 @@ public class InertiaDemoController {
             props.put("active_workspace_role", WorkspaceContext.getWorkspaceRole());
         }
 
-        return Inertia.render("Client/Dashboard", props);
+        return Inertia.render("client/Dashboard", props);
     }
 
     @PostMapping("/app/settings")

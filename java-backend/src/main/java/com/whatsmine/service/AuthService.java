@@ -72,6 +72,7 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(auth);
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+        new HttpSessionSecurityContextRepository().saveContext(SecurityContextHolder.getContext(), httpRequest, null);
 
         return true; // Fully authenticated
     }

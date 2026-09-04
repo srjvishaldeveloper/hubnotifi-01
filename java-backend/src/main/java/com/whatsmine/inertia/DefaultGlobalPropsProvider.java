@@ -12,6 +12,7 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -19,7 +20,25 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
 
     public static final String FLASH_SESSION_KEY = "flash_message";
 
-    @Value("${app.name:WhatsMine}")
+    // AdminUserDetails.getAuthorities() grants every admin user the same flat
+    // ROLE_ADMIN (the roles/permissions tables aren't wired into authentication
+    // yet), so every authenticated admin gets the full permission set here too —
+    // this list is what actually decides which items AdminLayout's sidebar shows.
+    private static final List<String> ALL_ADMIN_PERMISSIONS = List.of(
+            "view_clients", "create_clients", "update_clients", "delete_clients",
+            "view_subscriptions",
+            "view_settings", "manage_settings",
+            "view_payment_gateways",
+            "view_plans",
+            "view_email_settings",
+            "view_currencies",
+            "view_languages",
+            "view_admin_roles", "manage_admin_roles",
+            "view_admins", "create_admins", "update_admins", "delete_admins",
+            "manage_integrations"
+    );
+
+    @Value("${app.name:Hub Notification}")
     private String appName;
 
     @Value("${app.version:1.0.0}")
@@ -73,6 +92,7 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
                 adminMap.put("role", "admin");
                 authMap.put("admin", adminMap);
                 authMap.put("user", adminMap);
+                authMap.put("permissions", ALL_ADMIN_PERMISSIONS);
             }
         } else {
             authMap.put("user", null);

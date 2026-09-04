@@ -37,7 +37,7 @@ public class PricingController {
         return userRepository.findByEmail(principal.getName()).orElse(null);
     }
 
-    @GetMapping("/pricing")
+    @GetMapping("/app/pricing")
     public Object index(Principal principal) {
         User user = getAuthenticatedUser(principal);
         List<Plan> plans = planRepository.findByEnabledTrueOrderBySortOrderAsc();

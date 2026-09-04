@@ -14,7 +14,7 @@ import java.util.Map;
 @RequestMapping("/api/v1")
 public class HealthCheckController {
 
-    @Value("${app.name:WhatsMine}")
+    @Value("${app.name:Hub Notification}")
     private String appName;
 
     @Value("${app.version:1.0.0}")

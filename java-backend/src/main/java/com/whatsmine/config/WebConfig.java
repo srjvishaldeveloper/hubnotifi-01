@@ -30,7 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(inertiaInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/build/**", "/storage/**", "/favicon.ico");
+                .excludePathPatterns("/build/**", "/storage/**", "/i18n/**", "/images/**", "/favicon.ico", "/whatsmine-logo.png", "/*.png", "/*.svg", "/*.ico", "/*.js");
     }
 
     @Override
@@ -44,9 +44,9 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/build/**")
                 .addResourceLocations("classpath:/static/build/", "file:src/main/resources/static/build/", "file:../php/public/build/", "file:public/build/");
 
-        // Serve static public assets (images, icons, etc.)
-        registry.addResourceHandler("/images/**", "/whatsmine-icon.svg", "/favicon.ico", "/*.png", "/*.svg")
-                .addResourceLocations("classpath:/static/", "file:../php/public/", "file:public/");
+        // Serve static public assets (images, icons, root assets)
+        registry.addResourceHandler("/images/**", "/whatsmine-icon.svg", "/whatsmine-logo.png", "/favicon.ico", "/*.png", "/*.svg", "/*.ico", "/*.js")
+                .addResourceLocations("classpath:/static/", "file:src/main/resources/static/", "file:../php/public/", "file:public/");
 
         // Serve storage uploads
         registry.addResourceHandler("/storage/**")
