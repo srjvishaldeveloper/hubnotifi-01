@@ -1,18 +1,22 @@
 package com.whatsmine.service.whatsapp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.whatsmine.model.AiChatbot;
 import com.whatsmine.model.CampaignRecipient;
 import com.whatsmine.model.ChannelAccount;
 import com.whatsmine.model.Contact;
 import com.whatsmine.model.Conversation;
 import com.whatsmine.model.Message;
 import com.whatsmine.realtime.RealtimeBroadcaster;
+import com.whatsmine.repository.AiChatbotRepository;
 import com.whatsmine.repository.CampaignRecipientRepository;
 import com.whatsmine.repository.ChannelAccountRepository;
 import com.whatsmine.repository.ContactRepository;
 import com.whatsmine.repository.ConversationRepository;
 import com.whatsmine.repository.MessageRepository;
+import com.whatsmine.service.ai.ChatbotRunner;
 import com.whatsmine.service.automation.AutomationTriggerService;
+import com.whatsmine.service.whatsapp.WhatsAppApiClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -49,12 +53,21 @@ public class WhatsappInboundProcessor {
     private static final Map<String, Integer> STATUS_PRIORITY = Map.of(
             "queued", 0, "sent", 1, "delivered", 2, "read", 3, "failed", 4);
 
+    /** Case-insensitive substrings that hand a conversation off to a human agent. */
+    private static final List<String> HANDOVER_PHRASES = List.of(
+            "talk to human", "talk to agent", "speak to agent", "speak to human",
+            "human please", "real person", "live agent", "live support",
+            "need a human", "connect me to", "transfer me");
+
     private final ChannelAccountRepository channelAccountRepository;
     private final ContactRepository contactRepository;
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final CampaignRecipientRepository campaignRecipientRepository;
     private final AutomationTriggerService automationTriggerService;
+    private final AiChatbotRepository aiChatbotRepository;
+    private final ChatbotRunner chatbotRunner;
+    private final WhatsAppApiClient whatsAppApiClient;
     private final RealtimeBroadcaster realtimeBroadcaster;
     private final ObjectMapper objectMapper;
 
@@ -65,6 +78,9 @@ public class WhatsappInboundProcessor {
             MessageRepository messageRepository,
             CampaignRecipientRepository campaignRecipientRepository,
             AutomationTriggerService automationTriggerService,
+            AiChatbotRepository aiChatbotRepository,
+            ChatbotRunner chatbotRunner,
+            WhatsAppApiClient whatsAppApiClient,
             RealtimeBroadcaster realtimeBroadcaster,
             ObjectMapper objectMapper) {
         this.channelAccountRepository = channelAccountRepository;
@@ -73,6 +89,9 @@ public class WhatsappInboundProcessor {
         this.messageRepository = messageRepository;
         this.campaignRecipientRepository = campaignRecipientRepository;
         this.automationTriggerService = automationTriggerService;
+        this.aiChatbotRepository = aiChatbotRepository;
+        this.chatbotRunner = chatbotRunner;
+        this.whatsAppApiClient = whatsAppApiClient;
         this.realtimeBroadcaster = realtimeBroadcaster;
         this.objectMapper = objectMapper;
     }
@@ -154,6 +173,11 @@ public class WhatsappInboundProcessor {
             conversation.setChannelAccountId(channelAccount.getId());
             conversation.setStatus("open");
             conversation.setExternalThreadId(fromPhone);
+            // A brand-new inbound conversation has no human on it yet — start it
+            // bot-handled (matches PHP's `assigned_to ?? 'bot'` fallback) so
+            // maybeAutoReply() below can actually respond. The entity's own
+            // default of "human" is meant for agent-initiated conversations.
+            conversation.setAssignedTo("bot");
             conversation = conversationRepository.save(conversation);
         }
 
@@ -203,6 +227,108 @@ public class WhatsappInboundProcessor {
         } catch (Exception e) {
             log.error("Automation trigger failed for contact {}: {}", contact.getId(), e.getMessage());
         }
+
+        try {
+            maybeAutoReply(channelAccount, conversation, message, contact);
+        } catch (Exception e) {
+            log.error("AI auto-reply failed for conversation {}: {}", conversation.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Java port of the AI-chatbot branch of PHP's AutoReplyListener::process().
+     * Keyword/welcome/schedule auto-reply RULES (WhatsappAutoReply) are a
+     * separate, still-unported feature — this only covers: skip if a human is
+     * already on the conversation, hand over on request phrases, otherwise run
+     * whichever chatbot is linked to this channel account (if any) and send
+     * its reply back over WhatsApp.
+     */
+    private void maybeAutoReply(ChannelAccount channelAccount, Conversation conversation, Message inboundMessage, Contact contact) {
+        if ("human".equalsIgnoreCase(conversation.getAssignedTo())) {
+            return;
+        }
+
+        String body = inboundMessage.getBody() != null ? inboundMessage.getBody().toLowerCase() : "";
+        for (String phrase : HANDOVER_PHRASES) {
+            if (body.contains(phrase)) {
+                conversation.setAssignedTo("human");
+                conversation.setHandoverAt(LocalDateTime.now());
+                conversationRepository.save(conversation);
+                log.info("Conversation {} handed over to human (requested)", conversation.getId());
+                return;
+            }
+        }
+
+        Long chatbotId = extractChatbotId(channelAccount.getMetaJson());
+        if (chatbotId == null) {
+            return;
+        }
+
+        AiChatbot bot = aiChatbotRepository.findByWorkspaceIdAndId(channelAccount.getWorkspaceId(), chatbotId).orElse(null);
+        if (bot == null || !bot.isEnabled()) {
+            return;
+        }
+
+        String reply = chatbotRunner.run(bot, inboundMessage);
+        if (reply == null || reply.isBlank()) {
+            return;
+        }
+
+        Message botMessage = new Message();
+        botMessage.setConversationId(conversation.getId());
+        botMessage.setDirection("out");
+        botMessage.setChannel("whatsapp");
+        botMessage.setType("text");
+        botMessage.setBody(reply);
+        botMessage.setStatus("queued");
+        botMessage.setSentBy("bot");
+        botMessage.setSentAt(LocalDateTime.now());
+        botMessage = messageRepository.save(botMessage);
+
+        try {
+            String providerMsgId = whatsAppApiClient.sendTextMessage(contact.getPhoneE164(), reply);
+            botMessage.setStatus("sent");
+            botMessage.setProviderMessageId(providerMsgId);
+        } catch (Exception sendErr) {
+            botMessage.setStatus("failed");
+            botMessage.setErrorJson("{\"message\":\"" + sendErr.getMessage() + "\"}");
+            log.warn("AI chatbot reply send failed for conversation {}: {}", conversation.getId(), sendErr.getMessage());
+        }
+        botMessage = messageRepository.save(botMessage);
+
+        conversation.setLastMessageAt(LocalDateTime.now());
+        conversationRepository.save(conversation);
+
+        broadcastOutbound(channelAccount.getWorkspaceId(), conversation, botMessage);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Long extractChatbotId(String metaJson) {
+        if (metaJson == null || metaJson.isBlank()) return null;
+        try {
+            Map<String, Object> meta = objectMapper.readValue(metaJson, Map.class);
+            Object id = meta.get("ai_chatbot_id");
+            if (id == null) return null;
+            return Long.valueOf(id.toString());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void broadcastOutbound(Long workspaceId, Conversation conversation, Message message) {
+        if (realtimeBroadcaster == null) return;
+        Map<String, Object> msgPayload = new LinkedHashMap<>();
+        msgPayload.put("id", message.getId());
+        msgPayload.put("conversation_id", message.getConversationId());
+        msgPayload.put("direction", "out");
+        msgPayload.put("channel", "whatsapp");
+        msgPayload.put("type", message.getType());
+        msgPayload.put("body", message.getBody() != null ? message.getBody() : "");
+        msgPayload.put("status", message.getStatus());
+        msgPayload.put("created_at", message.getCreatedAt() != null ? message.getCreatedAt().toString() : LocalDateTime.now().toString());
+
+        realtimeBroadcaster.broadcast("conversation." + conversation.getId(), ".MessageSent", msgPayload);
+        realtimeBroadcaster.broadcast("workspace." + workspaceId, ".MessageSent", msgPayload);
     }
 
     private void broadcastInbound(Long workspaceId, Conversation conversation, Message message) {
