@@ -54,3 +54,8 @@ bower_components
 psd
 thumb
 sketch
+
+### java-backend (Gradle) ###
+java-backend/build/
+java-backend/bin/
+java-backend/.gradle/
