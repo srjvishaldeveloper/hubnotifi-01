@@ -967,7 +967,7 @@ function SecuritySection({ landing }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Welcome({ auth, canLogin, canRegister, landing = {}, plans = [] }) {
-    const appName = import.meta.env.VITE_APP_NAME || 'WhatsMine';
+    const appName = import.meta.env.VITE_APP_NAME || 'Hub Notification';
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
 
     const metaTitle = s('seo_title') || s('hero_title') || appName;

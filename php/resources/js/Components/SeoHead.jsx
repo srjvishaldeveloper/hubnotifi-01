@@ -1,21 +1,8 @@
 import { Head } from '@inertiajs/react';
 
-/**
- * Reusable SEO <Head> for public marketing pages.
- *
- * Renders the page title, meta description/keywords, canonical URL,
- * Open Graph + Twitter card tags, and optional JSON-LD structured data.
- *
- * Props:
- *  - title        string  document <title> + og:title
- *  - description  string  meta description + og:description
- *  - keywords     string  comma-separated meta keywords (optional)
- *  - image        string  absolute og:image URL (optional)
- *  - canonical    string  canonical URL (optional; falls back to current URL)
- *  - jsonLd       object|array  one or more JSON-LD graphs (optional)
- */
+
 export default function SeoHead({ title, description, keywords, image, canonical, jsonLd }) {
-    const appName = import.meta.env.VITE_APP_NAME || 'WhatsMine';
+    const appName = import.meta.env.VITE_APP_NAME || 'Hub Notification';
     const fullTitle = title || appName;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const url =

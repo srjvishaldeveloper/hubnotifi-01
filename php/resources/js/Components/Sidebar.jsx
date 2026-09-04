@@ -78,7 +78,7 @@ export default function Sidebar({
     showCreateButton = true,
 }) {
     const { t } = useTranslation();
-    const appName = import.meta.env.VITE_APP_NAME || 'WhatsMine';
+    const appName = import.meta.env.VITE_APP_NAME || 'Hub Notification';
     const { branding } = usePage().props;
     const logoUrl = branding?.logo_url;
 

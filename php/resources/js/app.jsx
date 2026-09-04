@@ -55,7 +55,7 @@ window.addEventListener('pageshow', (event) => {
     }
 });
 
-const appName = import.meta.env.VITE_APP_NAME || 'WhatsMine';
+const appName = import.meta.env.VITE_APP_NAME || 'Hub Notification';
 
 // Wrapper cache keyed by page component. resolve() runs on every navigation;
 // returning a fresh wrapper function each time gives the page a new component
@@ -69,7 +69,16 @@ const pages = import.meta.glob('./Pages/**/*.jsx');
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
-        const importPage = pages[`./Pages/${name}.jsx`];
+        let importPage = pages[`./Pages/${name}.jsx`];
+        if (!importPage) {
+            const lowerTarget = `./pages/${name.toLowerCase()}.jsx`;
+            const matchingKey = Object.keys(pages).find(
+                (key) => key.toLowerCase() === lowerTarget
+            );
+            if (matchingKey) {
+                importPage = pages[matchingKey];
+            }
+        }
         if (!importPage) {
             throw new Error(`Page not found: ./Pages/${name}.jsx`);
         }

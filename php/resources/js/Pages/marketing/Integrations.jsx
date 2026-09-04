@@ -16,7 +16,7 @@ function Badge({ text }) {
 
 export default function Integrations({ canRegister, landing = {} }) {
     const { t } = useTranslation();
-    const appName = import.meta.env.VITE_APP_NAME || 'WhatsMine';
+    const appName = import.meta.env.VITE_APP_NAME || 'Hub Notification';
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
 
     const categories = [1, 2, 3, 4, 5, 6, 7].map((i) => ({

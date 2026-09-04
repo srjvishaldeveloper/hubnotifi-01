@@ -130,11 +130,102 @@ Application (React 19 + Inertia 2)
 
 ---
 
-## 14. Remaining Work
+## 14. Phase 4 Manual Browser Runtime Fix
 
-All local frontend and backend migration phases (Phases 1-4) are **100% COMPLETE AND VERIFIED**.
-The standalone Spring Boot JAR runs independently with embedded React frontend assets, 0 PHP processes, and 0 Vite runtime processes.
+### Root Cause Analysis
+1. **JavaScript MIME Type Error (`text/html` instead of `text/javascript`)**:
+   - In `php/vite.config.js`, standard Vite without explicit `base: '/build/'` generated asset URLs and dynamic chunk imports relative to `/` (e.g. `/assets/Welcome-xxxx.js`).
+   - When the React application executed dynamic imports (`import.meta.glob('./Pages/**/*.jsx')`), Chrome requested `GET http://localhost:8080/assets/Welcome-xxxx.js`.
+   - In Spring Boot, static assets were mapped under `/build/assets/**`. Requests to `/assets/*.js` did not match static resource locations and were forwarded to Spring Boot's Inertia SPA fallback handler (`/login`), returning HTML bootstrap (`Content-Type: text/html`) with HTTP status 200/401.
+   - Chrome's Strict MIME Type Checking rejected the `text/html` response for `<script type="module">` with:
+     `Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html".`
+2. **Broken Logo (`/whatsmine-logo.png`)**:
+   - Public static files (`whatsmine-logo.png`, `whatsmine-icon.svg`, `images/*`) were present in `php/public/` but missing from `java-backend/src/main/resources/static/`.
+   - Requests for `/whatsmine-logo.png` fell through to Spring Security / SPA fallback, returning HTML instead of image data.
+3. **Untranslated i18n Keys (`nav.features`, `nav.use_cases`, etc.)**:
+   - `php/resources/js/i18n.js` initializes `i18next-http-backend` which fetches `/i18n/{locale}` at runtime.
+   - Spring Boot lacked an `/i18n/{locale}` endpoint and classpath locale resources, causing `/i18n/en` requests to return SPA HTML, which failed JSON parsing and left i18next uninitialized.
+
+---
+
+### Exact Technical Fixes
+1. **Vite Production Base Path**:
+   - Updated `php/vite.config.js` to include `base: '/build/'`.
+   - Dynamic imports and asset tags now generate URLs prefixed with `/build/assets/` (e.g. `/build/assets/Welcome-C5EXYaGF.js`).
+2. **Static Resource Integration**:
+   - Copied all public assets from `php/public/` (`whatsmine-logo.png`, `whatsmine-icon.svg`, `favicon.ico`, `robots.txt`, `images/*`) into `java-backend/src/main/resources/static/`.
+   - Updated `WebConfig.java` resource locations to include `classpath:/static/` and `file:src/main/resources/static/`.
+3. **Spring I18n Controller & Locales**:
+   - Copied `php/resources/js/locales/*.json` to `java-backend/src/main/resources/locales/`.
+   - Created `I18nController.java` (`@GetMapping("/i18n/{locale}")`) to load classpath locale JSON files, flatten nested keys to dot-notation (e.g. `nav.features` => `"Features"`), and return `{"translation": flatMap}`.
+4. **Spring Security Configuration**:
+   - Updated `SecurityConfig.java` to add `/i18n/**`, `/whatsmine-logo.png`, `/*.png`, `/*.svg`, `/*.ico`, `/images/**` to `permitAll()` in `clientSecurityFilterChain`.
+   - Updated `WebConfig.java` to exclude `/i18n/**`, `/images/**`, `/whatsmine-logo.png`, `/*.png`, `/*.svg`, `/*.ico` from `InertiaInterceptor`.
+5. **Inertia Path Normalization**:
+   - Updated `InertiaRenderer.java` to safely format JS and CSS asset URLs with `/build/` prefix without duplicating paths.
+
+---
+
+### Audit & Verification Results
+- **npm run build**: PASS (24.32s)
+- **gradlew clean bootJar**: PASS (2m 52s)
+- **Packaged Standalone JAR**: `java-backend/build/libs/whats-mine-1.0.0-SNAPSHOT.jar` (68.4 MB)
+- **JAR Contents Audit**:
+  - `BOOT-INF/classes/static/build/manifest.json`: PRESENT
+  - `BOOT-INF/classes/static/build/assets/app-BPBpQSMT.js`: PRESENT
+  - `BOOT-INF/classes/static/build/assets/app-BMT4SSt3.css`: PRESENT
+  - `BOOT-INF/classes/static/build/assets/Welcome-C5EXYaGF.js`: PRESENT
+  - `BOOT-INF/classes/static/whatsmine-logo.png`: PRESENT
+  - `BOOT-INF/classes/static/locales/en.json`: PRESENT
+- **HTTP Endpoint Verification (Standalone JAR running on port 8080)**:
+  - `GET http://localhost:8080/`: 200 OK (`Content-Type: text/html;charset=UTF-8`)
+  - `GET http://localhost:8080/build/assets/app-BPBpQSMT.js`: 200 OK (`Content-Type: text/javascript`)
+  - `GET http://localhost:8080/build/assets/Welcome-C5EXYaGF.js`: 200 OK (`Content-Type: text/javascript`)
+  - `GET http://localhost:8080/build/assets/app-BMT4SSt3.css`: 200 OK (`Content-Type: text/css`)
+  - `GET http://localhost:8080/whatsmine-logo.png`: 200 OK (`Content-Type: image/png`, 52,475 bytes)
+  - `GET http://localhost:8080/i18n/en`: 200 OK (`Content-Type: application/json`, flattened translation dictionary)
+- **Network Audit**:
+  - **Module MIME errors**: 0
+  - **localhost:5173/5174/5175 requests**: 0
+  - **PHP / Laravel runtime requests**: 0
+  - **Vite runtime requests**: 0
+  - **HTML responses for JS requests**: 0
+
+---
+
+## 15. Final Architecture Verification
+
+```text
+Browser
+   │
+   ▼
+Spring Boot :8080 (whats-mine-1.0.0-SNAPSHOT.jar)
+   │
+   ├─► Inertia HTML Bootstrap (InertiaRenderer)
+   │
+   ├─► Main React Bundle (/build/assets/app-BPBpQSMT.js → Content-Type: text/javascript)
+   │
+   ├─► Dynamic React Page Chunks (/build/assets/*.js → Content-Type: text/javascript)
+   │
+   ├─► CSS Stylesheets (/build/assets/app-BMT4SSt3.css → Content-Type: text/css)
+   │
+   ├─► Public Static Assets (/whatsmine-logo.png, /images/** → Content-Type: image/*)
+   │
+   ├─► Translation Dictionaries (/i18n/{locale} → Content-Type: application/json)
+   │
+   ├─► Route Helper (/api/ziggy.js → Content-Type: text/javascript)
+   │
+   └─► Backend API & Realtime WebSockets (/app/** via Spring Boot)
+```
+
+---
+
+## 16. Next Deployment Step
+
+All local frontend and backend migration phases (Phases 1-4 including Phase 4 Manual Browser Runtime Fix) are **100% COMPLETE AND VERIFIED**.
+The standalone Spring Boot JAR runs completely decoupled from PHP, Laravel, Node, and Vite.
 
 Next Deployment Step:
 **Phase 5 — Staging / Production Deployment Preparation (Render Deployment Configuration)**
 *(DO NOT execute automatically.)*
+

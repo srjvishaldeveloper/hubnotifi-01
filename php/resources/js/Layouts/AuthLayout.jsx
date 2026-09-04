@@ -41,7 +41,7 @@ const SOCIAL_PROOF = [
 function LeftPane({ variant }) {
     const { t } = useTranslation();
     const features = variant === 'admin' ? ADMIN_FEATURES : CLIENT_FEATURES;
-    const appName = import.meta.env.VITE_APP_NAME || 'WhatsMine';
+    const appName = import.meta.env.VITE_APP_NAME || 'Hub Notification';
 
     return (
         <div className="relative hidden lg:flex lg:w-[45%] flex-col justify-between overflow-hidden p-10 text-white" style={{ background: '#283f24' }}>
