@@ -72,6 +72,75 @@ public class InertiaRenderer {
                     .replace("\"", "&quot;")
                     .replace("'", "&#39;");
 
+            String headAssetTags;
+            java.io.File hotFile = new java.io.File("../php/public/hot");
+            if (!hotFile.exists()) {
+                hotFile = new java.io.File("public/hot");
+            }
+
+            if (hotFile.exists()) {
+                String hotUrl = "http://127.0.0.1:5173";
+                try {
+                    String content = java.nio.file.Files.readString(hotFile.toPath()).trim();
+                    if (!content.isEmpty()) {
+                        hotUrl = content;
+                    }
+                } catch (Exception ignored) {}
+                headAssetTags = """
+                    <script type="module">
+                        import RefreshRuntime from "%s/@react-refresh";
+                        RefreshRuntime.injectIntoGlobalHook(window);
+                        window.$RefreshReg$ = () => {};
+                        window.$RefreshSig$ = () => (type) => type;
+                        window.__vite_plugin_react_preamble_installed__ = true;
+                    </script>
+                    <script type="module" src="%s/@vite/client"></script>
+                    <script type="module" src="%s/resources/js/app.jsx"></script>
+                    """.formatted(hotUrl, hotUrl, hotUrl);
+            } else {
+                String jsFile = "assets/app-wcd0bkdE.js";
+                String cssFile = "assets/app-BMT4SSt3.css";
+                try {
+                    String manifestContent = null;
+                    try (var is = getClass().getResourceAsStream("/static/build/manifest.json")) {
+                        if (is != null) {
+                            manifestContent = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                        }
+                    } catch (Exception ignored) {}
+
+                    if (manifestContent == null) {
+                        java.io.File manifestFile = new java.io.File("src/main/resources/static/build/manifest.json");
+                        if (!manifestFile.exists()) {
+                            manifestFile = new java.io.File("build/resources/main/static/build/manifest.json");
+                        }
+                        if (!manifestFile.exists()) {
+                            manifestFile = new java.io.File("../php/public/build/manifest.json");
+                        }
+                        if (manifestFile.exists()) {
+                            manifestContent = java.nio.file.Files.readString(manifestFile.toPath());
+                        }
+                    }
+
+                    if (manifestContent != null) {
+                        var jsonNode = objectMapper.readTree(manifestContent);
+                        var entryNode = jsonNode.get("resources/js/app.jsx");
+                        if (entryNode != null) {
+                            if (entryNode.has("file")) {
+                                jsFile = entryNode.get("file").asText();
+                            }
+                            if (entryNode.has("css") && entryNode.get("css").isArray() && entryNode.get("css").size() > 0) {
+                                cssFile = entryNode.get("css").get(0).asText();
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+
+                headAssetTags = """
+                    <link rel="stylesheet" href="/build/%s">
+                    <script type="module" src="/build/%s"></script>
+                    """.formatted(cssFile, jsFile);
+            }
+
             return """
                 <!DOCTYPE html>
                 <html lang="en" dir="ltr">
@@ -84,8 +153,7 @@ public class InertiaRenderer {
                     <link rel="preconnect" href="https://fonts.bunny.net">
                     <link href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700&display=swap" rel="stylesheet" />
                     <script src="/api/ziggy.js"></script>
-                    <script type="module" src="/build/assets/app.js"></script>
-                    <link rel="stylesheet" href="/build/assets/app.css">
+                    %s
                 </head>
                 <body class="font-sans antialiased">
                     <div id="app" data-page="%s"></div>
@@ -94,6 +162,7 @@ public class InertiaRenderer {
                 """.formatted(
                     extractCsrfToken(inertiaResponse),
                     inertiaResponse.getComponent(),
+                    headAssetTags,
                     escapedJson
             );
         } catch (Exception e) {

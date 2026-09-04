@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.071s</div>
+<div class="counter">0.067s</div>
 <p>duration</p>
 </div>
 </td>
@@ -81,7 +81,7 @@
 <tr>
 <td class="success">3. Asset version mismatch on GET should return 409 Conflict with X-Inertia-Location header</td>
 <td class="success">testAssetVersionMismatchReturns409()</td>
-<td class="success">0.011s</td>
+<td class="success">0.006s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
@@ -93,25 +93,25 @@
 <tr>
 <td class="success">2. Inertia AJAX request (X-Inertia: true) should return JSON payload with X-Inertia response header</td>
 <td class="success">testInertiaAjaxRequestReturnsJson()</td>
-<td class="success">0.009s</td>
+<td class="success">0.008s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">1. Initial page load (no X-Inertia header) should return HTML bootstrap template with data-page attribute</td>
 <td class="success">testInitialPageLoadReturnsHtmlBootstrap()</td>
-<td class="success">0.011s</td>
+<td class="success">0.018s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">5. Partial reload request should filter props according to X-Inertia-Partial-Data header</td>
 <td class="success">testPartialReloadFiltersProps()</td>
-<td class="success">0.010s</td>
+<td class="success">0.009s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">4. Non-GET Inertia redirect should convert HTTP 302 to 303 See Other</td>
 <td class="success">testPostRedirectConverts302To303()</td>
-<td class="success">0.010s</td>
+<td class="success">0.006s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -119,25 +119,25 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>2026-09-04 15:02:01.800  INFO 18880 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.whatsmine.inertia.InertiaProtocolTest]: InertiaProtocolTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-04 15:02:01.807  INFO 18880 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.whatsmine.WhatsMineApplication for test class com.whatsmine.inertia.InertiaProtocolTest
-2026-09-04 15:02:01.814 DEBUG 18880 --- [   scheduling-1] org.hibernate.SQL                        : select j1_0.&quot;id&quot;,j1_0.&quot;attempts&quot;,j1_0.&quot;available_at&quot;,j1_0.&quot;created_at&quot;,j1_0.&quot;payload&quot;,j1_0.&quot;queue&quot;,j1_0.&quot;reserved_at&quot; from &quot;jobs&quot; j1_0 where j1_0.&quot;available_at&quot;&lt;=? and (j1_0.&quot;reserved_at&quot; is null or j1_0.&quot;reserved_at&quot;&lt;=?) order by j1_0.&quot;id&quot; fetch first ? rows only
+<pre>2026-09-04 19:18:33.380  INFO 21412 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.whatsmine.inertia.InertiaProtocolTest]: InertiaProtocolTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-04 19:18:33.393 DEBUG 21412 --- [   scheduling-1] org.hibernate.SQL                        : select j1_0.&quot;id&quot;,j1_0.&quot;attempts&quot;,j1_0.&quot;available_at&quot;,j1_0.&quot;created_at&quot;,j1_0.&quot;payload&quot;,j1_0.&quot;queue&quot;,j1_0.&quot;reserved_at&quot; from &quot;jobs&quot; j1_0 where j1_0.&quot;available_at&quot;&lt;=? and (j1_0.&quot;reserved_at&quot; is null or j1_0.&quot;reserved_at&quot;&lt;=?) order by j1_0.&quot;id&quot; fetch first ? rows only
 Hibernate: select j1_0.&quot;id&quot;,j1_0.&quot;attempts&quot;,j1_0.&quot;available_at&quot;,j1_0.&quot;created_at&quot;,j1_0.&quot;payload&quot;,j1_0.&quot;queue&quot;,j1_0.&quot;reserved_at&quot; from &quot;jobs&quot; j1_0 where j1_0.&quot;available_at&quot;&lt;=? and (j1_0.&quot;reserved_at&quot; is null or j1_0.&quot;reserved_at&quot;&lt;=?) order by j1_0.&quot;id&quot; fetch first ? rows only
-2026-09-04 15:02:01.817 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
+2026-09-04 19:18:33.394  INFO 21412 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.whatsmine.WhatsMineApplication for test class com.whatsmine.inertia.InertiaProtocolTest
+2026-09-04 19:18:33.400 DEBUG 21412 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
-2026-09-04 15:02:01.828 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
+2026-09-04 19:18:33.414 DEBUG 21412 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
-2026-09-04 15:02:01.842 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
+2026-09-04 19:18:33.427 DEBUG 21412 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
-2026-09-04 15:02:01.849 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
+2026-09-04 19:18:33.434 DEBUG 21412 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
-2026-09-04 15:02:01.862 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
+2026-09-04 19:18:33.450 DEBUG 21412 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
-2026-09-04 15:02:01.862 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
+2026-09-04 19:18:33.450 DEBUG 21412 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
-2026-09-04 15:02:01.869 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
+2026-09-04 19:18:33.457 DEBUG 21412 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
-2026-09-04 15:02:01.876 DEBUG 18880 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
+2026-09-04 19:18:33.465 DEBUG 21412 --- [    Test worker] org.hibernate.SQL                        : select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;role&quot;,wu1_0.&quot;updated_at&quot;,wu1_0.&quot;user_id&quot;,wu1_0.&quot;workspace_id&quot; from &quot;workspace_user&quot; wu1_0 where wu1_0.&quot;workspace_id&quot;=? and wu1_0.&quot;user_id&quot;=?
 </pre>
 </span>
@@ -150,7 +150,7 @@ Hibernate: select wu1_0.&quot;id&quot;,wu1_0.&quot;created_at&quot;,wu1_0.&quot;
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.10.2</a> at 04-Sept-2026, 3:02:41 pm</p>
+<a href="http://www.gradle.org">Gradle 8.9</a> at Sep 4, 2026, 7:19:25 PM</p>
 </div>
 </div>
 </body>

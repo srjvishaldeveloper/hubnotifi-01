@@ -3,7 +3,6 @@ import './bootstrap';
 import './echo';
 
 import { createInertiaApp, router } from '@inertiajs/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import i18n, { initI18n } from '@/i18n';
 import LocaleSync from '@/Components/LocaleSync';
@@ -65,13 +64,16 @@ const appName = import.meta.env.VITE_APP_NAME || 'WhatsMine';
 // the validation errors before they can render.
 const wrappedPages = new WeakMap();
 
+const pages = import.meta.glob('./Pages/**/*.jsx');
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) =>
-        resolvePageComponent(
-            `./Pages/${name}.jsx`,
-            import.meta.glob('./Pages/**/*.jsx'),
-        ).then((module) => {
+    resolve: (name) => {
+        const importPage = pages[`./Pages/${name}.jsx`];
+        if (!importPage) {
+            throw new Error(`Page not found: ./Pages/${name}.jsx`);
+        }
+        return importPage().then((module) => {
             const Page = module.default;
             if (!wrappedPages.has(Page)) {
                 const Wrapped = function WrappedWithThemeAndLocale(props) {
@@ -87,7 +89,8 @@ createInertiaApp({
                 wrappedPages.set(Page, Wrapped);
             }
             return wrappedPages.get(Page);
-        }),
+        });
+    },
     setup({ el, App, props }) {
         syncCsrfToken(props.initialPage);
         const i18nProps = props.initialPage?.props?.i18n;

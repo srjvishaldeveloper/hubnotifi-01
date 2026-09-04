@@ -29,6 +29,11 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @GetMapping("/")
+    public InertiaResponse showRoot() {
+        return Inertia.render("Welcome");
+    }
+
     @GetMapping("/login")
     public InertiaResponse showLogin() {
         return Inertia.render("Auth/Login");

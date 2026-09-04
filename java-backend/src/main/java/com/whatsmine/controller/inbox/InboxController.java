@@ -67,6 +67,9 @@ public class InboxController {
     @Autowired
     private WhatsAppApiClient whatsAppApiClient;
 
+    @Autowired
+    private com.whatsmine.realtime.RealtimeBroadcaster realtimeBroadcaster;
+
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         return userDetails.getWorkspaceId();
     }
@@ -287,6 +290,21 @@ public class InboxController {
         }
         conversationRepository.save(conversation);
 
+        if (realtimeBroadcaster != null) {
+            Map<String, Object> msgPayload = Map.of(
+                    "id", msg.getId(),
+                    "conversation_id", msg.getConversationId(),
+                    "direction", msg.getDirection() != null ? msg.getDirection() : "outbound",
+                    "channel", msg.getChannel() != null ? msg.getChannel() : "whatsapp",
+                    "type", msg.getType() != null ? msg.getType() : "text",
+                    "body", msg.getBody() != null ? msg.getBody() : "",
+                    "status", msg.getStatus() != null ? msg.getStatus() : "sent",
+                    "created_at", msg.getCreatedAt() != null ? msg.getCreatedAt().toString() : LocalDateTime.now().toString()
+            );
+            realtimeBroadcaster.broadcast("conversation." + conversation.getId(), ".MessageSent", msgPayload);
+            realtimeBroadcaster.broadcast("workspace." + workspaceId, ".MessageSent", msgPayload);
+        }
+
         if ("application/json".equalsIgnoreCase(request.getHeader("Accept"))) {
             return ResponseEntity.ok(Map.of("message", msg, "error", sendError != null ? sendError : ""));
         }
@@ -306,14 +324,27 @@ public class InboxController {
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
 
         Long userId = body.get("user_id") != null ? Long.valueOf(body.get("user_id").toString()) : null;
+        String userName = "Agent";
         if (userId != null) {
-            userRepository.findById(userId)
-                    .filter(u -> u.getWorkspaceId().equals(workspaceId))
-                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY));
+            var assignedUserOpt = userRepository.findById(userId)
+                    .filter(u -> u.getWorkspaceId().equals(workspaceId));
+            if (assignedUserOpt.isEmpty()) {
+                throw new org.springframework.web.server.ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+            }
+            userName = assignedUserOpt.get().getName() != null ? assignedUserOpt.get().getName() : assignedUserOpt.get().getEmail();
         }
 
         conversation.setAssignedUserId(userId);
         conversationRepository.save(conversation);
+
+        if (realtimeBroadcaster != null) {
+            Map<String, Object> assignedPayload = Map.of(
+                    "conversation_id", conversation.getId(),
+                    "assigned_to", userId != null ? Map.of("id", userId, "name", userName) : null
+            );
+            realtimeBroadcaster.broadcast("workspace." + workspaceId, ".ConversationAssigned", assignedPayload);
+            realtimeBroadcaster.broadcast("conversation." + conversation.getId(), ".ConversationAssigned", assignedPayload);
+        }
 
         return Inertia.redirect("/app/inbox/conversations/" + conversation.getUuid());
     }
@@ -366,11 +397,26 @@ public class InboxController {
     @PostMapping("/conversations/{uuid}/typing")
     public ResponseEntity<Map<String, Boolean>> typing(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String uuid
+            @PathVariable String uuid,
+            @RequestBody(required = false) Map<String, Object> bodyPayload
     ) {
         Long workspaceId = getWorkspaceId(userDetails);
-        conversationRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
+        Conversation conversation = conversationRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        boolean isTyping = bodyPayload != null && Boolean.TRUE.equals(bodyPayload.get("is_typing"));
+
+        if (realtimeBroadcaster != null) {
+            String uName = userDetails.getUser() != null && userDetails.getUser().getName() != null
+                    ? userDetails.getUser().getName()
+                    : userDetails.getUsername();
+            Map<String, Object> typingPayload = Map.of(
+                    "user_id", userDetails.getId(),
+                    "user_name", uName,
+                    "is_typing", isTyping
+            );
+            realtimeBroadcaster.broadcast("conversation." + conversation.getId(), ".TypingChanged", typingPayload);
+        }
 
         return ResponseEntity.ok(Map.of("ok", true));
     }

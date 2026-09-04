@@ -42,11 +42,15 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Serve static build assets (compiled Vite JS/CSS)
         registry.addResourceHandler("/build/**")
-                .addResourceLocations("classpath:/static/build/");
+                .addResourceLocations("classpath:/static/build/", "file:src/main/resources/static/build/", "file:../php/public/build/", "file:public/build/");
+
+        // Serve static public assets (images, icons, etc.)
+        registry.addResourceHandler("/images/**", "/whatsmine-icon.svg", "/favicon.ico", "/*.png", "/*.svg")
+                .addResourceLocations("classpath:/static/", "file:../php/public/", "file:public/");
 
         // Serve storage uploads
         registry.addResourceHandler("/storage/**")
-                .addResourceLocations("classpath:/static/storage/", "file:storage/app/public/");
+                .addResourceLocations("classpath:/static/storage/", "file:storage/app/public/", "file:../php/storage/app/public/");
     }
 
     @Override

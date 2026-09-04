@@ -82,8 +82,15 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
         // Branding
         Map<String, Object> branding = new HashMap<>();
         branding.put("app_name", appName);
-        branding.put("logo_url", "/images/logo.png");
+        branding.put("logo_url", "/whatsmine-logo.png");
         shared.put("branding", branding);
+
+        // Pusher Config for Realtime Echo
+        Map<String, Object> pusher = new HashMap<>();
+        pusher.put("key", "whatsmine-key");
+        pusher.put("cluster", "mt1");
+        pusher.put("enabled", true);
+        shared.put("pusher", pusher);
 
         // App System Specs
         shared.put("app_version", appVersion);

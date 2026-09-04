@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.whatsmine.WhatsMineApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-04T09:31:16" hostname="DESKTOP-13QE2JF" time="0.013">
+<testsuite name="com.whatsmine.WhatsMineApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-04T13:47:32" hostname="DESKTOP-8B9F66M" time="0.013">
   <properties/>
   <testcase name="contextLoads()" classname="com.whatsmine.WhatsMineApplicationTests" time="0.013"/>
-  <system-out><![CDATA[2026-09-04 15:01:16.394  INFO 18880 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.whatsmine.WhatsMineApplicationTests]: WhatsMineApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-09-04 15:01:16.412  INFO 18880 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.whatsmine.WhatsMineApplication for test class com.whatsmine.WhatsMineApplicationTests
+  <system-out><![CDATA[2026-09-04 19:17:31.987  INFO 21412 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.whatsmine.WhatsMineApplicationTests]: WhatsMineApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-04 19:17:32.014  INFO 21412 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.whatsmine.WhatsMineApplication for test class com.whatsmine.WhatsMineApplicationTests
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
