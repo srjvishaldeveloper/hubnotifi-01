@@ -88,6 +88,12 @@ public class CampaignController {
     @Autowired
     private com.whatsmine.service.broadcasting.CampaignAudienceService campaignAudienceService;
 
+    @Autowired
+    private com.whatsmine.service.sms.SmsApiClient smsApiClient;
+
+    @Autowired
+    private com.whatsmine.service.email.EmailApiClient emailApiClient;
+
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         return userDetails.getWorkspaceId();
     }
@@ -366,7 +372,7 @@ public class CampaignController {
             recipient.setSentAt(LocalDateTime.now());
 
             try {
-                if ("whatsapp".equalsIgnoreCase(campaign.getChannel()) && contact.getPhoneE164() != null) {
+                if ("whatsapp".equalsIgnoreCase(campaign.getChannel())) {
                     if (waChannelAccount == null) {
                         throw new IllegalStateException("No active WhatsApp channel connected for this workspace.");
                     }
@@ -374,10 +380,18 @@ public class CampaignController {
                     recipient.setStatus("sent");
                     recipient.setProviderMessageId(providerId);
                     sentCount++;
-                } else {
+                } else if ("sms".equalsIgnoreCase(campaign.getChannel())) {
+                    String sid = smsApiClient.sendText(contact.getPhoneE164(), "Broadcast: " + campaign.getName());
                     recipient.setStatus("sent");
-                    recipient.setProviderMessageId("msg-" + UUID.randomUUID());
+                    recipient.setProviderMessageId(sid);
                     sentCount++;
+                } else if ("email".equalsIgnoreCase(campaign.getChannel())) {
+                    emailApiClient.send(contact.getEmail(), campaign.getName(), "Broadcast: " + campaign.getName());
+                    recipient.setStatus("sent");
+                    recipient.setProviderMessageId("email-" + UUID.randomUUID());
+                    sentCount++;
+                } else {
+                    throw new IllegalStateException("Unsupported campaign channel: " + campaign.getChannel());
                 }
             } catch (Exception e) {
                 recipient.setStatus("failed");

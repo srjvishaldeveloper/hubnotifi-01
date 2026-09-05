@@ -34,6 +34,7 @@ public class AdminIntegrationController {
 
     static {
         LABELS.put("meta_app", "Meta App (WhatsApp / Instagram / Messenger / Facebook)");
+        LABELS.put("sms_twilio", "SMS (Twilio)");
         LABELS.put("oauth_linkedin", "LinkedIn OAuth");
         LABELS.put("oauth_twitter", "Twitter / X OAuth");
         LABELS.put("oauth_youtube", "YouTube / Google OAuth");
@@ -52,6 +53,7 @@ public class AdminIntegrationController {
         LABELS.put("storage_wasabi", "Wasabi Cloud Storage");
 
         CATEGORIES.put("meta_app", "Meta");
+        CATEGORIES.put("sms_twilio", "SMS");
         CATEGORIES.put("oauth_linkedin", "Social OAuth");
         CATEGORIES.put("oauth_twitter", "Social OAuth");
         CATEGORIES.put("oauth_youtube", "Social OAuth");
@@ -75,6 +77,11 @@ public class AdminIntegrationController {
                 field("system_user_token", "System User Access Token", "password", false,
                         "Long-lived token from Meta Business Manager > System Users, with whatsapp_business_messaging permission."),
                 field("verify_token", "Webhook Verify Token", "text", false, null)
+        ));
+        FIELDS.put("sms_twilio", List.of(
+                field("account_sid", "Account SID", "text", true, null),
+                field("auth_token", "Auth Token", "password", true, null),
+                field("from_number", "From Number", "text", true, "The Twilio phone number or Messaging Service SID to send from, e.g. +15551234567.")
         ));
     }
 

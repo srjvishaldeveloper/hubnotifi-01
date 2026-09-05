@@ -3,6 +3,7 @@ package com.whatsmine.controller.admin;
 import com.whatsmine.inertia.Inertia;
 import com.whatsmine.model.SystemSetting;
 import com.whatsmine.repository.SystemSettingRepository;
+import com.whatsmine.service.email.EmailApiClient;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,9 +20,11 @@ import java.util.Map;
 public class AdminEmailSystemController {
 
     private final SystemSettingRepository systemSettingRepository;
+    private final EmailApiClient emailApiClient;
 
-    public AdminEmailSystemController(SystemSettingRepository systemSettingRepository) {
+    public AdminEmailSystemController(SystemSettingRepository systemSettingRepository, EmailApiClient emailApiClient) {
         this.systemSettingRepository = systemSettingRepository;
+        this.emailApiClient = emailApiClient;
     }
 
     @GetMapping
@@ -57,6 +60,17 @@ public class AdminEmailSystemController {
 
     @PostMapping("/test")
     public ResponseEntity<Map<String, Object>> sendTestEmail(@RequestBody Map<String, Object> payload) {
-        return ResponseEntity.ok(Map.of("success", true, "message", "Test email sent successfully."));
+        Object toRaw = payload.get("to");
+        String to = toRaw != null ? toRaw.toString() : null;
+        if (to == null || to.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Provide a recipient email address."));
+        }
+
+        try {
+            emailApiClient.send(to, "Test email from Hub Notification", "This is a test email confirming your SMTP configuration works.");
+            return ResponseEntity.ok(Map.of("success", true, "message", "Test email sent successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 }

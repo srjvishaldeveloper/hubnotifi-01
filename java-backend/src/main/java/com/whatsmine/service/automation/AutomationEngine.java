@@ -41,6 +41,8 @@ public class AutomationEngine {
     @Autowired private com.whatsmine.repository.AiChatbotRepository chatbotRepository;
     @Autowired private com.whatsmine.repository.ChannelAccountRepository channelAccountRepository;
     @Autowired private com.whatsmine.service.whatsapp.WhatsAppApiClient whatsAppApiClient;
+    @Autowired private com.whatsmine.service.sms.SmsApiClient smsApiClient;
+    @Autowired private com.whatsmine.service.email.EmailApiClient emailApiClient;
     @Autowired private ObjectMapper objectMapper;
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
@@ -333,8 +335,8 @@ public class AutomationEngine {
                      "quick_replies", "list_message", "cta_button", "send_location",
                      "send_poll", "whatsapp_form", "whatsapp_catalog" ->
                         executeSendMessage(type, data, run, context);
-                case "send_sms" -> Map.of("status", "skipped", "message", "SMS driver not available in Phase 10.");
-                case "send_email" -> Map.of("status", "skipped", "message", "Email not available in Phase 10.");
+                case "send_sms" -> executeSendSms(data, run, context);
+                case "send_email" -> executeSendEmail(data, run, context);
                 case "ask_question" -> executeAskQuestion(data, run, context);
                 case "ai_reply" -> executeAiReply(data, run, context);
                 case "run_chatbot" -> executeRunChatbot(data, run, context);
@@ -595,6 +597,47 @@ public class AutomationEngine {
 
         triggerForContact(target, run.getContactId(), context);
         return Map.of("status", "ok", "message", "Triggered sub-flow '" + target.getName() + "'.");
+    }
+
+    // ─── Send SMS / Email ──────────────────────────────────────────────────────
+
+    private Map<String, Object> executeSendSms(Map<String, Object> data, AutomationRun run, Map<String, Object> context) {
+        if (run.getContactId() == null) return Map.of("status", "skipped", "message", "Contact not found.");
+        Contact contact = contactRepository.findById(run.getContactId()).orElse(null);
+        if (contact == null) return Map.of("status", "skipped", "message", "Contact not found.");
+        if (!Boolean.TRUE.equals(contact.getOptInSms()) || contact.getPhoneE164() == null || contact.getPhoneE164().isBlank()) {
+            return Map.of("status", "error", "message", "Contact has not opted in to SMS or has no phone number.");
+        }
+
+        String body = renderTokens(str(data.get("body")), contact, context);
+        if (body.isEmpty()) return Map.of("status", "error", "message", "SMS body is required.");
+
+        try {
+            String sid = smsApiClient.sendText(contact.getPhoneE164(), body);
+            return Map.of("status", "ok", "message", "SMS sent.", "output", Map.of("message_id", sid != null ? sid : ""));
+        } catch (Exception e) {
+            return Map.of("status", "error", "message", "SMS send failed: " + e.getMessage());
+        }
+    }
+
+    private Map<String, Object> executeSendEmail(Map<String, Object> data, AutomationRun run, Map<String, Object> context) {
+        if (run.getContactId() == null) return Map.of("status", "skipped", "message", "Contact not found.");
+        Contact contact = contactRepository.findById(run.getContactId()).orElse(null);
+        if (contact == null) return Map.of("status", "skipped", "message", "Contact not found.");
+        if (!Boolean.TRUE.equals(contact.getOptInEmail()) || contact.getEmail() == null || contact.getEmail().isBlank()) {
+            return Map.of("status", "error", "message", "Contact has not opted in to email or has no email address.");
+        }
+
+        String subject = renderTokens(str(data.get("subject")), contact, context);
+        if (subject.isEmpty()) return Map.of("status", "error", "message", "Email subject is required.");
+        String body = renderTokens(str(data.get("body")), contact, context);
+
+        try {
+            emailApiClient.send(contact.getEmail(), subject, body);
+            return Map.of("status", "ok", "message", "Email sent.");
+        } catch (Exception e) {
+            return Map.of("status", "error", "message", "Email send failed: " + e.getMessage());
+        }
     }
 
     // ─── Send Message (WhatsApp — templates/media/interactive/location) ───────
