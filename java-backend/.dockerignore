@@ -1,0 +1,8 @@
+build/
+bin/
+.gradle/
+*.log
+run_test*.log*
+HELP.md
+README.md
+.git

@@ -176,7 +176,8 @@ public class SecurityConfig {
                                 "/use-cases",
                                 "/integrations",
                                 "/about",
-                                "/contact"
+                                "/contact",
+                                "/actuator/health"
                         ).permitAll()
                         .requestMatchers("/app/**", "/client/**", "/dashboard", "/dashboard/**", "/contacts/**", "/inbox/**", "/profile/**", "/billing/**", "/social/**", "/whatsapp/**", "/broadcasting/**", "/ecommerce/**").hasRole("CLIENT")
                         .anyRequest().authenticated()
