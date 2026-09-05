@@ -15,4 +15,6 @@ public interface ChannelAccountRepository extends JpaRepository<ChannelAccount, 
     Optional<ChannelAccount> findByPhoneNumberIdAndChannel(String phoneNumberId, String channel);
 
     List<ChannelAccount> findByWorkspaceId(Long workspaceId);
+
+    List<ChannelAccount> findByChannelAndStatus(String channel, String status);
 }

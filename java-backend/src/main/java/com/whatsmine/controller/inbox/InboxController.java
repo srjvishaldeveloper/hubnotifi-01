@@ -68,7 +68,43 @@ public class InboxController {
     private WhatsAppApiClient whatsAppApiClient;
 
     @Autowired
+    private com.whatsmine.service.social.MetaMessagingApiClient metaMessagingApiClient;
+
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
+    @Autowired
     private com.whatsmine.realtime.RealtimeBroadcaster realtimeBroadcaster;
+
+    /** Reads Contact.customFields (JSON) for the PSID/IGSID stored by MetaMessagingInboundProcessor. */
+    @SuppressWarnings("unchecked")
+    private String contactPsid(Contact contact, String channel) {
+        if (contact.getCustomFields() == null || contact.getCustomFields().isBlank()) return null;
+        try {
+            Map<String, Object> customFields = objectMapper.readValue(contact.getCustomFields(), Map.class);
+            Object psid = customFields.get("messenger".equalsIgnoreCase(channel) ? "messenger_psid" : "instagram_psid");
+            return psid != null ? psid.toString() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String sendOverChannel(ChannelAccount channelAccount, Contact contact, String body) {
+        String channel = channelAccount.getChannel();
+        if ("whatsapp".equalsIgnoreCase(channel)) {
+            return whatsAppApiClient.sendText(channelAccount, contact.getPhoneE164(), body);
+        }
+        if ("messenger".equalsIgnoreCase(channel) || "instagram".equalsIgnoreCase(channel)) {
+            String psid = contactPsid(contact, channel);
+            if (psid == null || psid.isBlank()) {
+                throw new IllegalStateException("This contact has no " + channel + " conversation id — they must message in first.");
+            }
+            return "messenger".equalsIgnoreCase(channel)
+                    ? metaMessagingApiClient.sendMessengerText(channelAccount, psid, body)
+                    : metaMessagingApiClient.sendInstagramText(channelAccount, psid, body);
+        }
+        throw new IllegalStateException("Unsupported channel: " + channel);
+    }
 
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         return userDetails.getWorkspaceId();
@@ -221,11 +257,9 @@ public class InboxController {
             msg = messageRepository.save(msg);
 
             try {
-                if ("whatsapp".equalsIgnoreCase(channelAccount.getChannel())) {
-                    String msgId = whatsAppApiClient.sendText(channelAccount, contact.getPhoneE164(), initialMsg);
-                    msg.setStatus("sent");
-                    msg.setProviderMessageId(msgId);
-                }
+                String msgId = sendOverChannel(channelAccount, contact, initialMsg);
+                msg.setStatus("sent");
+                msg.setProviderMessageId(msgId);
             } catch (Exception e) {
                 msg.setStatus("failed");
                 msg.setErrorJson("{\"message\":\"" + e.getMessage() + "\"}");
@@ -271,15 +305,13 @@ public class InboxController {
 
         String sendError = null;
         try {
-            if ("whatsapp".equalsIgnoreCase(msg.getChannel())) {
-                Contact contact = contactRepository.findById(conversation.getContactId()).orElseThrow();
-                ChannelAccount sendChannelAccount = conversation.getChannelAccountId() != null
-                        ? channelAccountRepository.findById(conversation.getChannelAccountId()).orElseThrow()
-                        : conversation.getChannelAccount();
-                String providerMsgId = whatsAppApiClient.sendText(sendChannelAccount, contact.getPhoneE164(), body);
-                msg.setStatus("sent");
-                msg.setProviderMessageId(providerMsgId);
-            }
+            Contact contact = contactRepository.findById(conversation.getContactId()).orElseThrow();
+            ChannelAccount sendChannelAccount = conversation.getChannelAccountId() != null
+                    ? channelAccountRepository.findById(conversation.getChannelAccountId()).orElseThrow()
+                    : conversation.getChannelAccount();
+            String providerMsgId = sendOverChannel(sendChannelAccount, contact, body);
+            msg.setStatus("sent");
+            msg.setProviderMessageId(providerMsgId);
         } catch (Exception e) {
             sendError = e.getMessage();
             msg.setStatus("failed");
