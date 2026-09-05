@@ -39,6 +39,8 @@ public class AutomationEngine {
     @Autowired private com.whatsmine.service.ai.LlmGateway llmGateway;
     @Autowired private com.whatsmine.service.ai.ChatbotRunner chatbotRunner;
     @Autowired private com.whatsmine.repository.AiChatbotRepository chatbotRepository;
+    @Autowired private com.whatsmine.repository.ChannelAccountRepository channelAccountRepository;
+    @Autowired private com.whatsmine.service.whatsapp.WhatsAppApiClient whatsAppApiClient;
     @Autowired private ObjectMapper objectMapper;
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
@@ -603,8 +605,31 @@ public class AutomationEngine {
         if (contact == null) return Map.of("status", "skipped", "message", "Contact not found.");
 
         String body = renderTokens(str(data.get("body")), contact, context);
-        return Map.of("status", "ok", "message", "Message queued (" + type + ").",
-                "output", Map.of("message_id", "sim-" + UUID.randomUUID().toString().substring(0, 8)));
+
+        // Only plain-text WhatsApp sends are wired to the real API so far.
+        // Templates/media/interactive messages need payload shapes WhatsAppApiClient
+        // doesn't build yet — those stay simulated rather than silently failing.
+        if (!"send_whatsapp".equals(type)) {
+            return Map.of("status", "ok", "message", "Message queued (" + type + ") — simulated, not yet sent for real.",
+                    "output", Map.of("message_id", "sim-" + UUID.randomUUID().toString().substring(0, 8)));
+        }
+
+        if (contact.getPhoneE164() == null || contact.getPhoneE164().isBlank()) {
+            return Map.of("status", "error", "message", "Contact has no WhatsApp phone number.");
+        }
+
+        ChannelAccount channelAccount = channelAccountRepository.findByWorkspaceIdAndStatus(contact.getWorkspaceId(), "active")
+                .stream().filter(ca -> "whatsapp".equalsIgnoreCase(ca.getChannel())).findFirst().orElse(null);
+        if (channelAccount == null) {
+            return Map.of("status", "error", "message", "No active WhatsApp channel connected for this workspace.");
+        }
+
+        try {
+            String messageId = whatsAppApiClient.sendText(channelAccount, contact.getPhoneE164(), body);
+            return Map.of("status", "ok", "message", "WhatsApp message sent.", "output", Map.of("message_id", messageId != null ? messageId : ""));
+        } catch (Exception e) {
+            return Map.of("status", "error", "message", "WhatsApp send failed: " + e.getMessage());
+        }
     }
 
     // ─── Ask Question ─────────────────────────────────────────────────────────

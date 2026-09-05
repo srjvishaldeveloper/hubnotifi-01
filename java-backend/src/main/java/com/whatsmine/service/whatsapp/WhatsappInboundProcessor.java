@@ -295,7 +295,7 @@ public class WhatsappInboundProcessor {
         botMessage = messageRepository.save(botMessage);
 
         try {
-            String providerMsgId = whatsAppApiClient.sendTextMessage(contact.getPhoneE164(), reply);
+            String providerMsgId = whatsAppApiClient.sendText(channelAccount, contact.getPhoneE164(), reply);
             botMessage.setStatus("sent");
             botMessage.setProviderMessageId(providerMsgId);
         } catch (Exception sendErr) {

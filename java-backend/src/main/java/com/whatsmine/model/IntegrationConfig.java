@@ -1,5 +1,6 @@
 package com.whatsmine.model;
 
+import com.whatsmine.model.converter.EncryptedJsonMapConverter;
 import com.whatsmine.model.converter.JsonAttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -13,6 +14,14 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+/**
+ * Integration credentials (Meta app, LLM providers, storage, etc).
+ * `workspaceId` is null for a system-wide config (set by a master admin —
+ * e.g. the one Meta app the whole platform sends WhatsApp through) and set
+ * for a per-workspace override. `credentials` is AES-GCM encrypted at rest
+ * (see CredentialsCipher) since it holds real secrets; `settings` is plain
+ * JSON for non-secret config.
+ */
 @Entity
 @Table(name = "integration_configs")
 public class IntegrationConfig {
@@ -27,13 +36,16 @@ public class IntegrationConfig {
     @Column(name = "provider", length = 64, nullable = false)
     private String provider;
 
+    @Column(name = "label")
+    private String label;
+
     @Column(name = "mode", length = 32)
     private String mode = "live";
 
     @Column(name = "enabled")
     private Boolean enabled = false;
 
-    @Convert(converter = JsonAttributeConverter.class)
+    @Convert(converter = EncryptedJsonMapConverter.class)
     @Column(name = "credentials", length = 65535)
     private Map<String, Object> credentials;
 
@@ -43,6 +55,15 @@ public class IntegrationConfig {
 
     @Column(name = "is_default")
     private Boolean isDefault = false;
+
+    @Column(name = "last_tested_at")
+    private LocalDateTime lastTestedAt;
+
+    @Column(name = "last_test_status", length = 32)
+    private String lastTestStatus;
+
+    @Column(name = "last_test_message", length = 65535)
+    private String lastTestMessage;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -74,6 +95,9 @@ public class IntegrationConfig {
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
 
+    public String getLabel() { return label; }
+    public void setLabel(String label) { this.label = label; }
+
     public String getMode() { return mode; }
     public void setMode(String mode) { this.mode = mode; }
 
@@ -88,6 +112,15 @@ public class IntegrationConfig {
 
     public Boolean getIsDefault() { return isDefault; }
     public void setIsDefault(Boolean isDefault) { this.isDefault = isDefault; }
+
+    public LocalDateTime getLastTestedAt() { return lastTestedAt; }
+    public void setLastTestedAt(LocalDateTime lastTestedAt) { this.lastTestedAt = lastTestedAt; }
+
+    public String getLastTestStatus() { return lastTestStatus; }
+    public void setLastTestStatus(String lastTestStatus) { this.lastTestStatus = lastTestStatus; }
+
+    public String getLastTestMessage() { return lastTestMessage; }
+    public void setLastTestMessage(String lastTestMessage) { this.lastTestMessage = lastTestMessage; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

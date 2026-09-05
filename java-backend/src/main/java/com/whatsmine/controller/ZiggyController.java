@@ -121,6 +121,8 @@ public class ZiggyController {
                         "admin.queue.index": { "uri": "admin/queue", "methods": ["GET", "HEAD"] },
                         "admin.pusher-settings.index": { "uri": "admin/pusher-settings", "methods": ["GET", "HEAD"] },
                         "admin.integrations.index": { "uri": "admin/integrations", "methods": ["GET", "HEAD"] },
+                        "admin.integrations.edit": { "uri": "admin/integrations/{provider}", "methods": ["GET", "HEAD"] },
+                        "admin.integrations.update": { "uri": "admin/integrations/{provider}", "methods": ["PUT"] },
                         "admin.ai.index": { "uri": "admin/ai", "methods": ["GET", "HEAD"] }
 
                         // NOTE: the following nav items have NO backend controller at all yet

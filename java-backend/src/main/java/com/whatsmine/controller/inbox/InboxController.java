@@ -222,7 +222,7 @@ public class InboxController {
 
             try {
                 if ("whatsapp".equalsIgnoreCase(channelAccount.getChannel())) {
-                    String msgId = whatsAppApiClient.sendTextMessage(contact.getPhoneE164(), initialMsg);
+                    String msgId = whatsAppApiClient.sendText(channelAccount, contact.getPhoneE164(), initialMsg);
                     msg.setStatus("sent");
                     msg.setProviderMessageId(msgId);
                 }
@@ -273,7 +273,10 @@ public class InboxController {
         try {
             if ("whatsapp".equalsIgnoreCase(msg.getChannel())) {
                 Contact contact = contactRepository.findById(conversation.getContactId()).orElseThrow();
-                String providerMsgId = whatsAppApiClient.sendTextMessage(contact.getPhoneE164(), body);
+                ChannelAccount sendChannelAccount = conversation.getChannelAccountId() != null
+                        ? channelAccountRepository.findById(conversation.getChannelAccountId()).orElseThrow()
+                        : conversation.getChannelAccount();
+                String providerMsgId = whatsAppApiClient.sendText(sendChannelAccount, contact.getPhoneE164(), body);
                 msg.setStatus("sent");
                 msg.setProviderMessageId(providerMsgId);
             }

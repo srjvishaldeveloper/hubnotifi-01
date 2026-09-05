@@ -82,6 +82,9 @@ public class CampaignController {
     @Autowired
     private WhatsAppApiClient whatsAppApiClient;
 
+    @Autowired
+    private com.whatsmine.repository.ChannelAccountRepository channelAccountRepository;
+
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         return userDetails.getWorkspaceId();
     }
@@ -342,6 +345,16 @@ public class CampaignController {
         int sentCount = 0;
         int failedCount = 0;
 
+        // TODO(known gap, tracked separately): audience is still hardcoded to the
+        // 30 most-recent contacts rather than the campaign's real segment/filter,
+        // and the message body is a placeholder rather than the saved template —
+        // this fix only makes the actual SEND real, not the targeting/content.
+        com.whatsmine.model.ChannelAccount waChannelAccount = "whatsapp".equalsIgnoreCase(campaign.getChannel())
+                ? channelAccountRepository.findByWorkspaceIdAndStatus(workspaceId, "active").stream()
+                        .filter(ca -> "whatsapp".equalsIgnoreCase(ca.getChannel()))
+                        .findFirst().orElse(null)
+                : null;
+
         for (Contact contact : contacts) {
             CampaignRecipient recipient = new CampaignRecipient();
             recipient.setCampaignId(campaign.getId());
@@ -350,7 +363,10 @@ public class CampaignController {
 
             try {
                 if ("whatsapp".equalsIgnoreCase(campaign.getChannel()) && contact.getPhoneE164() != null) {
-                    String providerId = whatsAppApiClient.sendTextMessage(contact.getPhoneE164(), "Broadcast: " + campaign.getName());
+                    if (waChannelAccount == null) {
+                        throw new IllegalStateException("No active WhatsApp channel connected for this workspace.");
+                    }
+                    String providerId = whatsAppApiClient.sendText(waChannelAccount, contact.getPhoneE164(), "Broadcast: " + campaign.getName());
                     recipient.setStatus("sent");
                     recipient.setProviderMessageId(providerId);
                     sentCount++;

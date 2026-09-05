@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface IntegrationConfigRepository extends JpaRepository<IntegrationConfig, Long> {
     Optional<IntegrationConfig> findByProvider(String provider);
     Optional<IntegrationConfig> findByWorkspaceIdAndProvider(Long workspaceId, String provider);
+    Optional<IntegrationConfig> findByProviderAndMode(String provider, String mode);
     List<IntegrationConfig> findByEnabledTrue();
 }
