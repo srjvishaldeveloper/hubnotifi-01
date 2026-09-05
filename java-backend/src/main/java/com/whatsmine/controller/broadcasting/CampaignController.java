@@ -85,6 +85,9 @@ public class CampaignController {
     @Autowired
     private com.whatsmine.repository.ChannelAccountRepository channelAccountRepository;
 
+    @Autowired
+    private com.whatsmine.service.broadcasting.CampaignAudienceService campaignAudienceService;
+
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         return userDetails.getWorkspaceId();
     }
@@ -275,8 +278,9 @@ public class CampaignController {
         Long workspaceId = getWorkspaceId(userDetails);
         String channel = (String) body.get("channel");
         String audienceType = (String) body.get("audience_type");
+        String audienceRef = (String) body.get("audience_ref");
 
-        List<Contact> matchedContacts = contactRepository.findTop30ByWorkspaceIdOrderByCreatedAtDesc(workspaceId);
+        List<Contact> matchedContacts = campaignAudienceService.resolve(workspaceId, channel, audienceType, audienceRef);
         int matched = matchedContacts.size();
         int deliverable = matched;
 
@@ -341,14 +345,14 @@ public class CampaignController {
         campaignRepository.save(campaign);
 
         // Resolve audience contacts and insert campaign recipients
-        List<Contact> contacts = contactRepository.findTop30ByWorkspaceIdOrderByCreatedAtDesc(workspaceId);
+        List<Contact> contacts = campaignAudienceService.resolve(workspaceId, campaign.getChannel(), campaign.getAudienceType(), campaign.getAudienceRef());
         int sentCount = 0;
         int failedCount = 0;
 
-        // TODO(known gap, tracked separately): audience is still hardcoded to the
-        // 30 most-recent contacts rather than the campaign's real segment/filter,
-        // and the message body is a placeholder rather than the saved template —
-        // this fix only makes the actual SEND real, not the targeting/content.
+        // TODO(known gap, tracked separately): the message body sent below is
+        // still a placeholder ("Broadcast: <name>") rather than the campaign's
+        // saved template/payload — audience targeting itself is now real
+        // (segment/tag/contact_list resolved against actual Contact data).
         com.whatsmine.model.ChannelAccount waChannelAccount = "whatsapp".equalsIgnoreCase(campaign.getChannel())
                 ? channelAccountRepository.findByWorkspaceIdAndStatus(workspaceId, "active").stream()
                         .filter(ca -> "whatsapp".equalsIgnoreCase(ca.getChannel()))
