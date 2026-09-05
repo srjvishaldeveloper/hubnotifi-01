@@ -150,6 +150,7 @@ public class WhatsappInboundProcessor {
         String phoneE164 = "+" + (fromPhone != null ? fromPhone : "");
 
         Contact contact = contactRepository.findByWorkspaceIdAndPhoneE164(workspaceId, phoneE164).orElse(null);
+        boolean isNewContact = contact == null;
         if (contact == null) {
             contact = new Contact();
             contact.setWorkspaceId(workspaceId);
@@ -160,6 +161,14 @@ public class WhatsappInboundProcessor {
         } else if (!Boolean.TRUE.equals(contact.getOptInWhatsapp())) {
             contact.setOptInWhatsapp(true);
             contact = contactRepository.save(contact);
+        }
+
+        if (isNewContact) {
+            try {
+                automationTriggerService.fireForContact(workspaceId, "contact.created", contact.getId(), Map.of());
+            } catch (Exception e) {
+                log.error("contact.created automation trigger failed for contact {}: {}", contact.getId(), e.getMessage());
+            }
         }
 
         Conversation conversation = conversationRepository

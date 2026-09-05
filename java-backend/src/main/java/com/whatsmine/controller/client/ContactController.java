@@ -7,6 +7,7 @@ import com.whatsmine.model.ContactTag;
 import com.whatsmine.repository.ContactRepository;
 import com.whatsmine.repository.ContactTagRepository;
 import com.whatsmine.security.CustomUserDetails;
+import com.whatsmine.service.automation.AutomationTriggerService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
@@ -49,10 +50,15 @@ public class ContactController {
 
     private final ContactRepository contactRepository;
     private final ContactTagRepository contactTagRepository;
+    private final AutomationTriggerService automationTriggerService;
 
-    public ContactController(ContactRepository contactRepository, ContactTagRepository contactTagRepository) {
+    public ContactController(
+            ContactRepository contactRepository,
+            ContactTagRepository contactTagRepository,
+            AutomationTriggerService automationTriggerService) {
         this.contactRepository = contactRepository;
         this.contactTagRepository = contactTagRepository;
+        this.automationTriggerService = automationTriggerService;
     }
 
     @GetMapping
@@ -114,7 +120,13 @@ public class ContactController {
         contact.setOptInEmail(bool(payload.get("opt_in_email"), false));
         contact.setSource("manual");
 
-        contactRepository.save(contact);
+        contact = contactRepository.save(contact);
+
+        try {
+            automationTriggerService.fireForContact(workspaceId, "contact.created", contact.getId(), Map.of());
+        } catch (Exception e) {
+            // Never let an automation misconfiguration block saving the contact.
+        }
 
         Inertia.flashSuccess(session, "Contact saved.");
         return Inertia.redirect("/contacts");

@@ -1,5 +1,6 @@
 package com.whatsmine.service.automation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whatsmine.model.*;
 import com.whatsmine.repository.*;
 import org.slf4j.Logger;
@@ -8,6 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -33,6 +39,11 @@ public class AutomationEngine {
     @Autowired private com.whatsmine.service.ai.LlmGateway llmGateway;
     @Autowired private com.whatsmine.service.ai.ChatbotRunner chatbotRunner;
     @Autowired private com.whatsmine.repository.AiChatbotRepository chatbotRepository;
+    @Autowired private ObjectMapper objectMapper;
+
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
     private Map<String, Object> executeAiReply(Map<String, Object> data, AutomationRun run, Map<String, Object> context) {
         Automation auto = automationRepository.findById(run.getAutomationId()).orElse(null);
@@ -428,10 +439,81 @@ public class AutomationEngine {
         if (contact != null) url = renderTokens(url, contact, context);
 
         String method = str(data.getOrDefault("method", "POST")).toUpperCase();
-        // Actual HTTP call is deferred; record the intent
-        return Map.of("status", "ok", "message", "Webhook " + method + " " + url + " → 200 (simulated)",
-                "output", Map.of("status", 200),
-                "context_update", Map.of("webhook_status", 200));
+        if (!List.of("GET", "POST", "PUT", "PATCH", "DELETE").contains(method)) {
+            method = "POST";
+        }
+
+        Map<String, Object> headers = decodeJsonField(data.get("headers"), contact, context);
+        Map<String, Object> payload = decodeJsonField(data.get("payload"), contact, context);
+
+        try {
+            String query = "";
+            HttpRequest.BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.noBody();
+            if ("GET".equals(method)) {
+                if (!payload.isEmpty()) {
+                    StringBuilder qs = new StringBuilder();
+                    for (Map.Entry<String, Object> e : payload.entrySet()) {
+                        if (qs.length() > 0) qs.append('&');
+                        qs.append(java.net.URLEncoder.encode(e.getKey(), java.nio.charset.StandardCharsets.UTF_8))
+                          .append('=')
+                          .append(java.net.URLEncoder.encode(String.valueOf(e.getValue()), java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                    query = (url.contains("?") ? "&" : "?") + qs;
+                }
+            } else {
+                Map<String, Object> body = new LinkedHashMap<>(payload);
+                body.put("context", context != null ? context : Map.of());
+                bodyPublisher = HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body));
+            }
+
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(URI.create(url + query))
+                    .timeout(Duration.ofSeconds(10))
+                    .method(method, bodyPublisher)
+                    .header("Content-Type", "application/json");
+            for (Map.Entry<String, Object> h : headers.entrySet()) {
+                if (h.getValue() != null) builder.header(h.getKey(), String.valueOf(h.getValue()));
+            }
+
+            HttpResponse<String> response = HTTP_CLIENT.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            int status = response.statusCode();
+
+            return Map.of("status", "ok", "message", "Webhook " + method + " " + url + " → " + status,
+                    "output", Map.of("status", status, "body", truncate(response.body(), 2000)),
+                    "context_update", Map.of("webhook_status", status));
+        } catch (Exception e) {
+            log.warn("Automation webhook call failed: {} {} — {}", method, url, e.getMessage());
+            return Map.of("status", "error", "message", "Webhook " + method + " " + url + " failed: " + e.getMessage());
+        }
+    }
+
+    /** Config fields (headers/payload) come in either as a Map already, or as a JSON string — normalize + token-render either shape. */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> decodeJsonField(Object raw, Contact contact, Map<String, Object> context) {
+        if (raw == null) return Map.of();
+        Map<String, Object> map;
+        if (raw instanceof Map) {
+            map = (Map<String, Object>) raw;
+        } else {
+            String s = str(raw);
+            if (s.isEmpty()) return Map.of();
+            try {
+                map = objectMapper.readValue(s, Map.class);
+            } catch (Exception e) {
+                return Map.of();
+            }
+        }
+        Map<String, Object> rendered = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> e : map.entrySet()) {
+            Object v = e.getValue();
+            rendered.put(e.getKey(), v instanceof String s ? renderTokens(s, contact, context) : v);
+        }
+        return rendered;
+    }
+
+    private String truncate(String s, int max) {
+        if (s == null) return "";
+        return s.length() > max ? s.substring(0, max) : s;
     }
 
     // ─── Condition ────────────────────────────────────────────────────────────
