@@ -597,39 +597,210 @@ public class AutomationEngine {
         return Map.of("status", "ok", "message", "Triggered sub-flow '" + target.getName() + "'.");
     }
 
-    // ─── Send Message (stub) ──────────────────────────────────────────────────
+    // ─── Send Message (WhatsApp — templates/media/interactive/location) ───────
 
+    /**
+     * Java port of PHP AutomationEngine's per-type send executors, collapsed
+     * into one dispatcher. WhatsApp-only: send_sms/send_email have their own
+     * "not available" branches in executeNode(), and Messenger/Instagram have
+     * no channel driver in Java yet, so those PHP multi-channel paths
+     * (dispatchMessage's channel switch, dispatchSms) aren't ported — every
+     * send here goes out over the workspace's WhatsApp channel account.
+     */
     private Map<String, Object> executeSendMessage(String type, Map<String, Object> data, AutomationRun run, Map<String, Object> context) {
         if (run.getContactId() == null) return Map.of("status", "skipped", "message", "Contact not found.");
         Contact contact = contactRepository.findById(run.getContactId()).orElse(null);
         if (contact == null) return Map.of("status", "skipped", "message", "Contact not found.");
 
-        String body = renderTokens(str(data.get("body")), contact, context);
-
-        // Only plain-text WhatsApp sends are wired to the real API so far.
-        // Templates/media/interactive messages need payload shapes WhatsAppApiClient
-        // doesn't build yet — those stay simulated rather than silently failing.
-        if (!"send_whatsapp".equals(type)) {
-            return Map.of("status", "ok", "message", "Message queued (" + type + ") — simulated, not yet sent for real.",
-                    "output", Map.of("message_id", "sim-" + UUID.randomUUID().toString().substring(0, 8)));
-        }
-
         if (contact.getPhoneE164() == null || contact.getPhoneE164().isBlank()) {
             return Map.of("status", "error", "message", "Contact has no WhatsApp phone number.");
         }
-
-        ChannelAccount channelAccount = channelAccountRepository.findByWorkspaceIdAndStatus(contact.getWorkspaceId(), "active")
-                .stream().filter(ca -> "whatsapp".equalsIgnoreCase(ca.getChannel())).findFirst().orElse(null);
+        ChannelAccount channelAccount = resolveWhatsappChannel(contact.getWorkspaceId());
         if (channelAccount == null) {
             return Map.of("status", "error", "message", "No active WhatsApp channel connected for this workspace.");
         }
+        String to = contact.getPhoneE164();
 
         try {
-            String messageId = whatsAppApiClient.sendText(channelAccount, contact.getPhoneE164(), body);
-            return Map.of("status", "ok", "message", "WhatsApp message sent.", "output", Map.of("message_id", messageId != null ? messageId : ""));
+            return switch (type) {
+                case "send_whatsapp" -> {
+                    String body = renderTokens(str(data.get("body")), contact, context);
+                    String id = whatsAppApiClient.sendText(channelAccount, to, body);
+                    yield sent(id);
+                }
+                case "send_template" -> {
+                    String name = firstNonEmpty(str(data.get("template_name")), str(data.get("template_ref")));
+                    if (name.isEmpty()) yield Map.of("status", "error", "message", "No template selected.");
+
+                    List<String> rawVars = toList(data.get("variables"));
+                    List<Map<String, Object>> components = new ArrayList<>();
+                    if (!rawVars.isEmpty()) {
+                        List<Map<String, Object>> params = new ArrayList<>();
+                        for (String v : rawVars) {
+                            params.add(Map.of("type", "text", "text", renderTokens(v, contact, context)));
+                        }
+                        components.add(Map.of("type", "body", "parameters", params));
+                    }
+                    String language = str(data.getOrDefault("language", "en"));
+                    String id = whatsAppApiClient.sendTemplate(channelAccount, to, name, language.isEmpty() ? "en" : language, components);
+                    yield sent(id);
+                }
+                case "send_media" -> {
+                    String mediaType = List.of("image", "video", "document", "audio").contains(str(data.get("media_type"))) ? str(data.get("media_type")) : "image";
+                    String link = renderTokens(str(data.get("link")), contact, context);
+                    if (link.isEmpty()) yield Map.of("status", "error", "message", "Media link is required.");
+                    String caption = data.get("caption") != null ? renderTokens(str(data.get("caption")), contact, context) : null;
+                    String filename = str(data.get("filename"));
+                    String id = whatsAppApiClient.sendMedia(channelAccount, to, mediaType, link, null, caption, filename.isEmpty() ? null : filename);
+                    yield sent(id);
+                }
+                case "quick_replies" -> {
+                    String body = renderTokens(str(data.get("body")), contact, context);
+                    List<String> buttons = toList(data.get("buttons"));
+                    if (body.isEmpty() || buttons.isEmpty()) yield Map.of("status", "error", "message", "Body and at least one button are required.");
+                    String id = whatsAppApiClient.sendInteractive(channelAccount, to, buttonInteractive(body, buttons));
+                    yield sent(id);
+                }
+                case "list_message" -> {
+                    String body = renderTokens(str(data.get("body")), contact, context);
+                    List<Map<String, String>> rows = parseRows(data.get("rows"));
+                    if (body.isEmpty() || rows.isEmpty()) yield Map.of("status", "error", "message", "Body and at least one list item are required.");
+                    String buttonLabel = str(data.getOrDefault("button_label", "Menu"));
+                    String sectionTitle = str(data.getOrDefault("section_title", "Options"));
+                    String id = whatsAppApiClient.sendInteractive(channelAccount, to, listInteractive(body, buttonLabel.isEmpty() ? "Menu" : buttonLabel, sectionTitle.isEmpty() ? "Options" : sectionTitle, rows));
+                    yield sent(id);
+                }
+                case "cta_button" -> {
+                    String body = renderTokens(str(data.get("body")), contact, context);
+                    String url = renderTokens(str(data.get("url")), contact, context);
+                    if (body.isEmpty() || url.isEmpty()) yield Map.of("status", "error", "message", "Body and URL are required.");
+                    String displayText = str(data.getOrDefault("display_text", "Open"));
+                    Map<String, Object> interactive = Map.of(
+                            "type", "cta_url",
+                            "body", Map.of("text", truncate(body, 1024)),
+                            "action", Map.of("name", "cta_url", "parameters", Map.of(
+                                    "display_text", truncate(displayText.isEmpty() ? "Open" : displayText, 20),
+                                    "url", url)));
+                    String id = whatsAppApiClient.sendInteractive(channelAccount, to, interactive);
+                    yield sent(id);
+                }
+                case "send_location" -> {
+                    Object lat = data.get("latitude");
+                    Object lng = data.get("longitude");
+                    if (lat == null || lng == null || str(lat).isEmpty() || str(lng).isEmpty()) {
+                        yield Map.of("status", "error", "message", "Latitude and longitude are required.");
+                    }
+                    String id = whatsAppApiClient.sendLocation(channelAccount, to, toDouble(str(lat)), toDouble(str(lng)), str(data.get("name")), str(data.get("address")));
+                    yield sent(id);
+                }
+                case "send_poll" -> {
+                    String question = renderTokens(str(data.get("question")), contact, context);
+                    List<String> options = toList(data.get("options"));
+                    if (question.isEmpty() || options.isEmpty()) yield Map.of("status", "error", "message", "Question and options are required.");
+                    // The Cloud API has no native poll — emulate with reply buttons (<=3) or a list.
+                    Map<String, Object> interactive = options.size() <= 3
+                            ? buttonInteractive(question, options)
+                            : listInteractive(question, str(data.getOrDefault("button_label", "Vote")), "Options",
+                                    options.stream().map(o -> Map.of("title", o, "description", "")).toList());
+                    String id = whatsAppApiClient.sendInteractive(channelAccount, to, interactive);
+                    yield sent(id);
+                }
+                default -> Map.of("status", "ok", "message", "Message queued (" + type + ") — simulated, not yet sent for real.",
+                        "output", Map.of("message_id", "sim-" + UUID.randomUUID().toString().substring(0, 8)));
+            };
         } catch (Exception e) {
             return Map.of("status", "error", "message", "WhatsApp send failed: " + e.getMessage());
         }
+    }
+
+    private Map<String, Object> sent(String messageId) {
+        return Map.of("status", "ok", "message", "WhatsApp message sent.", "output", Map.of("message_id", messageId != null ? messageId : ""));
+    }
+
+    private ChannelAccount resolveWhatsappChannel(Long workspaceId) {
+        return channelAccountRepository.findByWorkspaceIdAndStatus(workspaceId, "active")
+                .stream().filter(ca -> "whatsapp".equalsIgnoreCase(ca.getChannel())).findFirst().orElse(null);
+    }
+
+    /** WhatsApp interactive reply-buttons payload (max 3). */
+    private Map<String, Object> buttonInteractive(String body, List<String> titles) {
+        List<Map<String, Object>> buttons = new ArrayList<>();
+        int i = 0;
+        for (String title : titles) {
+            if (i >= 3) break;
+            buttons.add(Map.of("type", "reply", "reply", Map.of("id", "btn_" + (i + 1), "title", truncate(title, 20))));
+            i++;
+        }
+        return Map.of("type", "button", "body", Map.of("text", truncate(body, 1024)), "action", Map.of("buttons", buttons));
+    }
+
+    /** WhatsApp interactive list payload (max 10 rows). */
+    private Map<String, Object> listInteractive(String body, String buttonLabel, String sectionTitle, List<Map<String, String>> rows) {
+        List<Map<String, Object>> items = new ArrayList<>();
+        int i = 0;
+        for (Map<String, String> row : rows) {
+            if (i >= 10) break;
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", "row_" + (i + 1));
+            item.put("title", truncate(row.getOrDefault("title", ""), 24));
+            String description = row.get("description");
+            if (description != null && !description.isBlank()) item.put("description", truncate(description, 72));
+            items.add(item);
+            i++;
+        }
+        return Map.of("type", "list", "body", Map.of("text", truncate(body, 1024)),
+                "action", Map.of("button", truncate(buttonLabel, 20), "sections", List.of(Map.of("title", truncate(sectionTitle, 24), "rows", items))));
+    }
+
+    private String firstNonEmpty(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isEmpty()) return v;
+        }
+        return "";
+    }
+
+    /** Normalize a value to a trimmed list — accepts a List already, or a comma/newline-separated string. */
+    @SuppressWarnings("unchecked")
+    private List<String> toList(Object v) {
+        if (v instanceof List) {
+            List<String> out = new ArrayList<>();
+            for (Object o : (List<Object>) v) {
+                String s = String.valueOf(o).trim();
+                if (!s.isEmpty()) out.add(s);
+            }
+            return out;
+        }
+        if (v instanceof String s && !s.isEmpty()) {
+            List<String> out = new ArrayList<>();
+            for (String part : s.split("[\\r\\n,]+")) {
+                String t = part.trim();
+                if (!t.isEmpty()) out.add(t);
+            }
+            return out;
+        }
+        return List.of();
+    }
+
+    /** Rows for a list-message node: each entry is {title, description?}. */
+    @SuppressWarnings("unchecked")
+    private List<Map<String, String>> parseRows(Object v) {
+        List<Map<String, String>> out = new ArrayList<>();
+        if (!(v instanceof List)) return out;
+        for (Object o : (List<Object>) v) {
+            if (o instanceof Map) {
+                Map<String, Object> m = (Map<String, Object>) o;
+                String title = str(m.get("title"));
+                if (title.isEmpty()) continue;
+                Map<String, String> row = new LinkedHashMap<>();
+                row.put("title", title);
+                row.put("description", str(m.get("description")));
+                out.add(row);
+            } else {
+                String title = String.valueOf(o).trim();
+                if (!title.isEmpty()) out.add(Map.of("title", title, "description", ""));
+            }
+        }
+        return out;
     }
 
     // ─── Ask Question ─────────────────────────────────────────────────────────

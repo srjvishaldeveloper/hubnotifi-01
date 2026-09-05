@@ -75,6 +75,58 @@ public class WhatsAppApiClient {
         throw new IllegalStateException("sendTextMessage(to, text) can't resolve which WhatsApp number/token to send from — use sendText(channelAccount, to, text) instead.");
     }
 
+    public String sendTemplate(ChannelAccount channelAccount, String to, String templateName, String language, List<Map<String, Object>> components) {
+        Map<String, Object> response = sendTemplateMessage(channelAccount.getPhoneNumberId(), resolveAccessToken(channelAccount), to, templateName, language, components);
+        return extractMessageId(response);
+    }
+
+    /** mediaType is one of image/video/document/audio. Exactly one of link or mediaId should be set (link is the common case — a publicly reachable URL). */
+    public String sendMedia(ChannelAccount channelAccount, String to, String mediaType, String link, String mediaId, String caption, String filename) {
+        Map<String, Object> mediaObject = new HashMap<>();
+        if (link != null && !link.isBlank()) mediaObject.put("link", link);
+        if (mediaId != null && !mediaId.isBlank()) mediaObject.put("id", mediaId);
+        if (caption != null && !caption.isBlank()) mediaObject.put("caption", caption);
+        if (filename != null && !filename.isBlank()) mediaObject.put("filename", filename);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("messaging_product", "whatsapp");
+        payload.put("to", to);
+        payload.put("type", mediaType);
+        payload.put(mediaType, mediaObject);
+
+        Map<String, Object> response = post(channelAccount.getPhoneNumberId(), resolveAccessToken(channelAccount), payload);
+        return extractMessageId(response);
+    }
+
+    /** interactivePayload is the full WhatsApp `interactive` object (type: button/list/cta_url, body, action, ...). */
+    public String sendInteractive(ChannelAccount channelAccount, String to, Map<String, Object> interactivePayload) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("messaging_product", "whatsapp");
+        payload.put("to", to);
+        payload.put("type", "interactive");
+        payload.put("interactive", interactivePayload);
+
+        Map<String, Object> response = post(channelAccount.getPhoneNumberId(), resolveAccessToken(channelAccount), payload);
+        return extractMessageId(response);
+    }
+
+    public String sendLocation(ChannelAccount channelAccount, String to, double latitude, double longitude, String name, String address) {
+        Map<String, Object> location = new HashMap<>();
+        location.put("latitude", latitude);
+        location.put("longitude", longitude);
+        if (name != null && !name.isBlank()) location.put("name", name);
+        if (address != null && !address.isBlank()) location.put("address", address);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("messaging_product", "whatsapp");
+        payload.put("to", to);
+        payload.put("type", "location");
+        payload.put("location", location);
+
+        Map<String, Object> response = post(channelAccount.getPhoneNumberId(), resolveAccessToken(channelAccount), payload);
+        return extractMessageId(response);
+    }
+
     public Map<String, Object> sendTextMessage(String phoneNumberId, String accessToken, String to, String text) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("messaging_product", "whatsapp");
