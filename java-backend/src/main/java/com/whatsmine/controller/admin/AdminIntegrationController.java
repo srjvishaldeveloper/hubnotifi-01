@@ -76,7 +76,11 @@ public class AdminIntegrationController {
                 field("app_secret", "App Secret", "password", true, null),
                 field("system_user_token", "System User Access Token", "password", false,
                         "Long-lived token from Meta Business Manager > System Users, with whatsapp_business_messaging permission."),
-                field("verify_token", "Webhook Verify Token", "text", false, null)
+                field("verify_token", "Webhook Verify Token", "text", false, null),
+                field("config_id_whatsapp", "Embedded Signup Config ID (WhatsApp)", "text", false,
+                        "Facebook Login for Business configuration ID for the WhatsApp Embedded Signup flow, from Meta App Dashboard > Facebook Login for Business > Configurations."),
+                field("config_id_social", "Embedded Signup Config ID (Instagram/Messenger)", "text", false,
+                        "Facebook Login for Business configuration ID for the Instagram/Messenger Embedded Signup flow.")
         ));
         FIELDS.put("sms_twilio", List.of(
                 field("account_sid", "Account SID", "text", true, null),

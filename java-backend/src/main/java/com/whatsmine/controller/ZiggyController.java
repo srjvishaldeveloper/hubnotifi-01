@@ -218,11 +218,16 @@ public class ZiggyController {
                         "client.whatsapp.setup.destroy": { "uri": "app/whatsapp/setup/{waba}", "methods": ["DELETE"] },
                         "client.whatsapp.setup.sync-phone-numbers": { "uri": "app/whatsapp/setup/{waba}/sync-phone-numbers", "methods": ["POST"] },
                         "client.whatsapp.setup.refresh-phone-status": { "uri": "app/whatsapp/setup/{waba}/phone/{phoneNumberId}/refresh-status", "methods": ["POST"] },
-                        "client.whatsapp.setup.change-display-name": { "uri": "app/whatsapp/setup/{waba}/phone/{phoneNumberId}/change-name", "methods": ["POST"] }
+                        "client.whatsapp.setup.change-display-name": { "uri": "app/whatsapp/setup/{waba}/phone/{phoneNumberId}/change-name", "methods": ["POST"] },
+                        "client.inbox.setup": { "uri": "app/inbox/setup", "methods": ["GET", "HEAD"] },
+                        "client.inbox.setup.embedded-signup.instagram": { "uri": "app/inbox/setup/embedded-signup/instagram", "methods": ["POST"] },
+                        "client.inbox.setup.embedded-signup.messenger": { "uri": "app/inbox/setup/embedded-signup/messenger", "methods": ["POST"] },
+                        "client.inbox.setup.assign-chatbot": { "uri": "app/inbox/setup/{channelAccount}/chatbot", "methods": ["PATCH"] },
+                        "client.inbox.setup.destroy": { "uri": "app/inbox/setup/{channelAccount}", "methods": ["DELETE"] },
+                        "client.whatsapp.setup": { "uri": "app/inbox/setup", "methods": ["GET", "HEAD"] }
 
                         // NOTE: the following nav items have NO backend controller at all yet
                         // (not a routing bug — the page was never built in Java): client.settings.*,
-                        // client.inbox.setup,
                         // client.api-tokens.*,
                         // admin.search, admin.integrations.audit-log/edit/update/test/rotate/
                         // set-default (Integrations page itself now loads read-only).
