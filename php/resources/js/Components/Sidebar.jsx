@@ -87,12 +87,13 @@ export default function Sidebar({
             {/* Brand header */}
             <div className="flex h-14 shrink-0 items-center gap-2.5 px-4 border-b border-white/8">
                 {logoUrl ? (
-                    <img src={logoUrl} alt={appName} className="h-7 max-w-[140px] object-contain" />
+                    <img src={logoUrl} alt={appName} className="h-7 w-7 shrink-0 object-contain" />
                 ) : logo ? (
                     logo
                 ) : (
-                    <img src="/whatsmine-logo.png" alt={appName} className="h-10 w-auto max-w-[200px] object-contain" />
+                    <img src="/whatsmine-logo.png" alt={appName} className="h-7 w-7 shrink-0 object-contain" />
                 )}
+                <span className="truncate text-sm font-bold text-white">{appName}</span>
             </div>
 
             {showCreateButton && (
