@@ -116,6 +116,16 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
         shared.put("app_version", appVersion);
         shared.put("demo_mode", demoMode);
 
+        // Impersonation banner (ClientLayout reads impersonation.active/clientName/returnUrl)
+        Map<String, Object> impersonation = new HashMap<>();
+        boolean impersonating = session != null && Boolean.TRUE.equals(session.getAttribute("impersonating"));
+        impersonation.put("active", impersonating);
+        if (impersonating) {
+            impersonation.put("clientName", session.getAttribute("impersonated_client_name"));
+            impersonation.put("returnUrl", "/admin/impersonation/stop");
+        }
+        shared.put("impersonation", impersonation);
+
         return shared;
     }
 }

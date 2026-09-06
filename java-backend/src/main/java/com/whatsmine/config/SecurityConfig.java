@@ -112,6 +112,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login", "/admin/forgot-password", "/admin/reset-password/**").permitAll()
+                        // Callable by the impersonated user (client role) to return to their
+                        // own admin session — deliberately not admin-gated, same as PHP's
+                        // ImpersonationController::stop route (['web', 'auth'], no auth:admin).
+                        .requestMatchers("/admin/impersonation/stop").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
