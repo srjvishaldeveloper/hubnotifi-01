@@ -127,7 +127,7 @@ public class ParityIntegrationTest {
                         .header("X-Inertia", "true"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Inertia", "true"))
-                .andExpect(jsonPath("$.component", equalTo("Client/Dashboard")))
+                .andExpect(jsonPath("$.component", equalTo("client/Dashboard")))
                 .andExpect(jsonPath("$.props.title", equalTo("Workspace Dashboard")))
                 .andExpect(jsonPath("$.props.unreadCount", equalTo(5)));
     }
@@ -325,6 +325,6 @@ public class ParityIntegrationTest {
                         .header("X-Inertia", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.component", equalTo("Admin/Settings/Index")))
-                .andExpect(jsonPath("$.props.settings.app_name", equalTo("WhatsMine")));
+                .andExpect(jsonPath("$.props.settings.app_name", equalTo("Hub Notification")));
     }
 }

@@ -159,7 +159,7 @@ public class InboxParityIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Inertia", "true"))
                 .andExpect(jsonPath("$.component").value("Inbox/Index"))
-                .andExpect(jsonPath("$.props.conversations.content").isArray());
+                .andExpect(jsonPath("$.props.conversations.data").isArray());
     }
 
     @Test

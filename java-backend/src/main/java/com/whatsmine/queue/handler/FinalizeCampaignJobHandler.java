@@ -8,6 +8,7 @@ import com.whatsmine.repository.CampaignRecipientRepository;
 import com.whatsmine.repository.CampaignRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,17 +16,21 @@ import java.util.Map;
 
 /**
  * Stage 4 of the campaign send pipeline, porting PHP's FinalizeCampaignJob:
- * polls until no recipients remain "queued" (self-rescheduling every 60s, up
- * to 1440 attempts / ~24h), then tallies sent/delivered/read vs failed and
- * marks the campaign completed (or failed if nothing sent).
+ * polls until no recipients remain "queued" (self-rescheduling every
+ * {@code campaign.finalize.poll-delay-seconds}, up to
+ * {@code campaign.finalize.max-attempts}), then tallies sent/delivered/read
+ * vs failed and marks the campaign completed (or failed if nothing sent).
+ * Production defaults to 60s/1440 attempts (~24h); the test profile uses a
+ * sub-second poll delay so integration tests exercise the real pipeline
+ * without a real 60s wait.
  */
 @Component
 public class FinalizeCampaignJobHandler implements JobHandler {
 
     private static final Logger log = LoggerFactory.getLogger(FinalizeCampaignJobHandler.class);
-    private static final int POLL_DELAY_SECONDS = 60;
-    private static final int MAX_ATTEMPTS = 1440;
 
+    private final int pollDelaySeconds;
+    private final int maxAttempts;
     private final CampaignRepository campaignRepository;
     private final CampaignRecipientRepository campaignRecipientRepository;
     private final QueueDispatcher queueDispatcher;
@@ -34,11 +39,15 @@ public class FinalizeCampaignJobHandler implements JobHandler {
     public FinalizeCampaignJobHandler(CampaignRepository campaignRepository,
                                        CampaignRecipientRepository campaignRecipientRepository,
                                        QueueDispatcher queueDispatcher,
-                                       ObjectMapper objectMapper) {
+                                       ObjectMapper objectMapper,
+                                       @Value("${campaign.finalize.poll-delay-seconds:60}") int pollDelaySeconds,
+                                       @Value("${campaign.finalize.max-attempts:1440}") int maxAttempts) {
         this.campaignRepository = campaignRepository;
         this.campaignRecipientRepository = campaignRecipientRepository;
         this.queueDispatcher = queueDispatcher;
         this.objectMapper = objectMapper;
+        this.pollDelaySeconds = pollDelaySeconds;
+        this.maxAttempts = maxAttempts;
     }
 
     @Override
@@ -58,9 +67,9 @@ public class FinalizeCampaignJobHandler implements JobHandler {
         }
 
         long stillQueued = campaignRecipientRepository.countByCampaignIdAndStatus(campaignId, "queued");
-        if (stillQueued > 0 && attempt < MAX_ATTEMPTS) {
+        if (stillQueued > 0 && attempt < maxAttempts) {
             queueDispatcher.dispatchDelayed("broadcast", "FinalizeCampaignJob",
-                    Map.of("campaignId", campaignId, "attempt", attempt + 1), POLL_DELAY_SECONDS, 60, new int[]{60});
+                    Map.of("campaignId", campaignId, "attempt", attempt + 1), pollDelaySeconds, 60, new int[]{60});
             return;
         }
 

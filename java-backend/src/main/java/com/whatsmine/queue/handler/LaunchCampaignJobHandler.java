@@ -10,6 +10,7 @@ import com.whatsmine.repository.CampaignRepository;
 import com.whatsmine.service.broadcasting.CampaignAudienceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -22,16 +23,20 @@ import java.util.Set;
  * Stage 1 of the real campaign send pipeline, porting PHP's LaunchCampaignJob:
  * resolves the audience, inserts queued CampaignRecipient rows (idempotently —
  * skips contacts already inserted by a retried attempt), then dispatches one
- * DispatchCampaignChunkJob per 1000-contact chunk, staggered 5s apart, plus a
- * FinalizeCampaignJob to poll for completion.
+ * DispatchCampaignChunkJob per 1000-contact chunk, staggered
+ * {@code campaign.chunk.stagger-seconds} apart, plus a FinalizeCampaignJob to
+ * poll for completion. The chunk stagger and finalize floor are configurable
+ * (production defaults of 5s/60s; the test profile uses sub-second values so
+ * integration tests exercise the real async pipeline without a real 60s wait).
  */
 @Component
 public class LaunchCampaignJobHandler implements JobHandler {
 
     private static final Logger log = LoggerFactory.getLogger(LaunchCampaignJobHandler.class);
     private static final int CHUNK_SIZE = 1000;
-    private static final int CHUNK_DELAY_SECONDS = 5;
 
+    private final int chunkDelaySeconds;
+    private final int finalizeFloorSeconds;
     private final CampaignRepository campaignRepository;
     private final CampaignRecipientRepository campaignRecipientRepository;
     private final CampaignAudienceService campaignAudienceService;
@@ -40,11 +45,15 @@ public class LaunchCampaignJobHandler implements JobHandler {
     public LaunchCampaignJobHandler(CampaignRepository campaignRepository,
                                      CampaignRecipientRepository campaignRecipientRepository,
                                      CampaignAudienceService campaignAudienceService,
-                                     QueueDispatcher queueDispatcher) {
+                                     QueueDispatcher queueDispatcher,
+                                     @Value("${campaign.chunk.stagger-seconds:5}") int chunkDelaySeconds,
+                                     @Value("${campaign.finalize.poll-delay-seconds:60}") int finalizeFloorSeconds) {
         this.campaignRepository = campaignRepository;
         this.campaignRecipientRepository = campaignRecipientRepository;
         this.campaignAudienceService = campaignAudienceService;
         this.queueDispatcher = queueDispatcher;
+        this.chunkDelaySeconds = chunkDelaySeconds;
+        this.finalizeFloorSeconds = finalizeFloorSeconds;
     }
 
     @Override
@@ -102,11 +111,11 @@ public class LaunchCampaignJobHandler implements JobHandler {
             List<Long> chunk = newContactIds.subList(i * CHUNK_SIZE, Math.min((i + 1) * CHUNK_SIZE, newContactIds.size()));
             queueDispatcher.dispatchDelayed("broadcast", "DispatchCampaignChunkJob",
                     Map.of("campaignId", campaignId, "contactIds", new ArrayList<>(chunk)),
-                    i * CHUNK_DELAY_SECONDS, 2, new int[]{60});
+                    i * chunkDelaySeconds, 2, new int[]{60});
             totalChunks++;
         }
 
-        int finalizeDelay = Math.max(60, totalChunks * CHUNK_DELAY_SECONDS + 60);
+        int finalizeDelay = Math.max(finalizeFloorSeconds, totalChunks * chunkDelaySeconds + finalizeFloorSeconds);
         queueDispatcher.dispatchDelayed("broadcast", "FinalizeCampaignJob",
                 Map.of("campaignId", campaignId, "attempt", 1), finalizeDelay, 60, new int[]{60});
 

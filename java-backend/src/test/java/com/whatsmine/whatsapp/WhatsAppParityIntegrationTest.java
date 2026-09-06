@@ -1,9 +1,13 @@
 package com.whatsmine.whatsapp;
 
+import com.whatsmine.model.Contact;
+import com.whatsmine.model.Conversation;
 import com.whatsmine.model.User;
 import com.whatsmine.model.WhatsappBusinessAccount;
 import com.whatsmine.model.WhatsappTemplate;
 import com.whatsmine.model.Workspace;
+import com.whatsmine.repository.ContactRepository;
+import com.whatsmine.repository.ConversationRepository;
 import com.whatsmine.repository.UserRepository;
 import com.whatsmine.repository.WhatsappBusinessAccountRepository;
 import com.whatsmine.repository.WhatsappTemplateRepository;
@@ -63,11 +67,18 @@ public class WhatsAppParityIntegrationTest {
     @Autowired
     private WhatsAppApiClient apiClient;
 
+    @Autowired
+    private ContactRepository contactRepository;
+
+    @Autowired
+    private ConversationRepository conversationRepository;
+
     private CustomUserDetails user1Details;
     private CustomUserDetails user2Details;
     private Workspace workspace1;
     private Workspace workspace2;
     private WhatsappBusinessAccount waba1;
+    private Conversation conversation1;
 
     @BeforeEach
     void setUp() {
@@ -96,6 +107,20 @@ public class WhatsAppParityIntegrationTest {
         waba1.setWebhookVerifyToken("verify_token_12345");
         waba1.setStatus("active");
         waba1 = wabaRepository.save(waba1);
+
+        // A contact + open conversation for Workspace 1, so a reply can be sent
+        Contact contact1 = new Contact();
+        contact1.setWorkspaceId(workspace1.getId());
+        contact1.setFirstName("Wanda");
+        contact1.setLastName("Recipient");
+        contact1.setPhoneE164("+15550199222");
+        contact1 = contactRepository.save(contact1);
+
+        conversation1 = new Conversation();
+        conversation1.setWorkspaceId(workspace1.getId());
+        conversation1.setContactId(contact1.getId());
+        conversation1.setStatus("open");
+        conversation1 = conversationRepository.save(conversation1);
 
         // User & Workspace 2
         User u2 = new User();
@@ -234,17 +259,20 @@ public class WhatsAppParityIntegrationTest {
     @Test
     @DisplayName("8. Outbound message send dispatches text message")
     void test8_OutboundMessageSending() throws Exception {
+        // Outbound sends go through the Inbox's reply endpoint for an existing
+        // conversation, not a standalone "/app/whatsapp/messages/send" route
+        // (that route was never wired up in the Java port — a pre-existing
+        // dead test route).
         MockHttpSession session = new MockHttpSession();
 
         String payload = """
             {
-                "to": "+15550199222",
                 "type": "text",
-                "text": "Hello from Phase 7 WhatsApp test!"
+                "body": "Hello from Phase 7 WhatsApp test!"
             }
             """;
 
-        mockMvc.perform(post("/app/whatsapp/messages/send")
+        mockMvc.perform(post("/app/inbox/conversations/" + conversation1.getUuid() + "/reply")
                         .with(user(user1Details))
                         .with(csrf())
                         .session(session)
@@ -252,7 +280,7 @@ public class WhatsAppParityIntegrationTest {
                         .content(payload)
                         .header("X-Inertia", "true"))
                 .andExpect(status().isSeeOther())
-                .andExpect(header().string("Location", "/app/dashboard"));
+                .andExpect(header().string("Location", "/app/inbox/conversations/" + conversation1.getUuid()));
     }
 
     @Test

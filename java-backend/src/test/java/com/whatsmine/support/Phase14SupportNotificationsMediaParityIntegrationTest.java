@@ -394,7 +394,7 @@ public class Phase14SupportNotificationsMediaParityIntegrationTest {
         page.setPublished(true);
         cmsPageRepository.saveAndFlush(page);
 
-        mockMvc.perform(get("/pages/terms-of-service")
+        mockMvc.perform(get("/p/terms-of-service")
                         .header("X-Inertia", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.component").value("Public/Page"));

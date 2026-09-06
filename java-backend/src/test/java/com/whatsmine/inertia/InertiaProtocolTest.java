@@ -58,7 +58,7 @@ public class InertiaProtocolTest {
                 .andExpect(result -> {
                     String html = result.getResponse().getContentAsString();
                     assert html.contains("<div id=\"app\" data-page=\"");
-                    assert html.contains("Client/Dashboard");
+                    assert html.contains("client/Dashboard");
                     assert html.contains("/app/dashboard");
                 });
     }
@@ -72,13 +72,13 @@ public class InertiaProtocolTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", containsString("application/json")))
                 .andExpect(header().string("X-Inertia", "true"))
-                .andExpect(jsonPath("$.component", equalTo("Client/Dashboard")))
+                .andExpect(jsonPath("$.component", equalTo("client/Dashboard")))
                 .andExpect(jsonPath("$.url", equalTo("/app/dashboard")))
                 .andExpect(jsonPath("$.version", equalTo(inertiaRenderer.getVersion())))
                 .andExpect(jsonPath("$.props.title", equalTo("Workspace Dashboard")))
                 .andExpect(jsonPath("$.props.unreadCount", equalTo(5)))
                 .andExpect(jsonPath("$.props.flash", notNullValue()))
-                .andExpect(jsonPath("$.props.branding.app_name", equalTo("WhatsMine")));
+                .andExpect(jsonPath("$.props.branding.app_name", equalTo("Hub Notification")));
     }
 
     @Test
@@ -110,10 +110,10 @@ public class InertiaProtocolTest {
         mockMvc.perform(get("/app/dashboard")
                         .with(user(customUserDetails))
                         .header("X-Inertia", "true")
-                        .header("X-Inertia-Partial-Component", "Client/Dashboard")
+                        .header("X-Inertia-Partial-Component", "client/Dashboard")
                         .header("X-Inertia-Partial-Data", "unreadCount"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.component", equalTo("Client/Dashboard")))
+                .andExpect(jsonPath("$.component", equalTo("client/Dashboard")))
                 .andExpect(jsonPath("$.props.unreadCount", equalTo(5)))
                 .andExpect(jsonPath("$.props.title").doesNotExist());
     }

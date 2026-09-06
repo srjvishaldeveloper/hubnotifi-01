@@ -16,3 +16,10 @@ logging:
     com.whatsmine: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.tool.hbm2ddl: DEBUG
+
+campaign:
+  chunk:
+    stagger-seconds: 0
+  finalize:
+    poll-delay-seconds: 0
+    max-attempts: 30

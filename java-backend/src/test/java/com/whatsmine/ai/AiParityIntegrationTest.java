@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.whatsmine.queue.QueueWorker;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +55,7 @@ public class AiParityIntegrationTest {
     @Autowired private AutomationEngine automationEngine;
     @Autowired private WorkflowGenerator workflowGenerator;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private QueueWorker queueWorker;
 
     @MockBean
     private LlmGateway llmGateway;
@@ -172,17 +174,25 @@ public class AiParityIntegrationTest {
 
     @Test
     void test4_AddAndIndexDocument() throws Exception {
-        Map<String, Object> body = Map.of(
-                "source_type", "text",
-                "title", "FAQ Document",
-                "source_ref", "Q: What are business hours?\nA: 9 AM to 5 PM Monday to Friday."
-        );
-
-        mockMvc.perform(post("/app/ai/knowledge-bases/" + kb1.getUuid() + "/documents")
-                        .with(user(user1Details)).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body)))
+        // The real frontend always submits this as multipart/form-data (a file
+        // input shares the form even for non-file source types), and
+        // AiKnowledgeBaseController.addDocument() binds via @RequestParam
+        // accordingly — not a JSON body.
+        mockMvc.perform(multipart("/app/ai/knowledge-bases/" + kb1.getUuid() + "/documents")
+                        .param("source_type", "text")
+                        .param("title", "FAQ Document")
+                        .param("source_ref", "Q: What are business hours?\nA: 9 AM to 5 PM Monday to Friday.")
+                        .with(user(user1Details)).with(csrf()))
                 .andExpect(status().isSeeOther());
+
+        // Indexing now always happens off-request via the real IndexDocumentJob
+        // queue (matching PHP), so the document is "pending" right after the
+        // request returns. Drive the same QueueWorker bean production uses,
+        // synchronously and within this test's own transaction, so the real
+        // handler runs deterministically without a background poll thread.
+        for (int i = 0; i < 10 && queueWorker.processNextAvailableJob(null); i++) {
+            // drain the queue
+        }
 
         List<AiKbDocument> docs = documentRepository.findByKbId(kb1.getId());
         assertFalse(docs.isEmpty());

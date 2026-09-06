@@ -55,6 +55,9 @@ public class Phase17E2ERegressionTest {
     private CampaignRepository campaignRepository;
 
     @Autowired
+    private CampaignRecipientRepository campaignRecipientRepository;
+
+    @Autowired
     private JobRepository jobRepository;
 
     @Autowired
@@ -85,7 +88,12 @@ public class Phase17E2ERegressionTest {
 
     @BeforeEach
     void setUp() {
+        // Child tables first — campaign_recipients references both campaigns
+        // and contacts, so it must be cleared before either of those (a real
+        // campaign can genuinely get launched between test methods by the
+        // live @Scheduled cron/queue worker, leaving recipient rows behind).
         jobRepository.deleteAll();
+        campaignRecipientRepository.deleteAll();
         messageRepository.deleteAll();
         conversationRepository.deleteAll();
         contactRepository.deleteAll();
@@ -147,7 +155,7 @@ public class Phase17E2ERegressionTest {
                         .header("X-Inertia", "true"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Inertia", "true"))
-                .andExpect(jsonPath("$.component").value("Client/Dashboard"))
+                .andExpect(jsonPath("$.component").value("client/Dashboard"))
                 .andExpect(jsonPath("$.props.auth.user.email").value("alice@acme.com"));
     }
 
@@ -213,11 +221,11 @@ public class Phase17E2ERegressionTest {
 
         Long campaignId = campaign.getId();
 
-        // Dispatch launch job to Phase 15 queue
-        String jobUuid = queueDispatcher.dispatch("broadcast", "LaunchCampaignJob", Map.of("campaign_id", campaignId));
+        // Dispatch launch job to the real queue (LaunchCampaignJobHandler reads "campaignId")
+        String jobUuid = queueDispatcher.dispatch("broadcast", "LaunchCampaignJob", Map.of("campaignId", campaignId));
         assertThat(jobUuid).isNotNull();
 
-        // Process Phase 15 Queue Worker (or background poller may have already consumed it)
+        // Process the real queue worker (or the background poller may have already consumed it)
         boolean processed = queueWorker.processNextAvailableJob(null);
         assertThat(processed || jobRepository.count() == 0).isTrue();
     }

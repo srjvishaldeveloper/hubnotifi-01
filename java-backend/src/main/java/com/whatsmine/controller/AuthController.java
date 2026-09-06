@@ -74,7 +74,7 @@ public class AuthController {
         try {
             boolean fullyAuthenticated = authService.login(loginRequest, request);
             if (fullyAuthenticated) {
-                return Inertia.redirect("/dashboard");
+                return Inertia.redirect("/app/dashboard");
             } else {
                 return Inertia.redirect("/two-factor-challenge");
             }

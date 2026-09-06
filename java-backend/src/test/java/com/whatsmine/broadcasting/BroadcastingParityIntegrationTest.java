@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.whatsmine.queue.QueueWorker;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +68,9 @@ public class BroadcastingParityIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private QueueWorker queueWorker;
 
     private User user1;
     private User user2;
@@ -129,7 +133,7 @@ public class BroadcastingParityIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Inertia", "true"))
                 .andExpect(jsonPath("$.component").value("Broadcasting/Campaigns/Index"))
-                .andExpect(jsonPath("$.props.campaigns.content").isArray());
+                .andExpect(jsonPath("$.props.campaigns.data").isArray());
     }
 
     @Test
@@ -200,9 +204,29 @@ public class BroadcastingParityIntegrationTest {
                         .header("X-Inertia", "true"))
                 .andExpect(status().is(303));
 
+        // Launch now just flips the campaign to "queued" and dispatches a
+        // LaunchCampaignJob — the real audience resolution and sends happen
+        // asynchronously on the real queue (Launch -> Chunk -> Send ->
+        // Finalize). Drive the same QueueWorker bean production uses,
+        // synchronously and within this test's own transaction, so the real
+        // handler code runs deterministically without waiting on the
+        // background @Scheduled poll thread or committing test data.
+        for (int i = 0; i < 20 && queueWorker.processNextAvailableJob(null); i++) {
+            // drain the queue
+        }
+
         Campaign updated = campaignRepository.findById(campaign1.getId()).orElseThrow();
-        assertEquals("completed", updated.getStatus());
+
+        // No WhatsApp ChannelAccount is configured for this workspace, so the
+        // real send genuinely fails validation ("No active WhatsApp channel
+        // connected") rather than silently succeeding — that's the correct
+        // outcome for a workspace with no channel wired up, and proves the
+        // full pipeline (not just the launch endpoint) actually ran.
+        assertEquals("failed", updated.getStatus());
         assertEquals(1, campaignRecipientRepository.countByCampaignId(campaign1.getId()));
+        var recipient = campaignRecipientRepository.findByCampaignIdAndContactId(campaign1.getId(), contact1.getId()).orElseThrow();
+        assertEquals("failed", recipient.getStatus());
+        assertTrue(recipient.getFailedReason().contains("No active WhatsApp channel connected"));
     }
 
     @Test
