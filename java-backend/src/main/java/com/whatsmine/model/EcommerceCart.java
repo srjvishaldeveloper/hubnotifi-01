@@ -42,7 +42,7 @@ public class EcommerceCart {
     private String currency;
 
     @Convert(converter = JsonListMapConverter.class)
-    @Column(name = "line_items")
+    @Column(name = "line_items", length = 65535)
     @JsonProperty("line_items")
     private List<Map<String, Object>> lineItems;
 

@@ -60,7 +60,7 @@ public class EcommerceOrder {
     private BigDecimal total = BigDecimal.ZERO;
 
     @Convert(converter = JsonListMapConverter.class)
-    @Column(name = "line_items")
+    @Column(name = "line_items", length = 65535)
     @JsonProperty("line_items")
     private List<Map<String, Object>> lineItems;
 
@@ -77,7 +77,7 @@ public class EcommerceOrder {
     private LocalDateTime placedAt;
 
     @Convert(converter = JsonMapConverter.class)
-    @Column(name = "raw")
+    @Column(name = "raw", length = 65535)
     private Map<String, Object> raw;
 
     @ManyToOne(fetch = FetchType.LAZY)

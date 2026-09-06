@@ -35,14 +35,14 @@ public class EcommerceStore {
     private String domain;
 
     @Convert(converter = JsonMapConverter.class)
-    @Column(name = "credentials")
+    @Column(name = "credentials", length = 65535)
     private Map<String, Object> credentials;
 
     @Column(name = "status", nullable = false, length = 20)
     private String status = "pending";
 
     @Convert(converter = JsonMapConverter.class)
-    @Column(name = "external_meta")
+    @Column(name = "external_meta", length = 65535)
     @JsonProperty("external_meta")
     private Map<String, Object> externalMeta;
 

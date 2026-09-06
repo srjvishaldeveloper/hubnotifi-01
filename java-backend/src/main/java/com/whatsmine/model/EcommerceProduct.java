@@ -54,7 +54,7 @@ public class EcommerceProduct {
     private String imageUrl;
 
     @Convert(converter = JsonMapConverter.class)
-    @Column(name = "raw")
+    @Column(name = "raw", length = 65535)
     private Map<String, Object> raw;
 
     @ManyToOne(fetch = FetchType.LAZY)

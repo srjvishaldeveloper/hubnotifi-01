@@ -17,4 +17,6 @@ public interface EcommerceCartRepository extends JpaRepository<EcommerceCart, Lo
     Optional<EcommerceCart> findByStoreIdAndExternalId(Long storeId, String externalId);
 
     List<EcommerceCart> findByContactIdAndWorkspaceId(Long contactId, Long workspaceId);
+
+    List<EcommerceCart> findByStoreIdAndContactIdAndRecoveredAtIsNull(Long storeId, Long contactId);
 }
