@@ -203,7 +203,7 @@ public class SecurityConfig {
                                 "/contact",
                                 "/actuator/health"
                         ).permitAll()
-                        .requestMatchers("/app/**", "/client/**", "/dashboard", "/dashboard/**", "/contacts/**", "/inbox/**", "/profile/**", "/billing/**", "/social/**", "/whatsapp/**", "/broadcasting/**", "/ecommerce/**").hasRole("CLIENT")
+                        .requestMatchers("/app/**", "/client/**", "/dashboard", "/dashboard/**", "/contacts/**", "/inbox/**", "/profile/**", "/billing/**", "/social/**", "/whatsapp/**", "/broadcasting/**", "/ecommerce/**", "/reports/exports/**").hasRole("CLIENT")
                         .anyRequest().authenticated()
                 )
                 .addFilterAfter(workspaceSecurityFilter, UsernamePasswordAuthenticationFilter.class)
