@@ -7,6 +7,7 @@ import com.whatsmine.model.ChannelAccount;
 import com.whatsmine.model.Contact;
 import com.whatsmine.model.Conversation;
 import com.whatsmine.model.Message;
+import com.whatsmine.model.WhatsappAutoReply;
 import com.whatsmine.realtime.RealtimeBroadcaster;
 import com.whatsmine.repository.AiChatbotRepository;
 import com.whatsmine.repository.CampaignRecipientRepository;
@@ -27,6 +28,7 @@ import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Java port of PHP's WhatsappDriver::processWebhookPayload() (the part that
@@ -70,6 +72,7 @@ public class WhatsappInboundProcessor {
     private final WhatsAppApiClient whatsAppApiClient;
     private final RealtimeBroadcaster realtimeBroadcaster;
     private final ObjectMapper objectMapper;
+    private final WhatsappAutoReplyMatcher autoReplyMatcher;
 
     public WhatsappInboundProcessor(
             ChannelAccountRepository channelAccountRepository,
@@ -82,7 +85,8 @@ public class WhatsappInboundProcessor {
             ChatbotRunner chatbotRunner,
             WhatsAppApiClient whatsAppApiClient,
             RealtimeBroadcaster realtimeBroadcaster,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            WhatsappAutoReplyMatcher autoReplyMatcher) {
         this.channelAccountRepository = channelAccountRepository;
         this.contactRepository = contactRepository;
         this.conversationRepository = conversationRepository;
@@ -94,6 +98,7 @@ public class WhatsappInboundProcessor {
         this.whatsAppApiClient = whatsAppApiClient;
         this.realtimeBroadcaster = realtimeBroadcaster;
         this.objectMapper = objectMapper;
+        this.autoReplyMatcher = autoReplyMatcher;
     }
 
     @SuppressWarnings("unchecked")
@@ -257,6 +262,14 @@ public class WhatsappInboundProcessor {
             return;
         }
 
+        // Rule-based (non-AI) auto-replies take priority over the handover-phrase
+        // check and the AI chatbot branch below, matching PHP's AutoReplyListener order.
+        Optional<WhatsappAutoReply> matchedRule = autoReplyMatcher.findMatch(channelAccount, conversation, inboundMessage);
+        if (matchedRule.isPresent()) {
+            sendAutoReplyRule(matchedRule.get(), channelAccount, conversation, contact);
+            return;
+        }
+
         String body = inboundMessage.getBody() != null ? inboundMessage.getBody().toLowerCase() : "";
         for (String phrase : HANDOVER_PHRASES) {
             if (body.contains(phrase)) {
@@ -302,6 +315,59 @@ public class WhatsappInboundProcessor {
             botMessage.setStatus("failed");
             botMessage.setErrorJson("{\"message\":\"" + sendErr.getMessage() + "\"}");
             log.warn("AI chatbot reply send failed for conversation {}: {}", conversation.getId(), sendErr.getMessage());
+        }
+        botMessage = messageRepository.save(botMessage);
+
+        conversation.setLastMessageAt(LocalDateTime.now());
+        conversationRepository.save(conversation);
+
+        broadcastOutbound(channelAccount.getWorkspaceId(), conversation, botMessage);
+    }
+
+    /** Sends a matched rule-based auto-reply, porting AutoReplyListener::dispatchAutoReply(). */
+    @SuppressWarnings("unchecked")
+    private void sendAutoReplyRule(WhatsappAutoReply rule, ChannelAccount channelAccount, Conversation conversation, Contact contact) {
+        Map<String, Object> payload = rule.getPayloadJson() != null ? rule.getPayloadJson() : Map.of();
+        String responseKind = rule.getResponseKind() != null ? rule.getResponseKind() : "text";
+
+        if ("flow".equals(responseKind)) {
+            log.warn("Auto-reply rule {} uses response_kind=flow, which has no WhatsApp driver support yet — skipping.", rule.getId());
+            return;
+        }
+
+        Message botMessage = new Message();
+        botMessage.setConversationId(conversation.getId());
+        botMessage.setDirection("out");
+        botMessage.setChannel("whatsapp");
+        botMessage.setType("text".equals(responseKind) ? "text" : responseKind);
+        botMessage.setBody(str(payload.get("text")));
+        botMessage.setStatus("queued");
+        botMessage.setSentBy("bot");
+        botMessage.setSentAt(LocalDateTime.now());
+        botMessage = messageRepository.save(botMessage);
+
+        try {
+            String providerMsgId = switch (responseKind) {
+                case "template" -> whatsAppApiClient.sendTemplate(
+                        channelAccount, contact.getPhoneE164(),
+                        str(payload.get("template_name")),
+                        str(payload.get("language")),
+                        (List<Map<String, Object>>) payload.getOrDefault("components", List.of()));
+                case "media" -> whatsAppApiClient.sendMedia(
+                        channelAccount, contact.getPhoneE164(),
+                        str(payload.get("media_type")),
+                        str(payload.get("link")),
+                        str(payload.get("media_id")),
+                        str(payload.get("caption")),
+                        str(payload.get("filename")));
+                default -> whatsAppApiClient.sendText(channelAccount, contact.getPhoneE164(), str(payload.getOrDefault("text", "")));
+            };
+            botMessage.setStatus("sent");
+            botMessage.setProviderMessageId(providerMsgId);
+        } catch (Exception sendErr) {
+            botMessage.setStatus("failed");
+            botMessage.setErrorJson("{\"message\":\"" + sendErr.getMessage() + "\"}");
+            log.warn("Auto-reply rule {} send failed for conversation {}: {}", rule.getId(), conversation.getId(), sendErr.getMessage());
         }
         botMessage = messageRepository.save(botMessage);
 
