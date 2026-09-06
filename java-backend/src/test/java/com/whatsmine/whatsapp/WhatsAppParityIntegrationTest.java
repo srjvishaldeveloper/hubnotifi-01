@@ -219,27 +219,35 @@ public class WhatsAppParityIntegrationTest {
     }
 
     @Test
-    @DisplayName("6. WhatsApp template index returns Client/WhatsApp/Templates component")
+    @DisplayName("6. WhatsApp template index returns Whatsapp/Templates/Index component")
     void test6_WhatsAppTemplateIndex() throws Exception {
+        // "Client/WhatsApp/Templates" doesn't exist anywhere in the shared
+        // frontend — the real pages are Whatsapp/Templates/Index and .../Editor.
         mockMvc.perform(get("/app/whatsapp/templates")
                         .with(user(user1Details))
                         .header("X-Inertia", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.component", equalTo("Client/WhatsApp/Templates")));
+                .andExpect(jsonPath("$.component", equalTo("Whatsapp/Templates/Index")));
     }
 
     @Test
     @DisplayName("7. WhatsApp template creation persists in database")
     void test7_WhatsAppTemplateCreation() throws Exception {
+        // A real WhatsApp template requires exactly one BODY component — the
+        // old payload's components:"[]" (a stringified empty array, matching
+        // the pre-fix fake endpoint that never validated anything) is no
+        // longer accepted now that store() genuinely enforces Meta's
+        // component rules and submits to Meta when credentials exist.
         MockHttpSession session = new MockHttpSession();
 
         String payload = """
             {
                 "name": "welcome_promo",
-                "wabaId": "waba_12345",
                 "language": "en",
                 "category": "MARKETING",
-                "components": "[]"
+                "components": [
+                    {"type": "BODY", "text": "Hello, welcome!"}
+                ]
             }
             """;
 

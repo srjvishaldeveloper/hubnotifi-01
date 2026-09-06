@@ -18,6 +18,8 @@ public interface WhatsappBusinessAccountRepository extends JpaRepository<Whatsap
 
     List<WhatsappBusinessAccount> findByWorkspaceId(Long workspaceId);
 
+    List<WhatsappBusinessAccount> findByWorkspaceIdOrderByIdDesc(Long workspaceId);
+
     Optional<WhatsappBusinessAccount> findByWorkspaceIdAndWabaId(Long workspaceId, String wabaId);
 
     Optional<WhatsappBusinessAccount> findFirstByWorkspaceIdAndStatus(Long workspaceId, String status);
