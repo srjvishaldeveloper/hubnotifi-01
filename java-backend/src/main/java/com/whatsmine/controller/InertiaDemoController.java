@@ -4,10 +4,13 @@ import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaResponse;
 import com.whatsmine.security.CustomUserDetails;
 import com.whatsmine.security.WorkspaceContext;
+import com.whatsmine.service.admin.AdminAnalyticsService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -15,6 +18,9 @@ import java.util.Map;
 
 @RestController
 public class InertiaDemoController {
+
+    @Autowired
+    private AdminAnalyticsService analytics;
 
     @GetMapping({"/dashboard", "/app/dashboard"})
     public InertiaResponse dashboard(@AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -37,11 +43,9 @@ public class InertiaDemoController {
     }
 
     @GetMapping("/admin/dashboard")
-    public InertiaResponse adminDashboard() {
-        Map<String, Object> props = new HashMap<>();
+    public InertiaResponse adminDashboard(@RequestParam(required = false) Integer range) {
+        Map<String, Object> props = analytics.dashboardProps(range != null ? range : 30);
         props.put("title", "Admin Control Panel");
-        props.put("stats", Map.of("users", 120, "revenue", 5400));
-
         return Inertia.render("Admin/Dashboard", props);
     }
 

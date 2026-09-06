@@ -4,6 +4,7 @@ import com.whatsmine.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdAndWorkspaceId(Long id, Long workspaceId);
 
     boolean existsByEmail(String email);
+
+    long countByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
 }

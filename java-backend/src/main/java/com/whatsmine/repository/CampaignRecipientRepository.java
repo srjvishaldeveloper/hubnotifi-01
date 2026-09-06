@@ -15,7 +15,8 @@ public interface CampaignRecipientRepository extends JpaRepository<CampaignRecip
 
     List<CampaignRecipient> findByCampaignId(Long campaignId);
 
-    List<CampaignRecipient> findByCampaignIdOrderByUpdatedAtDesc(Long campaignId, Pageable pageable);
+    @Query("SELECT cr FROM CampaignRecipient cr LEFT JOIN FETCH cr.contact WHERE cr.campaignId = :campaignId ORDER BY cr.updatedAt DESC")
+    List<CampaignRecipient> findByCampaignIdOrderByUpdatedAtDesc(@Param("campaignId") Long campaignId, Pageable pageable);
 
     long countByCampaignId(Long campaignId);
 

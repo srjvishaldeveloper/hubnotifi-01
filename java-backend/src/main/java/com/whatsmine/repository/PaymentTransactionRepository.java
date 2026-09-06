@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -15,4 +16,10 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     Page<PaymentTransaction> findByStatus(String status, Pageable pageable);
     Page<PaymentTransaction> findByGateway(String gateway, Pageable pageable);
     Page<PaymentTransaction> findByStatusAndGateway(String status, String gateway, Pageable pageable);
+
+    List<PaymentTransaction> findByStatusAndCreatedAtBetween(String status, LocalDateTime from, LocalDateTime to);
+
+    List<PaymentTransaction> findByStatusAndCreatedAtGreaterThanEqual(String status, LocalDateTime from);
+
+    List<PaymentTransaction> findTop6ByOrderByCreatedAtDesc();
 }
