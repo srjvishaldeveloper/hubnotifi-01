@@ -238,6 +238,52 @@ public class LandingPageSettingsService {
         d.put("landing.cta_primary", "Start Free Trial");
         d.put("landing.cta_secondary", "Talk to Sales");
 
+        d.put("landing.about_badge", "About Hub Notification");
+        d.put("landing.about_title", "We are on a mission to make business conversations effortless");
+        d.put("landing.about_subtitle", "Hub Notification helps thousands of businesses turn everyday messages into lasting customer relationships.");
+        d.put("landing.about_story_title", "Our story");
+        d.put("landing.about_story_body", "Hub Notification started with a simple frustration: customer conversations were scattered across too many apps, and great leads were slipping through the cracks.\n\nWe set out to build one platform where every WhatsApp, Messenger and Instagram conversation lives together — supercharged with AI and automation. Today, teams in over 60 countries use Hub Notification to reply faster, sell more and build relationships that last.");
+        d.put("landing.about_value_1_icon", "zap");
+        d.put("landing.about_value_1_title", "Move Fast");
+        d.put("landing.about_value_1_desc", "We ship quickly and obsess over making complex things feel simple.");
+        d.put("landing.about_value_2_icon", "users");
+        d.put("landing.about_value_2_title", "Customer First");
+        d.put("landing.about_value_2_desc", "Every decision starts with the people who use our product every day.");
+        d.put("landing.about_value_3_icon", "shield-check");
+        d.put("landing.about_value_3_title", "Trust & Privacy");
+        d.put("landing.about_value_3_desc", "We protect customer data like it is our own — because it matters.");
+        d.put("landing.about_value_4_icon", "globe");
+        d.put("landing.about_value_4_title", "Built for Everyone");
+        d.put("landing.about_value_4_desc", "Accessible, multi-language and designed for teams of every size.");
+        d.put("landing.about_stat_1_value", "12,000+");
+        d.put("landing.about_stat_1_label", "Businesses served");
+        d.put("landing.about_stat_2_value", "60+");
+        d.put("landing.about_stat_2_label", "Countries");
+        d.put("landing.about_stat_3_value", "50M+");
+        d.put("landing.about_stat_3_label", "Messages delivered");
+        d.put("landing.about_stat_4_value", "99.9%");
+        d.put("landing.about_stat_4_label", "Uptime");
+        d.put("landing.about_cta_title", "Want to join our journey?");
+        d.put("landing.about_cta_subtitle", "Start free today or get in touch — we would love to hear from you.");
+
+        d.put("landing.integrations_page_badge", "Integrations");
+        d.put("landing.integrations_page_title", "Connect Hub Notification to your entire stack");
+        d.put("landing.integrations_page_subtitle", "Native integrations, webhooks and a full REST API — bring Hub Notification into the tools your team already loves.");
+        d.put("landing.intcat_1_title", "Messaging Channels");
+        d.put("landing.intcat_1_items", "WhatsApp Business\nFacebook Messenger\nInstagram Direct\nSMS\nEmail");
+        d.put("landing.intcat_2_title", "AI Providers");
+        d.put("landing.intcat_2_items", "OpenAI\nAnthropic Claude\nGoogle Gemini\nQdrant");
+        d.put("landing.intcat_3_title", "E-commerce");
+        d.put("landing.intcat_3_items", "Shopify\nWooCommerce\nMagento\nBigCommerce");
+        d.put("landing.intcat_4_title", "Payments & Billing");
+        d.put("landing.intcat_4_items", "Stripe\nPayPal\nPaddle");
+        d.put("landing.intcat_5_title", "CRM & Automation");
+        d.put("landing.intcat_5_items", "Zapier\nHubSpot\nGoogle Sheets\nWebhooks");
+        d.put("landing.intcat_6_title", "Developer Tools");
+        d.put("landing.intcat_6_items", "REST API\nWebhooks\nOAuth 2.0\nFirebase");
+        d.put("landing.intcat_7_title", "Social Media");
+        d.put("landing.intcat_7_items", "Facebook\nInstagram\nLinkedIn\nX (Twitter)\nYouTube\nTikTok");
+
         return d;
     }
 
