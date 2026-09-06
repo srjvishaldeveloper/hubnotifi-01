@@ -5,6 +5,7 @@ import com.whatsmine.model.Contact;
 import com.whatsmine.model.EcommerceCart;
 import com.whatsmine.model.EcommerceOrder;
 import com.whatsmine.model.EcommerceStore;
+import com.whatsmine.queue.QueueDispatcher;
 import com.whatsmine.repository.ContactRepository;
 import com.whatsmine.repository.EcommerceCartRepository;
 import com.whatsmine.repository.EcommerceOrderRepository;
@@ -25,19 +26,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Turns a verified e-commerce order webhook into a real EcommerceOrder row,
- * a resolved/created Contact, and a fired automation trigger — porting the
- * order-handling path of php/app/Modules/Ecommerce/Jobs/ProcessEcommerceWebhookJob.php.
- * Runs synchronously inside the webhook request (like this app's Stripe/
- * Razorpay webhook handlers) rather than through the job queue, since the
- * queue's own job handlers are unwired dead code elsewhere in this port.
- * Cart/checkout ("cart.abandoned") events are the separate, still-unported
- * abandoned-cart-reminder feature — out of scope here.
+ * Turns a verified e-commerce order or cart/checkout webhook into a real
+ * EcommerceOrder/EcommerceCart row, a resolved/created Contact, and (for
+ * orders) a fired automation trigger — porting
+ * php/app/Modules/Ecommerce/Jobs/ProcessEcommerceWebhookJob.php. Runs
+ * synchronously inside the webhook request (like this app's Stripe/Razorpay
+ * webhook handlers) rather than through the job queue, since the queue's own
+ * job handlers are unwired dead code elsewhere in this port — except the
+ * abandoned-cart check itself, which genuinely needs a delay and so is
+ * dispatched onto the real queue (CheckAbandonedCartJob).
  */
 @Service
 public class EcommerceWebhookProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(EcommerceWebhookProcessor.class);
+
+    /** Minutes to wait before treating an unconverted checkout as abandoned. */
+    private static final int ABANDONED_AFTER_MINUTES = 30;
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -48,6 +53,7 @@ public class EcommerceWebhookProcessor {
     private final EcommerceOrderRepository orderRepository;
     private final EcommerceCartRepository cartRepository;
     private final AutomationTriggerService automationTriggerService;
+    private final QueueDispatcher queueDispatcher;
     private final ObjectMapper objectMapper;
 
     public EcommerceWebhookProcessor(EcommerceOrderNormalizer normalizer,
@@ -55,12 +61,14 @@ public class EcommerceWebhookProcessor {
                                       EcommerceOrderRepository orderRepository,
                                       EcommerceCartRepository cartRepository,
                                       AutomationTriggerService automationTriggerService,
+                                      QueueDispatcher queueDispatcher,
                                       ObjectMapper objectMapper) {
         this.normalizer = normalizer;
         this.contactRepository = contactRepository;
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.automationTriggerService = automationTriggerService;
+        this.queueDispatcher = queueDispatcher;
         this.objectMapper = objectMapper;
     }
 
@@ -73,12 +81,20 @@ public class EcommerceWebhookProcessor {
             default -> null;
         };
 
-        if (event == null || event.order == null) {
+        if (event == null) {
             return;
         }
 
         Contact contact = resolveContact(store.getWorkspaceId(), event.contact);
-        handleOrder(store, contact, event);
+
+        if (event.cart != null) {
+            handleCart(store, contact, event);
+            return;
+        }
+
+        if (event.order != null) {
+            handleOrder(store, contact, event);
+        }
     }
 
     // ── BigCommerce hydration ──────────────────────────────────────────
@@ -90,17 +106,22 @@ public class EcommerceWebhookProcessor {
     private EcommerceOrderNormalizer.NormalizedOrder hydrateAndNormalizeBigCommerce(EcommerceStore store, String scope, Map<String, Object> payload) {
         Object dataObj = payload.get("data");
         Map<String, Object> data = dataObj instanceof Map ? (Map<String, Object>) dataObj : Map.of();
-        String orderId = data.get("id") != null ? String.valueOf(data.get("id")) : null;
-        if (orderId == null) {
+        String resourceId = data.get("id") != null ? String.valueOf(data.get("id")) : null;
+        if (resourceId == null) {
             return null;
         }
 
-        String forcedEvent = "store/order/created".equals(scope) ? "order.placed" : null;
+        if ("store/cart/abandoned".equals(scope)) {
+            Map<String, Object> cart = fetchBigCommerceCart(store, resourceId);
+            return cart != null ? normalizer.bigcommerceCart(cart) : null;
+        }
+
         if (!"store/order/created".equals(scope) && !"store/order/statusUpdated".equals(scope)) {
             return null;
         }
 
-        Map<String, Object> order = fetchBigCommerceOrder(store, orderId);
+        String forcedEvent = "store/order/created".equals(scope) ? "order.placed" : null;
+        Map<String, Object> order = fetchBigCommerceOrder(store, resourceId);
         if (order == null) {
             return null;
         }
@@ -111,6 +132,27 @@ public class EcommerceWebhookProcessor {
         }
 
         return normalizer.bigcommerce(eventType, order);
+    }
+
+    /** Fetches a cart via BigCommerce's v3 API; adds `_recovery_url` = null (see bigcommerceCart() note on the skipped redirect_urls POST). */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> fetchBigCommerceCart(EcommerceStore store, String cartId) {
+        String storeHash = store.getDomain();
+        String accessToken = store.getCredentials() != null ? String.valueOf(store.getCredentials().getOrDefault("access_token", "")) : "";
+        if (accessToken.isBlank()) {
+            return null;
+        }
+        try {
+            Map<String, Object> resp = getBigCommerceJson(storeHash, accessToken, "/v3/carts/" + cartId, Map.class);
+            Object dataObj = resp != null ? resp.get("data") : null;
+            if (!(dataObj instanceof Map)) return null;
+            Map<String, Object> cart = new java.util.LinkedHashMap<>((Map<String, Object>) dataObj);
+            cart.put("_recovery_url", null);
+            return cart;
+        } catch (Exception e) {
+            log.warn("BigCommerce cart hydration failed for store {} cart {}: {}", store.getId(), cartId, e.getMessage());
+            return null;
+        }
     }
 
     private String eventFromBigCommerceStatus(String status) {
@@ -184,6 +226,50 @@ public class EcommerceWebhookProcessor {
         if (contactData.get("last_name") != null && !contactData.get("last_name").isBlank()) contact.setLastName(contactData.get("last_name"));
 
         return contactRepository.save(contact);
+    }
+
+    /**
+     * Upserts the EcommerceCart from a checkout/cart webhook and, once per
+     * cart, schedules a delayed CheckAbandonedCartJob to see whether it
+     * converted before firing the cart.abandoned automation trigger.
+     */
+    @SuppressWarnings("unchecked")
+    private void handleCart(EcommerceStore store, Contact contact, EcommerceOrderNormalizer.NormalizedOrder event) {
+        Map<String, Object> cartData = event.cart;
+        String externalId = String.valueOf(cartData.get("external_id"));
+
+        EcommerceCart cart = cartRepository.findByStoreIdAndExternalId(store.getId(), externalId).orElseGet(EcommerceCart::new);
+        cart.setStoreId(store.getId());
+        cart.setWorkspaceId(store.getWorkspaceId());
+        if (contact != null) {
+            cart.setContactId(contact.getId());
+        }
+        if (cartData.get("total") instanceof java.math.BigDecimal total) {
+            cart.setTotal(total);
+        }
+        if (cartData.get("currency") != null) {
+            cart.setCurrency(String.valueOf(cartData.get("currency")));
+        }
+        Object lineItems = cartData.get("line_items");
+        if (lineItems instanceof List) {
+            cart.setLineItems((List<Map<String, Object>>) lineItems);
+        }
+        if (cartData.get("recovery_url") != null) {
+            cart.setRecoveryUrl(String.valueOf(cartData.get("recovery_url")));
+        }
+        if (cartData.get("abandoned_at") instanceof LocalDateTime abandonedAt) {
+            cart.setAbandonedAt(abandonedAt);
+        }
+
+        boolean isNewOrUnscheduled = cart.getId() == null || (cart.getRecoveryTriggeredAt() == null && cart.getRecoveredAt() == null);
+        cart = cartRepository.save(cart);
+
+        // Only schedule recovery once, and only when we have a contact to message.
+        if (contact != null && isNewOrUnscheduled) {
+            int delayMinutes = cartData.get("recovery_delay_minutes") instanceof Number n ? n.intValue() : ABANDONED_AFTER_MINUTES;
+            queueDispatcher.dispatchDelayed("ecommerce", "CheckAbandonedCartJob",
+                    Map.of("cartId", cart.getId()), delayMinutes * 60, 2, new int[]{60});
+        }
     }
 
     @SuppressWarnings("unchecked")

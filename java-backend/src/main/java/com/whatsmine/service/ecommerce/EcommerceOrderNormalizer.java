@@ -13,12 +13,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Normalizes raw Shopify / WooCommerce / (hydrated) BigCommerce order
- * webhook payloads into one canonical shape, porting the order-handling
- * paths of php/app/Modules/Ecommerce/Services/PayloadNormalizer.php.
- * Cart/checkout ("cart.abandoned") and customer/product events are a
- * separate, still-unported feature (abandoned-cart reminders) — out of
- * scope here, so those topics are simply ignored (return null).
+ * Normalizes raw Shopify / WooCommerce / (hydrated) BigCommerce order and
+ * cart/checkout webhook payloads into one canonical shape, porting
+ * php/app/Modules/Ecommerce/Services/PayloadNormalizer.php. Customer/product
+ * events are a separate, still-unported feature — those topics are ignored
+ * (return null).
  */
 @Component
 public class EcommerceOrderNormalizer {
@@ -26,12 +25,17 @@ public class EcommerceOrderNormalizer {
     public static class NormalizedOrder {
         public String eventType;
         public Map<String, Object> order;
+        public Map<String, Object> cart;
         public Map<String, String> contact;
         public Map<String, String> context;
     }
 
     @SuppressWarnings("unchecked")
     public NormalizedOrder shopify(String topic, Map<String, Object> p) {
+        if ("checkouts/create".equals(topic)) {
+            return shopifyCheckout(p);
+        }
+
         String eventType = switch (topic) {
             case "orders/create" -> "order.placed";
             case "orders/fulfilled" -> "order.fulfilled";
@@ -164,6 +168,88 @@ public class EcommerceOrderNormalizer {
         result.contact = contact;
         result.context = orderContext(order);
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private NormalizedOrder shopifyCheckout(Map<String, Object> p) {
+        Map<String, Object> customer = mapOf(p.get("customer"));
+
+        Map<String, Object> cart = new LinkedHashMap<>();
+        cart.put("external_id", firstNonBlank(str(p.get("id")), str(p.get("token"))));
+        cart.put("total", toBigDecimal(p.get("total_price")));
+        cart.put("currency", p.get("currency"));
+        cart.put("line_items", lineItems(listOf(p.get("line_items")), "title"));
+        cart.put("recovery_url", p.get("abandoned_checkout_url"));
+        cart.put("abandoned_at", parseDate(str(p.get("created_at"))));
+
+        Map<String, String> contact = new LinkedHashMap<>();
+        contact.put("phone_e164", phone(firstNonBlank(str(p.get("phone")), str(customer.get("phone")))));
+        contact.put("email", firstNonBlank(str(p.get("email")), str(customer.get("email"))));
+        contact.put("first_name", str(customer.get("first_name")));
+        contact.put("last_name", str(customer.get("last_name")));
+
+        NormalizedOrder result = new NormalizedOrder();
+        result.eventType = "cart.abandoned";
+        result.cart = cart;
+        result.contact = contact;
+        result.context = cartContext(cart);
+        return result;
+    }
+
+    /**
+     * eventType/payload are already resolved+hydrated by the caller (see
+     * EcommerceWebhookProcessor); this only maps BigCommerce's cart shape.
+     * PHP also creates a recovery URL via a POST to /v3/carts/{id}/redirect_urls —
+     * that mutating call is skipped here, so recovery_url is left null for
+     * BigCommerce carts rather than fabricated.
+     */
+    @SuppressWarnings("unchecked")
+    public NormalizedOrder bigcommerceCart(Map<String, Object> p) {
+        Map<String, Object> lineItemsRoot = mapOf(p.get("line_items"));
+        List<Object> physicalItems = listOf(lineItemsRoot.get("physical_items"));
+
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (Object o : physicalItems) {
+            Map<String, Object> i = mapOf(o);
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("title", str(i.get("name")));
+            item.put("quantity", toInt(i.get("quantity"), 1));
+            item.put("price", str(firstNonNull(i.get("list_price"), i.get("sale_price"), "0")));
+            items.add(item);
+        }
+
+        Map<String, Object> currencyObj = mapOf(p.get("currency"));
+
+        Map<String, Object> cart = new LinkedHashMap<>();
+        cart.put("external_id", str(p.get("id")));
+        cart.put("total", toBigDecimal(firstNonNull(p.get("cart_amount"), p.get("base_amount"), 0)));
+        cart.put("currency", currencyObj.get("code"));
+        cart.put("line_items", items);
+        cart.put("recovery_url", p.get("_recovery_url"));
+        cart.put("abandoned_at", parseDate(str(p.get("updated_time"))));
+        // BigCommerce fires this webhook only once the cart is already abandoned.
+        cart.put("recovery_delay_minutes", 1);
+
+        Map<String, String> contact = new LinkedHashMap<>();
+        contact.put("phone_e164", null);
+        contact.put("email", str(p.get("email")));
+        contact.put("first_name", null);
+        contact.put("last_name", null);
+
+        NormalizedOrder result = new NormalizedOrder();
+        result.eventType = "cart.abandoned";
+        result.cart = cart;
+        result.contact = contact;
+        result.context = cartContext(cart);
+        return result;
+    }
+
+    private Map<String, String> cartContext(Map<String, Object> cart) {
+        Map<String, String> context = new LinkedHashMap<>();
+        context.put("cart_total", String.valueOf(cart.get("total")));
+        context.put("order_currency", str(cart.get("currency")));
+        context.put("recovery_url", str(cart.get("recovery_url")));
+        return context;
     }
 
     private Map<String, String> orderContext(Map<String, Object> order) {

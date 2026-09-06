@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,8 @@ public interface EcommerceOrderRepository extends JpaRepository<EcommerceOrder, 
     Optional<EcommerceOrder> findByStoreIdAndExternalOrderId(Long storeId, String externalOrderId);
 
     List<EcommerceOrder> findByContactIdAndWorkspaceIdOrderByIdDesc(Long contactId, Long workspaceId);
+
+    boolean existsByStoreIdAndContactIdAndPlacedAtGreaterThanEqual(Long storeId, Long contactId, LocalDateTime placedAt);
 
     @Query("SELECT o FROM EcommerceOrder o WHERE o.workspaceId = :workspaceId " +
            "AND (:status IS NULL OR o.status = :status) " +
