@@ -184,6 +184,11 @@ public class BroadcastingParityIntegrationTest {
 
     @Test
     void test5_TestSendMessage() throws Exception {
+        // No WhatsApp ChannelAccount is configured for this workspace, so the
+        // real test-send genuinely fails validation ("No active WhatsApp
+        // channel connected") rather than fabricating a success — the old
+        // endpoint used to return a fake {ok:true} regardless of any real
+        // channel/template state.
         Map<String, String> body = Map.of("phone_e164", "+1987654321");
 
         mockMvc.perform(post("/app/broadcasts/campaigns/" + campaign1.getUuid() + "/test-send")
@@ -191,9 +196,8 @@ public class BroadcastingParityIntegrationTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.ok").value(true))
-                .andExpect(jsonPath("$.channel").value("whatsapp"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("No active WhatsApp channel connected for this workspace."));
     }
 
     @Test

@@ -81,6 +81,18 @@ public class CampaignController {
     @Autowired
     private com.whatsmine.queue.QueueDispatcher queueDispatcher;
 
+    @Autowired
+    private com.whatsmine.repository.ChannelAccountRepository channelAccountRepository;
+
+    @Autowired
+    private com.whatsmine.service.whatsapp.WhatsAppApiClient whatsAppApiClient;
+
+    @Autowired
+    private com.whatsmine.service.sms.SmsApiClient smsApiClient;
+
+    @Autowired
+    private com.whatsmine.service.email.EmailApiClient emailApiClient;
+
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         return userDetails.getWorkspaceId();
     }
@@ -321,19 +333,96 @@ public class CampaignController {
         Campaign campaign = campaignRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        String phone = body.get("phone_e164");
-        String email = body.get("email");
+        String phone = body.get("phone_e164") != null ? body.get("phone_e164").trim() : null;
+        String email = body.get("email") != null ? body.get("email").trim() : null;
 
         if ((phone == null || phone.isBlank()) && (email == null || email.isBlank())) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "Provide either a phone or email to test."));
         }
 
-        String msgId = "test-msg-" + UUID.randomUUID().toString();
-        return ResponseEntity.ok(Map.of(
-                "ok", true,
-                "message_id", msgId,
-                "channel", campaign.getChannel()
-        ));
+        // Synthetic contact carrying the tester's own identity, so personalization
+        // tokens ({{contact.name}}, etc.) render meaningfully — mirrors PHP.
+        Contact testContact = new Contact();
+        testContact.setWorkspaceId(workspaceId);
+        testContact.setPhoneE164(phone);
+        testContact.setEmail(email);
+        testContact.setFirstName("Test");
+        testContact.setLastName("User");
+
+        try {
+            String messageId = switch (campaign.getChannel() == null ? "" : campaign.getChannel().toLowerCase()) {
+                case "whatsapp" -> testSendWhatsApp(campaign, testContact);
+                case "sms" -> testSendSms(campaign, testContact);
+                case "email" -> testSendEmail(campaign, testContact);
+                default -> throw new IllegalStateException("Unsupported campaign channel: " + campaign.getChannel());
+            };
+            return ResponseEntity.ok(Map.of("ok", true, "message_id", messageId, "channel", campaign.getChannel()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Send failed. Check your channel configuration and try again."));
+        }
+    }
+
+    private String testSendWhatsApp(Campaign campaign, Contact contact) throws Exception {
+        if (contact.getPhoneE164() == null || contact.getPhoneE164().isBlank()) {
+            throw new IllegalStateException("Phone is required for a WhatsApp test send.");
+        }
+        var waChannelAccount = channelAccountRepository.findByWorkspaceIdAndStatus(campaign.getWorkspaceId(), "active").stream()
+                .filter(ca -> "whatsapp".equalsIgnoreCase(ca.getChannel()))
+                .findFirst().orElse(null);
+        if (waChannelAccount == null) {
+            throw new IllegalStateException("No active WhatsApp channel connected for this workspace.");
+        }
+
+        Map<String, Object> tpl = parseJsonObject(campaign.getTemplateRef());
+        String name = tpl.get("name") != null ? tpl.get("name").toString() : "";
+        String language = tpl.get("language") != null ? tpl.get("language").toString() : "en";
+        if (name.isBlank()) {
+            throw new IllegalStateException("Pick a WhatsApp template before sending a test.");
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> components = tpl.get("components") instanceof List
+                ? (List<Map<String, Object>>) tpl.get("components") : List.of();
+
+        String phone = contact.getPhoneE164().startsWith("+") ? contact.getPhoneE164() : "+" + contact.getPhoneE164();
+        return whatsAppApiClient.sendTemplate(waChannelAccount, phone, name, language, components);
+    }
+
+    private String testSendSms(Campaign campaign, Contact contact) {
+        if (contact.getPhoneE164() == null || contact.getPhoneE164().isBlank()) {
+            throw new IllegalStateException("Phone is required for an SMS test send.");
+        }
+        Map<String, Object> payload = parseJsonObject(campaign.getPayloadJson());
+        String body = campaignPersonalizer.renderText(str(payload.get("body")), contact);
+        if (body == null || body.isBlank()) {
+            throw new IllegalStateException("SMS body is empty after personalization.");
+        }
+        return smsApiClient.sendText(campaign.getWorkspaceId(), contact.getPhoneE164(), body);
+    }
+
+    private String testSendEmail(Campaign campaign, Contact contact) {
+        if (contact.getEmail() == null || contact.getEmail().isBlank()) {
+            throw new IllegalStateException("Email is required for an email test send.");
+        }
+        Map<String, Object> payload = parseJsonObject(campaign.getPayloadJson());
+        String subject = campaignPersonalizer.renderText("[TEST] " + (str(payload.get("subject")) != null ? str(payload.get("subject")) : "No subject"), contact);
+        String body = campaignPersonalizer.renderText(str(payload.get("body")), contact);
+        emailApiClient.send(campaign.getWorkspaceId(), contact.getEmail(), subject, body != null ? body : "");
+        return "email-test-" + UUID.randomUUID();
+    }
+
+    private Map<String, Object> parseJsonObject(String raw) {
+        if (raw == null || raw.isBlank()) return Map.of();
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> parsed = objectMapper.readValue(raw, Map.class);
+            return parsed;
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    private String str(Object o) {
+        return o != null ? o.toString() : null;
     }
 
     @PostMapping("/campaigns/{uuid}/launch")
