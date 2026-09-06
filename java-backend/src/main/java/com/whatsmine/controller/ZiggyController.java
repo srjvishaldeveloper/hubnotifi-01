@@ -91,6 +91,13 @@ public class ZiggyController {
                         "client.contacts.destroy": { "uri": "contacts/{contact}", "methods": ["DELETE"] },
                         "client.contacts.bulk-destroy": { "uri": "contacts/bulk-destroy", "methods": ["DELETE"] },
                         "client.contacts.export": { "uri": "contacts/export", "methods": ["GET", "HEAD"] },
+                        "client.segments.index": { "uri": "segments", "methods": ["GET", "HEAD"] },
+                        "client.segments.store": { "uri": "segments", "methods": ["POST"] },
+                        "client.segments.update": { "uri": "segments/{segment}", "methods": ["PUT"] },
+                        "client.segments.destroy": { "uri": "segments/{segment}", "methods": ["DELETE"] },
+                        "client.segments.contacts": { "uri": "segments/{segment}/contacts", "methods": ["GET", "HEAD"] },
+                        "client.segments.contacts.attach": { "uri": "segments/{segment}/contacts", "methods": ["POST"] },
+                        "client.segments.contacts.detach": { "uri": "segments/{segment}/contacts/{contact}", "methods": ["DELETE"] },
 
                         "admin.login": { "uri": "admin/login", "methods": ["GET", "HEAD"] },
                         "admin.logout": { "uri": "admin/logout", "methods": ["POST"] },
@@ -126,9 +133,9 @@ public class ZiggyController {
                         "admin.ai.index": { "uri": "admin/ai", "methods": ["GET", "HEAD"] }
 
                         // NOTE: the following nav items have NO backend controller at all yet
-                        // (not a routing bug — the page was never built in Java): client.contacts.*,
-                        // client.segments.*, client.settings.*, client.social.* (composer/posts/
-                        // calendar/accounts), client.sms-gateways.*, client.email-server.*,
+                        // (not a routing bug — the page was never built in Java): client.settings.*,
+                        // client.social.* (composer/posts/calendar/accounts), client.sms-gateways.*,
+                        // client.email-server.*,
                         // client.whatsapp.auto-replies.*, client.whatsapp.widget(s).*,
                         // client.whatsapp.setup.* (no GET page, actions only), client.inbox.setup,
                         // client.api-tokens.*, client.reports.inbox/campaigns/ai/social,

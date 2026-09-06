@@ -4,8 +4,12 @@ import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaResponse;
 import com.whatsmine.model.Contact;
 import com.whatsmine.model.ContactTag;
+import com.whatsmine.model.Segment;
+import com.whatsmine.model.SegmentContact;
 import com.whatsmine.repository.ContactRepository;
 import com.whatsmine.repository.ContactTagRepository;
+import com.whatsmine.repository.SegmentContactRepository;
+import com.whatsmine.repository.SegmentRepository;
 import com.whatsmine.security.CustomUserDetails;
 import com.whatsmine.service.automation.AutomationTriggerService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,11 +39,10 @@ import java.util.Map;
 
 /**
  * Core Contact CRM — list/search, view, create, update, soft-delete, bulk
- * delete, CSV export. Segment/tag *association* on a contact (the checkbox
- * pickers in Index.jsx/Show.jsx) is left as an empty list for now: the
- * Segment feature itself has no controller yet, and there's no contact&lt;-&gt;tag
- * join table modeled in Java yet — both are separate follow-ups. This gets
- * the page from "doesn't exist" to "usable" without inventing the whole CRM.
+ * delete, CSV export. Segments are now wired to the real SegmentController;
+ * tag *association* on a contact (the checkbox pickers in Index.jsx/Show.jsx)
+ * is still an empty list — there's no contact&lt;-&gt;tag join table modeled in
+ * Java yet, a separate follow-up.
  */
 @RestController
 @RequestMapping("/contacts")
@@ -50,14 +53,20 @@ public class ContactController {
 
     private final ContactRepository contactRepository;
     private final ContactTagRepository contactTagRepository;
+    private final SegmentRepository segmentRepository;
+    private final SegmentContactRepository segmentContactRepository;
     private final AutomationTriggerService automationTriggerService;
 
     public ContactController(
             ContactRepository contactRepository,
             ContactTagRepository contactTagRepository,
+            SegmentRepository segmentRepository,
+            SegmentContactRepository segmentContactRepository,
             AutomationTriggerService automationTriggerService) {
         this.contactRepository = contactRepository;
         this.contactTagRepository = contactTagRepository;
+        this.segmentRepository = segmentRepository;
+        this.segmentContactRepository = segmentContactRepository;
         this.automationTriggerService = automationTriggerService;
     }
 
@@ -76,6 +85,7 @@ public class ContactController {
                 : contactRepository.findByWorkspaceIdAndDeletedAtIsNullOrderByCreatedAtDesc(workspaceId, pageable);
 
         List<ContactTag> tags = contactTagRepository.findByWorkspaceIdOrderByNameAsc(workspaceId);
+        List<Segment> segments = segmentRepository.findByWorkspaceIdOrderByNameAsc(workspaceId);
 
         Map<String, Object> filters = new LinkedHashMap<>();
         if (search != null) filters.put("search", search);
@@ -84,7 +94,7 @@ public class ContactController {
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("contacts", paginate(result, "/contacts", search));
         props.put("tags", tags.stream().map(this::tagMap).toList());
-        props.put("segments", List.of());
+        props.put("segments", segments.stream().map(this::segmentSummary).toList());
         props.put("filters", filters);
 
         return Inertia.render("Contacts/Index", props);
@@ -97,9 +107,12 @@ public class ContactController {
             return Inertia.redirect("/contacts");
         }
 
+        List<Segment> staticSegments = segmentRepository.findByWorkspaceIdOrderByNameAsc(userDetails.getWorkspaceId()).stream()
+                .filter(s -> "static".equalsIgnoreCase(s.getType())).toList();
+
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("contact", contactMap(contact));
-        props.put("staticSegments", List.of());
+        props.put("staticSegments", staticSegments.stream().map(this::segmentSummary).toList());
         return Inertia.render("Contacts/Show", props);
     }
 
@@ -121,6 +134,7 @@ public class ContactController {
         contact.setSource("manual");
 
         contact = contactRepository.save(contact);
+        syncStaticSegments(workspaceId, contact.getId(), payload.get("segment_ids"));
 
         try {
             automationTriggerService.fireForContact(workspaceId, "contact.created", contact.getId(), Map.of());
@@ -154,6 +168,9 @@ public class ContactController {
         if (payload.containsKey("opt_in_email")) contact.setOptInEmail(bool(payload.get("opt_in_email"), contact.getOptInEmail()));
 
         contactRepository.save(contact);
+        if (payload.containsKey("segment_ids")) {
+            syncStaticSegments(userDetails.getWorkspaceId(), contact.getId(), payload.get("segment_ids"));
+        }
 
         Inertia.flashSuccess(session, "Contact updated.");
         return Inertia.redirect("/contacts/" + uuid);
@@ -230,9 +247,57 @@ public class ContactController {
         m.put("opt_in_sms", c.getOptInSms());
         m.put("opt_in_email", c.getOptInEmail());
         m.put("tags", List.of());
-        m.put("segments", List.of());
+        List<Long> segmentIds = segmentContactRepository.findByContactId(c.getId()).stream()
+                .map(SegmentContact::getSegmentId).toList();
+        m.put("segments", segmentIds.isEmpty() ? List.of() : segmentRepository.findAllById(segmentIds).stream()
+                .map(this::segmentSummary).toList());
         m.put("conversations", List.of());
         m.put("created_at", c.getCreatedAt() != null ? c.getCreatedAt().format(TIMESTAMP) : null);
+        return m;
+    }
+
+    /** Syncs which static segments a contact belongs to, matching PHP's Create/Edit checkbox list (static segments only). */
+    @SuppressWarnings("unchecked")
+    private void syncStaticSegments(Long workspaceId, Long contactId, Object rawSegmentIds) {
+        if (!(rawSegmentIds instanceof List)) return;
+        java.util.Set<Long> requested = ((List<Object>) rawSegmentIds).stream()
+                .map(o -> Long.valueOf(o.toString())).collect(java.util.stream.Collectors.toSet());
+
+        java.util.Set<Long> staticSegmentIds = segmentRepository.findByWorkspaceIdOrderByNameAsc(workspaceId).stream()
+                .filter(s -> "static".equalsIgnoreCase(s.getType()))
+                .map(com.whatsmine.model.Segment::getId).collect(java.util.stream.Collectors.toSet());
+
+        java.util.Set<Long> current = segmentContactRepository.findByContactId(contactId).stream()
+                .map(com.whatsmine.model.SegmentContact::getSegmentId)
+                .filter(staticSegmentIds::contains)
+                .collect(java.util.stream.Collectors.toSet());
+
+        for (Long segmentId : staticSegmentIds) {
+            boolean shouldBeMember = requested.contains(segmentId);
+            boolean isMember = current.contains(segmentId);
+            if (shouldBeMember && !isMember) {
+                com.whatsmine.model.SegmentContact sc = new com.whatsmine.model.SegmentContact();
+                sc.setSegmentId(segmentId);
+                sc.setContactId(contactId);
+                segmentContactRepository.save(sc);
+            } else if (!shouldBeMember && isMember) {
+                segmentContactRepository.deleteBySegmentIdAndContactId(segmentId, contactId);
+            }
+        }
+
+        for (Long segmentId : staticSegmentIds) {
+            segmentRepository.findById(segmentId).ifPresent(seg -> {
+                seg.setContactCount((int) segmentContactRepository.countBySegmentId(segmentId));
+                segmentRepository.save(seg);
+            });
+        }
+    }
+
+    private Map<String, Object> segmentSummary(Segment s) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", s.getId());
+        m.put("name", s.getName());
+        m.put("type", s.getType());
         return m;
     }
 
