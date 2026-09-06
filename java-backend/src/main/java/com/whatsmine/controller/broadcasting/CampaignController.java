@@ -115,9 +115,25 @@ public class CampaignController {
         filters.put("status", status);
 
         return inertiaRenderer.render("Broadcasting/Campaigns/Index", Map.of(
-                "campaigns", campaigns,
+                "campaigns", paginate(campaigns),
                 "filters", filters
         ), request);
+    }
+
+    /**
+     * Builds a Laravel-paginator-shaped payload (data/current_page/last_page/total)
+     * since Broadcasting/Campaigns/Index.jsx was written against that shape —
+     * a raw Spring Page serializes as {content, pageable, ...}, which left
+     * campaigns.data undefined and silently broke the page render.
+     */
+    private Map<String, Object> paginate(Page<Campaign> page) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("data", page.getContent());
+        out.put("current_page", page.getNumber() + 1);
+        out.put("last_page", Math.max(page.getTotalPages(), 1));
+        out.put("per_page", page.getSize());
+        out.put("total", page.getTotalElements());
+        return out;
     }
 
     @GetMapping("/campaigns/create")

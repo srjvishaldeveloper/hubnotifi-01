@@ -110,6 +110,22 @@ public class InboxController {
         return userDetails.getWorkspaceId();
     }
 
+    /**
+     * Builds a Laravel-paginator-shaped payload (data/current_page/last_page/total)
+     * since Inbox/Index.jsx and Inbox/Show.jsx were written against that shape —
+     * a raw Spring Page serializes as {content, pageable, ...}, which left
+     * conversations.data undefined and silently broke the page render.
+     */
+    private Map<String, Object> paginate(Page<Conversation> page) {
+        Map<String, Object> out = new HashMap<>();
+        out.put("data", page.getContent());
+        out.put("current_page", page.getNumber() + 1);
+        out.put("last_page", Math.max(page.getTotalPages(), 1));
+        out.put("per_page", page.getSize());
+        out.put("total", page.getTotalElements());
+        return out;
+    }
+
     @GetMapping
     public Object index(
             HttpServletRequest request,
@@ -141,7 +157,7 @@ public class InboxController {
         filters.put("account_id", accountId);
 
         Map<String, Object> props = new HashMap<>();
-        props.put("conversations", conversations);
+        props.put("conversations", paginate(conversations));
         props.put("filters", filters);
         props.put("labels", labels);
         props.put("channelAccounts", channelAccounts);
@@ -198,7 +214,7 @@ public class InboxController {
         props.put("conversation", conversation);
         props.put("messages", messages);
         props.put("allLabels", allLabels);
-        props.put("conversations", conversations);
+        props.put("conversations", paginate(conversations));
         props.put("filters", filters);
         props.put("teamMembers", teamMembers);
         props.put("whatsappTemplates", whatsappTemplates);
