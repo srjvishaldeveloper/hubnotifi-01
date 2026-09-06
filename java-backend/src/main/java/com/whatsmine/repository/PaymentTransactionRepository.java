@@ -22,4 +22,6 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     List<PaymentTransaction> findByStatusAndCreatedAtGreaterThanEqual(String status, LocalDateTime from);
 
     List<PaymentTransaction> findTop6ByOrderByCreatedAtDesc();
+
+    java.util.Optional<PaymentTransaction> findByGatewayTransactionId(String gatewayTransactionId);
 }
