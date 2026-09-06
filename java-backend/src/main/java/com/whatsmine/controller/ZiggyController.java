@@ -153,7 +153,14 @@ public class ZiggyController {
                         "admin.integrations.index": { "uri": "admin/integrations", "methods": ["GET", "HEAD"] },
                         "admin.integrations.edit": { "uri": "admin/integrations/{provider}", "methods": ["GET", "HEAD"] },
                         "admin.integrations.update": { "uri": "admin/integrations/{provider}", "methods": ["PUT"] },
-                        "admin.ai.index": { "uri": "admin/ai", "methods": ["GET", "HEAD"] }
+                        "admin.ai.index": { "uri": "admin/ai", "methods": ["GET", "HEAD"] },
+                        "admin.license.index": { "uri": "admin/license", "methods": ["GET", "HEAD"] },
+                        "admin.license.check-update": { "uri": "admin/license/check-update", "methods": ["POST"] },
+                        "admin.license.apply-update": { "uri": "admin/license/apply-update", "methods": ["POST"] },
+                        "admin.license.activate": { "uri": "admin/license/activate", "methods": ["POST"] },
+                        "admin.license.deactivate": { "uri": "admin/license/deactivate", "methods": ["POST"] },
+                        "license.show": { "uri": "license", "methods": ["GET", "HEAD"] },
+                        "license.activate": { "uri": "license/activate", "methods": ["POST"] }
 
                         // NOTE: the following nav items have NO backend controller at all yet
                         // (not a routing bug — the page was never built in Java): client.settings.*,

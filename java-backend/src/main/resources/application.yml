@@ -41,3 +41,15 @@ app:
   demo-mode: ${APP_DEMO_MODE:false}
   installed: ${APP_INSTALLED:true}
   url: ${APP_URL:http://localhost:8080}
+
+# Self-hosted license verification (Botble License Manager API). Disabled by
+# default — an operator running their own copy of this app has no reason to
+# license-gate it; this only matters if this build is itself being
+# distributed/resold and the operator opts in with real credentials.
+license:
+  verify: ${LICENSE_VERIFY:false}
+  server-url: ${LICENSE_SERVER_URL:}
+  api-key: ${LICENSE_API_KEY:}
+  product-id: ${LICENSE_PRODUCT_ID:}
+  verify-type: ${LICENSE_VERIFY_TYPE:non_envato}
+  cache-hours: ${LICENSE_CACHE_HOURS:12}

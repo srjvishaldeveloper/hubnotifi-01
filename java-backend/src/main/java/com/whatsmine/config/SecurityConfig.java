@@ -4,8 +4,10 @@ import com.whatsmine.security.AdminUserDetailsService;
 import com.whatsmine.security.CustomUserDetailsService;
 import com.whatsmine.security.InertiaAccessDeniedHandler;
 import com.whatsmine.security.InertiaAuthenticationEntryPoint;
+import com.whatsmine.security.LicenseGateFilter;
 import com.whatsmine.security.SanctumAuthenticationFilter;
 import com.whatsmine.security.WorkspaceSecurityFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -32,6 +34,7 @@ public class SecurityConfig {
     private final AdminUserDetailsService adminUserDetailsService;
     private final SanctumAuthenticationFilter sanctumFilter;
     private final WorkspaceSecurityFilter workspaceSecurityFilter;
+    private final LicenseGateFilter licenseGateFilter;
     private final InertiaAuthenticationEntryPoint authenticationEntryPoint;
     private final InertiaAccessDeniedHandler accessDeniedHandler;
 
@@ -40,12 +43,14 @@ public class SecurityConfig {
             AdminUserDetailsService adminUserDetailsService,
             SanctumAuthenticationFilter sanctumFilter,
             WorkspaceSecurityFilter workspaceSecurityFilter,
+            LicenseGateFilter licenseGateFilter,
             InertiaAuthenticationEntryPoint authenticationEntryPoint,
             InertiaAccessDeniedHandler accessDeniedHandler) {
         this.userDetailsService = userDetailsService;
         this.adminUserDetailsService = adminUserDetailsService;
         this.sanctumFilter = sanctumFilter;
         this.workspaceSecurityFilter = workspaceSecurityFilter;
+        this.licenseGateFilter = licenseGateFilter;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
     }
@@ -53,6 +58,22 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+
+    /**
+     * LicenseGateFilter is a @Component OncePerRequestFilter, which Spring
+     * Boot would otherwise ALSO auto-register as a generic servlet filter
+     * running on every request — bypassing the admin chain's securityMatcher
+     * entirely and blocking unrelated routes (like /license itself) whenever
+     * licensing is enabled but unverified. Disabling that generic
+     * registration here so it only runs where addFilterAfter wires it below,
+     * scoped to /admin/**.
+     */
+    @Bean
+    public FilterRegistrationBean<LicenseGateFilter> disableLicenseGateFilterAutoRegistration(LicenseGateFilter filter) {
+        FilterRegistrationBean<LicenseGateFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
@@ -94,6 +115,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
+                .addFilterAfter(licenseGateFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
                         .logoutUrl("/admin/logout")
                         .logoutSuccessUrl("/admin/login")
@@ -169,6 +191,8 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/webhooks/**",
                                 "/widgets/**",
+                                "/license",
+                                "/license/**",
                                 "/pages/**",
                                 "/p/**",
                                 "/pricing",
