@@ -42,10 +42,16 @@ function CodeBlock({ code, label }) {
 /** Map common cron expressions to a readable label; fall back to the raw expression. */
 function humanizeExpression(expr, t) {
     const map = {
+        // Laravel (5-field) cron expressions
         '* * * * *': t('cron.freq.every_minute'),
         '0 * * * *': t('cron.freq.hourly'),
         '0 0 * * *': t('cron.freq.daily'),
         '0 0 * * 0': t('cron.freq.weekly'),
+        // Spring's @Scheduled cron expressions (6-field, leading seconds)
+        '0 * * * * *': t('cron.freq.every_minute'),
+        '0 0 * * * *': t('cron.freq.hourly'),
+        '0 0 0 * * *': t('cron.freq.daily'),
+        '0 0 0 * * SUN': t('cron.freq.weekly'),
     };
     return map[expr] || null;
 }
@@ -71,6 +77,7 @@ const STATUS = {
 };
 
 export default function CronSetupIndex({
+    runtime = 'php',
     basePath = '',
     phpBinary = 'php',
     queueConnection = 'redis',
@@ -79,6 +86,7 @@ export default function CronSetupIndex({
     schedulerStatus = 'inactive',
 }) {
     const { t } = useTranslation();
+    const isJava = runtime === 'java';
 
     const cronCommand = `* * * * * php ${basePath}/artisan schedule:run >> /dev/null 2>&1`;
 
@@ -95,6 +103,21 @@ stopasgroup=true
 killasgroup=true
 redirect_stderr=true
 stdout_logfile=${basePath}/storage/logs/worker.log`;
+
+    const systemdUnit = `[Unit]
+Description=Hub Notification (Spring Boot)
+After=network.target
+
+[Service]
+WorkingDirectory=${basePath}
+ExecStart=/usr/bin/java -jar ${basePath}/app.jar
+Restart=always
+RestartSec=5
+User=hubnotification
+Environment=SPRING_PROFILES_ACTIVE=prod
+
+[Install]
+WantedBy=multi-user.target`;
 
     const status = STATUS[schedulerStatus] || STATUS.inactive;
     const StatusIcon = status.icon;
@@ -135,65 +158,117 @@ stdout_logfile=${basePath}/storage/logs/worker.log`;
                     </Card.Body>
                 </Card>
 
-                {/* Step 1: cron entry */}
-                <Card>
-                    <Card.Body className="space-y-3">
-                        <div>
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                                <Terminal className="h-4 w-4 text-neutral-400" />
-                                {t('cron.step1_title')}
-                            </h3>
-                            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step1_desc')}</p>
-                        </div>
-                        <CodeBlock code={cronCommand} label={t('cron.copy')} />
-                    </Card.Body>
-                </Card>
+                {isJava ? (
+                    <>
+                        {/* Step 1 (Java): scheduler runs in-process */}
+                        <Card>
+                            <Card.Body className="space-y-3">
+                                <div>
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        <Terminal className="h-4 w-4 text-neutral-400" />
+                                        {t('cron.step1_title_java')}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step1_desc_java')}</p>
+                                </div>
+                            </Card.Body>
+                        </Card>
 
-                {/* Step 2: queue workers */}
-                <Card>
-                    <Card.Body className="space-y-3">
-                        <div>
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                                <Server className="h-4 w-4 text-neutral-400" />
-                                {t('cron.step2_title')}
-                            </h3>
-                            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step2_desc')}</p>
-                        </div>
-                        <CodeBlock code={queueCommand} label={t('cron.copy')} />
+                        {/* Step 2 (Java): job queue runs in-process, keep the JVM alive */}
+                        <Card>
+                            <Card.Body className="space-y-3">
+                                <div>
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        <Server className="h-4 w-4 text-neutral-400" />
+                                        {t('cron.step2_title_java')}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step2_desc_java')}</p>
+                                </div>
+                                <p className="pt-1 text-xs font-medium text-neutral-700 dark:text-neutral-300">{t('cron.systemd_title')}</p>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('cron.systemd_desc')}</p>
+                                <CodeBlock code={systemdUnit} label={t('cron.copy')} />
+                            </Card.Body>
+                        </Card>
 
-                        <p className="pt-1 text-xs font-medium text-neutral-700 dark:text-neutral-300">{t('cron.supervisor_title')}</p>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('cron.supervisor_desc')}</p>
-                        <CodeBlock code={supervisorConfig} label={t('cron.copy')} />
-                    </Card.Body>
-                </Card>
+                        {/* Step 3 (Java): verify */}
+                        <Card>
+                            <Card.Body className="space-y-3">
+                                <div>
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        <CheckCircle className="h-4 w-4 text-neutral-400" />
+                                        {t('cron.step3_title')}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step3_desc_java')}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('cron.verify_health')}</p>
+                                    <CodeBlock code="curl http://localhost:8080/actuator/health" label={t('cron.copy')} />
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </>
+                ) : (
+                    <>
+                        {/* Step 1: cron entry */}
+                        <Card>
+                            <Card.Body className="space-y-3">
+                                <div>
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        <Terminal className="h-4 w-4 text-neutral-400" />
+                                        {t('cron.step1_title')}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step1_desc')}</p>
+                                </div>
+                                <CodeBlock code={cronCommand} label={t('cron.copy')} />
+                            </Card.Body>
+                        </Card>
 
-                {/* Step 3: verify */}
-                <Card>
-                    <Card.Body className="space-y-3">
-                        <div>
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                                <CheckCircle className="h-4 w-4 text-neutral-400" />
-                                {t('cron.step3_title')}
-                            </h3>
-                            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step3_desc')}</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('cron.verify_run')}</p>
-                            <CodeBlock code="php artisan schedule:run" label={t('cron.copy')} />
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('cron.verify_list')}</p>
-                            <CodeBlock code="php artisan schedule:list" label={t('cron.copy')} />
-                        </div>
-                    </Card.Body>
-                </Card>
+                        {/* Step 2: queue workers */}
+                        <Card>
+                            <Card.Body className="space-y-3">
+                                <div>
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        <Server className="h-4 w-4 text-neutral-400" />
+                                        {t('cron.step2_title')}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step2_desc')}</p>
+                                </div>
+                                <CodeBlock code={queueCommand} label={t('cron.copy')} />
+
+                                <p className="pt-1 text-xs font-medium text-neutral-700 dark:text-neutral-300">{t('cron.supervisor_title')}</p>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('cron.supervisor_desc')}</p>
+                                <CodeBlock code={supervisorConfig} label={t('cron.copy')} />
+                            </Card.Body>
+                        </Card>
+
+                        {/* Step 3: verify */}
+                        <Card>
+                            <Card.Body className="space-y-3">
+                                <div>
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        <CheckCircle className="h-4 w-4 text-neutral-400" />
+                                        {t('cron.step3_title')}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.step3_desc')}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('cron.verify_run')}</p>
+                                    <CodeBlock code="php artisan schedule:run" label={t('cron.copy')} />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('cron.verify_list')}</p>
+                                    <CodeBlock code="php artisan schedule:list" label={t('cron.copy')} />
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </>
+                )}
 
                 {/* Registered scheduled tasks */}
                 <Card>
                     <Card.Body className="space-y-3">
                         <div>
                             <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('cron.tasks_title')}</h3>
-                            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t('cron.tasks_desc')}</p>
+                            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t(isJava ? 'cron.tasks_desc_java' : 'cron.tasks_desc')}</p>
                         </div>
 
                         {tasks.length === 0 ? (

@@ -11,16 +11,42 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class SystemSchedulerTasks {
 
     private static final Logger log = LoggerFactory.getLogger(SystemSchedulerTasks.class);
     private static final int WEBHOOK_EVENT_RETENTION_DAYS = 30;
+    private final AtomicReference<Instant> lastHeartbeat = new AtomicReference<>();
+
+    /**
+     * Human-readable descriptions for each {@code @Scheduled} method below, keyed by
+     * method name, in display order. Read by {@link #describeScheduledTasks()} so the
+     * admin Cron Setup page always reflects exactly what's registered here.
+     */
+    private static final Map<String, String> TASK_DESCRIPTIONS = new LinkedHashMap<>();
+    static {
+        TASK_DESCRIPTIONS.put("schedulerHeartbeat", "Scheduler heartbeat");
+        TASK_DESCRIPTIONS.put("launchScheduledCampaigns", "Launch scheduled campaigns");
+        TASK_DESCRIPTIONS.put("syncWhatsappTemplates", "Sync WhatsApp templates");
+        TASK_DESCRIPTIONS.put("dispatchScheduledSocialPosts", "Dispatch scheduled social posts");
+        TASK_DESCRIPTIONS.put("refreshSocialTokens", "Refresh expiring social tokens");
+        TASK_DESCRIPTIONS.put("resetMonthlyUsageMeters", "Reset monthly usage meters");
+        TASK_DESCRIPTIONS.put("pruneWebhookEvents", "Prune old billing webhook events");
+        TASK_DESCRIPTIONS.put("billingSync", "Sync subscription status with billing gateways");
+        TASK_DESCRIPTIONS.put("billingExpireTrials", "Expire trials past their end date");
+        TASK_DESCRIPTIONS.put("billingChargeRecurring", "Charge recurring subscriptions (merchant-initiated gateways)");
+        TASK_DESCRIPTIONS.put("notificationsTrialEnding", "Send trial-ending notifications");
+        TASK_DESCRIPTIONS.put("reportsWeeklyDigest", "Send weekly digest reports");
+    }
 
     private final QueueDispatcher queueDispatcher;
     private final SubscriptionRepository subscriptionRepository;
@@ -40,7 +66,49 @@ public class SystemSchedulerTasks {
     // Heartbeat every minute
     @Scheduled(fixedRate = 60000)
     public void schedulerHeartbeat() {
+        lastHeartbeat.set(Instant.now());
         log.debug("Scheduler heartbeat executed at {}", Instant.now());
+    }
+
+    /** Last time {@link #schedulerHeartbeat()} ran, or {@code null} before the first tick. */
+    public Instant getLastHeartbeat() {
+        return lastHeartbeat.get();
+    }
+
+    /**
+     * Reflects every {@code @Scheduled} method on this bean into a description + trigger
+     * expression, in {@link #TASK_DESCRIPTIONS} order — so the admin Cron Setup page always
+     * shows exactly what's registered here, never a hand-maintained list that can drift.
+     */
+    public List<Map<String, Object>> describeScheduledTasks() {
+        List<Map<String, Object>> tasks = new ArrayList<>();
+        for (Map.Entry<String, String> entry : TASK_DESCRIPTIONS.entrySet()) {
+            Method method;
+            try {
+                method = getClass().getDeclaredMethod(entry.getKey());
+            } catch (NoSuchMethodException e) {
+                continue;
+            }
+            Scheduled ann = method.getAnnotation(Scheduled.class);
+            if (ann == null) continue;
+
+            String expression;
+            if (!ann.cron().isEmpty()) {
+                expression = ann.cron();
+            } else if (ann.fixedRate() > 0) {
+                expression = "every " + (ann.fixedRate() / 1000) + "s";
+            } else if (ann.fixedDelay() > 0) {
+                expression = "every " + (ann.fixedDelay() / 1000) + "s";
+            } else {
+                expression = "";
+            }
+
+            Map<String, Object> task = new LinkedHashMap<>();
+            task.put("description", entry.getValue());
+            task.put("expression", expression);
+            tasks.add(task);
+        }
+        return tasks;
     }
 
     // Launch scheduled campaigns every minute
