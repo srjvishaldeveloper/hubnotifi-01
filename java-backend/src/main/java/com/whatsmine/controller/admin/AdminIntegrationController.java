@@ -83,6 +83,9 @@ public class AdminIntegrationController {
                 field("auth_token", "Auth Token", "password", true, null),
                 field("from_number", "From Number", "text", true, "The Twilio phone number or Messaging Service SID to send from, e.g. +15551234567.")
         ));
+        FIELDS.put("google_places", List.of(
+                field("api_key", "API Key", "password", true, "A Google Cloud API key with the Places API enabled.")
+        ));
     }
 
     private static Map<String, Object> field(String key, String label, String type, boolean required, String hint) {
