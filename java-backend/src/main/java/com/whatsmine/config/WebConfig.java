@@ -44,8 +44,15 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/build/**")
                 .addResourceLocations("classpath:/static/build/", "file:src/main/resources/static/build/", "file:../php/public/build/", "file:public/build/");
 
-        // Serve static public assets (images, icons, root assets)
-        registry.addResourceHandler("/images/**", "/whatsmine-icon.svg", "/whatsmine-logo.png", "/favicon.ico", "/*.png", "/*.svg", "/*.ico", "/*.js")
+        // Serve static public assets under /images/** (provider brand logos, etc.) —
+        // location must include the "images/" segment since the "**" match only
+        // captures the path AFTER "/images/", e.g. "/images/integrations/meta.svg"
+        // resolves to "integrations/meta.svg" under this location.
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("classpath:/static/images/", "file:src/main/resources/static/images/", "file:../php/public/images/", "file:public/images/");
+
+        // Serve root-level static assets (logo, favicon, etc.)
+        registry.addResourceHandler("/whatsmine-icon.svg", "/whatsmine-logo.png", "/favicon.ico", "/*.png", "/*.svg", "/*.ico", "/*.js")
                 .addResourceLocations("classpath:/static/", "file:src/main/resources/static/", "file:../php/public/", "file:public/");
 
         // Serve storage uploads
