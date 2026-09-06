@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface SocialPostAccountRepository extends JpaRepository<SocialPostAccount, Long> {
     List<SocialPostAccount> findBySocialPostId(Long socialPostId);
+
+    List<SocialPostAccount> findBySocialPostIdIn(List<Long> socialPostIds);
 }

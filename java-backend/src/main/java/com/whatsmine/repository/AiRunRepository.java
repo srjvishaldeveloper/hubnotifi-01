@@ -12,4 +12,6 @@ public interface AiRunRepository extends JpaRepository<AiRun, Long> {
     List<AiRun> findByChatbotId(Long chatbotId);
 
     List<AiRun> findByConversationId(Long conversationId);
+
+    List<AiRun> findByChatbotIdIn(List<Long> chatbotIds);
 }

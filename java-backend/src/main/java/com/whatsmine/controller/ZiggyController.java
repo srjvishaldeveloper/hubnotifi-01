@@ -61,6 +61,10 @@ public class ZiggyController {
                         "client.automations.edit": { "uri": "app/automations/{uuid}/edit", "methods": ["GET", "HEAD"] },
                         "client.automations.runs": { "uri": "app/automations/{uuid}/runs", "methods": ["GET", "HEAD"] },
                         "client.reports.automations.index": { "uri": "app/reports/automations", "methods": ["GET", "HEAD"] },
+                        "client.reports.campaigns.show": { "uri": "app/reports/campaigns/{campaign}", "methods": ["GET", "HEAD"] },
+                        "client.reports.inbox.index": { "uri": "app/reports/inbox", "methods": ["GET", "HEAD"] },
+                        "client.reports.ai.index": { "uri": "app/reports/ai", "methods": ["GET", "HEAD"] },
+                        "client.reports.social.index": { "uri": "app/reports/social", "methods": ["GET", "HEAD"] },
                         "client.ai.chatbots.index": { "uri": "app/ai/chatbots", "methods": ["GET", "HEAD"] },
                         "client.ai.knowledge-bases.index": { "uri": "app/ai/knowledge-bases", "methods": ["GET", "HEAD"] },
                         "client.ai.knowledge-bases.show": { "uri": "app/ai/knowledge-bases/{uuid}", "methods": ["GET", "HEAD"] },
@@ -138,7 +142,7 @@ public class ZiggyController {
                         // client.email-server.*,
                         // client.whatsapp.auto-replies.*, client.whatsapp.widget(s).*,
                         // client.whatsapp.setup.* (no GET page, actions only), client.inbox.setup,
-                        // client.api-tokens.*, client.reports.inbox/campaigns/ai/social,
+                        // client.api-tokens.*,
                         // admin.search, admin.integrations.audit-log/edit/update/test/rotate/
                         // set-default (Integrations page itself now loads read-only).
                     }

@@ -41,4 +41,12 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     );
 
     List<Conversation> findByWorkspaceIdOrderByLastMessageAtDesc(Long workspaceId);
+
+    @Query("SELECT c FROM Conversation c WHERE c.workspaceId = :workspaceId " +
+            "AND (c.createdAt BETWEEN :from AND :to OR c.resolvedAt BETWEEN :from AND :to)")
+    List<Conversation> findByWorkspaceIdAndActivityBetween(
+            @Param("workspaceId") Long workspaceId,
+            @Param("from") java.time.LocalDateTime from,
+            @Param("to") java.time.LocalDateTime to
+    );
 }
