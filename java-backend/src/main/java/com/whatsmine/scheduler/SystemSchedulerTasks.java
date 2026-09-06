@@ -1,23 +1,40 @@
 package com.whatsmine.scheduler;
 
+import com.whatsmine.model.Subscription;
 import com.whatsmine.queue.QueueDispatcher;
+import com.whatsmine.repository.SubscriptionRepository;
+import com.whatsmine.service.billing.BillingGatewayInterface;
+import com.whatsmine.service.billing.BillingGatewayRegistry;
+import com.whatsmine.service.billing.WebhookIdempotencyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Component
 public class SystemSchedulerTasks {
 
     private static final Logger log = LoggerFactory.getLogger(SystemSchedulerTasks.class);
+    private static final int WEBHOOK_EVENT_RETENTION_DAYS = 30;
 
     private final QueueDispatcher queueDispatcher;
+    private final SubscriptionRepository subscriptionRepository;
+    private final BillingGatewayRegistry gatewayRegistry;
+    private final WebhookIdempotencyService webhookIdempotencyService;
 
-    public SystemSchedulerTasks(QueueDispatcher queueDispatcher) {
+    public SystemSchedulerTasks(QueueDispatcher queueDispatcher,
+                                 SubscriptionRepository subscriptionRepository,
+                                 BillingGatewayRegistry gatewayRegistry,
+                                 WebhookIdempotencyService webhookIdempotencyService) {
         this.queueDispatcher = queueDispatcher;
+        this.subscriptionRepository = subscriptionRepository;
+        this.gatewayRegistry = gatewayRegistry;
+        this.webhookIdempotencyService = webhookIdempotencyService;
     }
 
     // Heartbeat every minute
@@ -57,31 +74,81 @@ public class SystemSchedulerTasks {
     // Reset monthly usage meters
     @Scheduled(cron = "0 0 0 1 * *")
     public void resetMonthlyUsageMeters() {
-        log.info("Cron: Resetting monthly usage meters");
+        // No usage-metering feature exists on the Java side yet (PHP's UsageMeter
+        // model/table was never ported) — nothing to reset. Logging this as done
+        // would be dishonest; logging the real reason instead.
+        log.info("Cron: Skipping usage-meter reset — no usage-metering feature ported yet.");
     }
 
-    // Prune webhook events daily at 03:00
-    @Scheduled(cron = "0 0 3 * * *")
+    // Prune webhook events — matches PHP's weekly() schedule, Sunday 00:00
+    @Scheduled(cron = "0 0 0 * * SUN")
     public void pruneWebhookEvents() {
-        log.info("Cron: Pruning old webhook events");
+        long deleted = webhookIdempotencyService.prune(WEBHOOK_EVENT_RETENTION_DAYS);
+        log.info("Cron: Pruned {} billing webhook event record(s) older than {} days", deleted, WEBHOOK_EVENT_RETENTION_DAYS);
     }
 
-    // Billing sync hourly
+    // Billing sync — matches PHP's hourly schedule
     @Scheduled(cron = "0 0 * * * *")
     public void billingSync() {
-        log.info("Cron: Syncing billing status");
+        List<Subscription> candidates = subscriptionRepository.findByStatusNot("canceled");
+        int synced = 0;
+        int skipped = 0;
+        for (Subscription sub : candidates) {
+            if (sub.getGateway() == null || sub.getGatewaySubscriptionId() == null) {
+                skipped++;
+                continue;
+            }
+            BillingGatewayInterface gateway = gatewayRegistry.get(sub.getGateway());
+            if (gateway == null || !gateway.isConfigured()) {
+                skipped++;
+                continue;
+            }
+            try {
+                if (gateway.sync(sub)) synced++;
+            } catch (Exception e) {
+                log.warn("Cron billing:sync failed for subscription {}: {}", sub.getId(), e.getMessage());
+            }
+        }
+        log.info("Cron: Billing sync — {} subscription(s) synced, {} skipped (no gateway id or gateway not configured)", synced, skipped);
     }
 
-    // Expire trials daily at 01:00
-    @Scheduled(cron = "0 0 1 * * *")
+    // Expire trials — matches PHP's hourly schedule
+    @Scheduled(cron = "0 0 * * * *")
     public void billingExpireTrials() {
-        log.info("Cron: Expiring billing trials");
+        List<Subscription> trialing = subscriptionRepository.findByStatus("trialing");
+        LocalDateTime now = LocalDateTime.now();
+        int expired = 0;
+        for (Subscription sub : trialing) {
+            if (sub.getTrialEndsAt() == null || sub.getTrialEndsAt().isAfter(now)) continue;
+
+            // Re-sync first so a real conversion webhook that already landed isn't clobbered.
+            BillingGatewayInterface gateway = sub.getGateway() != null ? gatewayRegistry.get(sub.getGateway()) : null;
+            if (gateway != null && gateway.isConfigured()) {
+                try {
+                    gateway.sync(sub);
+                } catch (Exception e) {
+                    log.warn("Cron billing:expire-trials sync failed for subscription {}: {}", sub.getId(), e.getMessage());
+                }
+            }
+
+            if ("trialing".equals(sub.getStatus()) && sub.getTrialEndsAt() != null && !sub.getTrialEndsAt().isAfter(now)) {
+                sub.setStatus("canceled");
+                sub.setEndsAt(sub.getTrialEndsAt());
+                subscriptionRepository.save(sub);
+                expired++;
+            }
+        }
+        log.info("Cron: Expired {} trial subscription(s) past their trial_ends_at", expired);
     }
 
-    // Charge recurring subscriptions daily at 01:30
-    @Scheduled(cron = "0 30 1 * * *")
+    // Charge recurring subscriptions — matches PHP's hourly schedule
+    @Scheduled(cron = "0 30 * * * *")
     public void billingChargeRecurring() {
-        log.info("Cron: Charging recurring subscriptions");
+        // Stripe and Razorpay (the two real gateways implemented) both auto-renew
+        // themselves and notify via webhook — this job exists in PHP only for
+        // "merchant-initiated transaction" gateways with no native recurring
+        // billing (Tap/Paymob/MyFatoorah), none of which are ported yet.
+        log.info("Cron: Skipping charge-recurring — all real gateways here auto-renew via their own webhook, no MIT-pattern gateway is ported yet.");
     }
 
     // Trial ending notifications daily at 09:00

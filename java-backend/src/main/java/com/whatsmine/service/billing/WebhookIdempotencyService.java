@@ -61,4 +61,11 @@ public class WebhookIdempotencyService {
             billingEventRepository.save(event);
         });
     }
+
+    /** Deletes billing event records older than the given retention window. Returns how many were removed. */
+    @Transactional
+    public long prune(int retentionDays) {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
+        return billingEventRepository.deleteByCreatedAtBefore(cutoff);
+    }
 }

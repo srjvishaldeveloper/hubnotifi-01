@@ -1,6 +1,5 @@
 package com.whatsmine.service.billing;
 
-import com.whatsmine.model.PaymentGatewayConfig;
 import com.whatsmine.repository.PaymentGatewayConfigRepository;
 import com.whatsmine.repository.PaymentTransactionRepository;
 import com.whatsmine.repository.SubscriptionRepository;
@@ -15,7 +14,6 @@ import java.util.Map;
 public class BillingGatewayRegistry {
 
     private final Map<String, BillingGatewayInterface> gateways = new LinkedHashMap<>();
-    private final PaymentGatewayConfigRepository gatewayConfigRepository;
 
     private static final Map<String, String> GATEWAY_LABELS = Map.ofEntries(
             Map.entry("stripe", "Stripe"),
@@ -34,17 +32,16 @@ public class BillingGatewayRegistry {
     );
 
     public BillingGatewayRegistry(StripeGateway stripeGateway,
+                                  RazorpayGateway razorpayGateway,
                                   SubscriptionRepository subscriptionRepository,
                                   PaymentTransactionRepository paymentTransactionRepository,
-                                  WebhookIdempotencyService idempotencyService,
                                   PaymentGatewayConfigRepository gatewayConfigRepository) {
-        this.gatewayConfigRepository = gatewayConfigRepository;
-
         gateways.put("stripe", stripeGateway);
+        gateways.put("razorpay", razorpayGateway);
 
         GATEWAY_LABELS.forEach((key, name) -> {
             if (!gateways.containsKey(key)) {
-                gateways.put(key, new GenericGateway(key, name, subscriptionRepository, paymentTransactionRepository, idempotencyService));
+                gateways.put(key, new GenericGateway(key, name, gatewayConfigRepository, subscriptionRepository, paymentTransactionRepository));
             }
         });
     }
@@ -64,13 +61,7 @@ public class BillingGatewayRegistry {
         List<Map<String, Object>> list = new ArrayList<>();
         GATEWAY_LABELS.forEach((key, name) -> {
             BillingGatewayInterface gateway = gateways.get(key);
-            boolean isConfigured = true;
-            try {
-                PaymentGatewayConfig config = gatewayConfigRepository.findByGateway(key).orElse(null);
-                if (config != null) {
-                    isConfigured = Boolean.TRUE.equals(config.getEnabled()) && config.hasActiveCredentials();
-                }
-            } catch (Exception ignored) {}
+            boolean isConfigured = gateway != null && gateway.isConfigured();
 
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("key", key);

@@ -27,4 +27,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     Page<Subscription> findByGateway(String gateway, Pageable pageable);
 
     Page<Subscription> findByStatusAndGateway(String status, String gateway, Pageable pageable);
+
+    List<Subscription> findByStatusNot(String status);
+
+    List<Subscription> findByStatus(String status);
 }
