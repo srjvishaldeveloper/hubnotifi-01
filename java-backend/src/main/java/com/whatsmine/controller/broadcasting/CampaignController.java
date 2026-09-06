@@ -1,6 +1,5 @@
 package com.whatsmine.controller.broadcasting;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.whatsmine.inertia.Inertia;
@@ -26,7 +25,6 @@ import com.whatsmine.repository.WhatsappTemplateRepository;
 
 import com.whatsmine.security.CustomUserDetails;
 import com.whatsmine.service.broadcasting.CampaignPersonalizer;
-import com.whatsmine.service.whatsapp.WhatsAppApiClient;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -37,8 +35,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 import java.util.*;
 
@@ -80,19 +76,10 @@ public class CampaignController {
     private CampaignPersonalizer campaignPersonalizer;
 
     @Autowired
-    private WhatsAppApiClient whatsAppApiClient;
-
-    @Autowired
-    private com.whatsmine.repository.ChannelAccountRepository channelAccountRepository;
-
-    @Autowired
     private com.whatsmine.service.broadcasting.CampaignAudienceService campaignAudienceService;
 
     @Autowired
-    private com.whatsmine.service.sms.SmsApiClient smsApiClient;
-
-    @Autowired
-    private com.whatsmine.service.email.EmailApiClient emailApiClient;
+    private com.whatsmine.queue.QueueDispatcher queueDispatcher;
 
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         return userDetails.getWorkspaceId();
@@ -363,74 +350,14 @@ public class CampaignController {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cannot launch this campaign.");
         }
 
-        campaign.setStatus("sending");
+        // Audience resolution + sending now happens off-request via the real
+        // job pipeline (LaunchCampaignJob -> DispatchCampaignChunkJob ->
+        // SendCampaignMessageJob -> FinalizeCampaignJob), matching PHP and no
+        // longer blocking this HTTP request or the WhatsApp/SMS rate limits.
+        campaign.setStatus("queued");
         campaignRepository.save(campaign);
 
-        // Resolve audience contacts and insert campaign recipients
-        List<Contact> contacts = campaignAudienceService.resolve(workspaceId, campaign.getChannel(), campaign.getAudienceType(), campaign.getAudienceRef());
-        int sentCount = 0;
-        int failedCount = 0;
-
-        // TODO(known gap, tracked separately): the message body sent below is
-        // still a placeholder ("Broadcast: <name>") rather than the campaign's
-        // saved template/payload — audience targeting itself is now real
-        // (segment/tag/contact_list resolved against actual Contact data).
-        com.whatsmine.model.ChannelAccount waChannelAccount = "whatsapp".equalsIgnoreCase(campaign.getChannel())
-                ? channelAccountRepository.findByWorkspaceIdAndStatus(workspaceId, "active").stream()
-                        .filter(ca -> "whatsapp".equalsIgnoreCase(ca.getChannel()))
-                        .findFirst().orElse(null)
-                : null;
-
-        for (Contact contact : contacts) {
-            CampaignRecipient recipient = new CampaignRecipient();
-            recipient.setCampaignId(campaign.getId());
-            recipient.setContactId(contact.getId());
-            recipient.setSentAt(LocalDateTime.now());
-
-            try {
-                if ("whatsapp".equalsIgnoreCase(campaign.getChannel())) {
-                    if (waChannelAccount == null) {
-                        throw new IllegalStateException("No active WhatsApp channel connected for this workspace.");
-                    }
-                    String providerId = whatsAppApiClient.sendText(waChannelAccount, contact.getPhoneE164(), "Broadcast: " + campaign.getName());
-                    recipient.setStatus("sent");
-                    recipient.setProviderMessageId(providerId);
-                    sentCount++;
-                } else if ("sms".equalsIgnoreCase(campaign.getChannel())) {
-                    String sid = smsApiClient.sendText(contact.getPhoneE164(), "Broadcast: " + campaign.getName());
-                    recipient.setStatus("sent");
-                    recipient.setProviderMessageId(sid);
-                    sentCount++;
-                } else if ("email".equalsIgnoreCase(campaign.getChannel())) {
-                    emailApiClient.send(contact.getEmail(), campaign.getName(), "Broadcast: " + campaign.getName());
-                    recipient.setStatus("sent");
-                    recipient.setProviderMessageId("email-" + UUID.randomUUID());
-                    sentCount++;
-                } else {
-                    throw new IllegalStateException("Unsupported campaign channel: " + campaign.getChannel());
-                }
-            } catch (Exception e) {
-                recipient.setStatus("failed");
-                recipient.setFailedReason(e.getMessage());
-                failedCount++;
-            }
-            campaignRecipientRepository.save(recipient);
-        }
-
-        campaign.setStatus("completed");
-        try {
-            Map<String, Object> totals = Map.of(
-                    "total", contacts.size(),
-                    "queued", 0,
-                    "sent", sentCount,
-                    "delivered", sentCount,
-                    "read", 0,
-                    "failed", failedCount
-            );
-            campaign.setTotalsJson(objectMapper.writeValueAsString(totals));
-        } catch (Exception ignored) {}
-
-        campaignRepository.save(campaign);
+        queueDispatcher.dispatch("broadcast", "LaunchCampaignJob", Map.of("campaignId", campaign.getId()), 2, new int[]{60});
 
         return Inertia.redirect("/app/broadcasts/campaigns/" + campaign.getUuid());
     }
