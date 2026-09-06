@@ -48,10 +48,12 @@ public class MediaService {
         String rawPath = "media/" + UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
         String path = storageManagerService.prefixedPath(rawPath);
 
-        // Store file locally under storage/app/public/ if public disk
-        Path uploadDir = Paths.get("storage/app/public", "media");
-        Files.createDirectories(uploadDir);
-        Path targetPath = Paths.get("storage/app/public", path);
+        // Store file locally under storage/app/public/ if public disk.
+        // MultipartFile#transferTo(File) resolves a RELATIVE destination against
+        // the servlet container's own temp work directory, not this process's
+        // working directory — must pass an absolute path or the write silently
+        // lands (or fails) somewhere under Tomcat's temp dir instead of storage/.
+        Path targetPath = Paths.get("storage/app/public", path).toAbsolutePath();
         Files.createDirectories(targetPath.getParent());
         file.transferTo(targetPath.toFile());
 

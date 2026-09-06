@@ -3,21 +3,27 @@ package com.whatsmine.controller.client;
 import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.AiKbDocument;
 import com.whatsmine.model.AiKnowledgeBase;
+import com.whatsmine.queue.QueueDispatcher;
 import com.whatsmine.repository.AiKbChunkRepository;
 import com.whatsmine.repository.AiKbDocumentRepository;
 import com.whatsmine.repository.AiKnowledgeBaseRepository;
 import com.whatsmine.security.CustomUserDetails;
-import com.whatsmine.service.ai.DocumentIndexer;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/app/ai")
@@ -36,7 +42,7 @@ public class AiKnowledgeBaseController {
     private AiKbChunkRepository chunkRepository;
 
     @Autowired
-    private DocumentIndexer documentIndexer;
+    private QueueDispatcher queueDispatcher;
 
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         if (userDetails == null || userDetails.getWorkspaceId() == null) {
@@ -89,34 +95,73 @@ public class AiKnowledgeBaseController {
         return inertiaRenderer.render("AI/KnowledgeBases/Show", props, request);
     }
 
+    /**
+     * The real Show.jsx page always submits this as multipart/form-data
+     * (it needs to support an optional file upload alongside url/text/faq/
+     * sitemap source refs), so this must bind form fields + an optional
+     * MultipartFile — a @RequestBody Map here would never actually
+     * deserialize the real request the frontend sends.
+     */
     @PostMapping("/knowledge-bases/{uuid}/documents")
     public Object addDocument(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String uuid,
-            @RequestBody Map<String, Object> body
-    ) {
+            @RequestParam(value = "source_type", defaultValue = "text") String sourceType,
+            @RequestParam(value = "source_ref", required = false) String sourceRef,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "file", required = false) MultipartFile file
+    ) throws java.io.IOException {
         Long workspaceId = getWorkspaceId(userDetails);
         AiKnowledgeBase kb = knowledgeBaseRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Knowledge base not found."));
 
-        String sourceType = body != null ? (String) body.get("source_type") : "text";
-        String sourceRef = body != null ? (String) body.get("source_ref") : "";
-        String title = body != null && body.get("title") != null ? (String) body.get("title") : "Document";
+        String resolvedSourceRef = sourceRef != null ? sourceRef : "";
+        String resolvedTitle = (title != null && !title.isBlank()) ? title : "Document";
+
+        if ("file".equals(sourceType)) {
+            if (file == null || file.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "A file is required for the file source type.");
+            }
+            resolvedSourceRef = storeUploadedFile(file);
+            if (title == null || title.isBlank()) {
+                resolvedTitle = file.getOriginalFilename() != null ? file.getOriginalFilename() : "Document";
+            }
+        }
 
         AiKbDocument doc = new AiKbDocument();
         doc.setKbId(kb.getId());
         doc.setSourceType(sourceType);
-        doc.setSourceRef(sourceRef);
-        doc.setTitle(title);
+        doc.setSourceRef(resolvedSourceRef);
+        doc.setTitle(resolvedTitle);
         doc.setStatus("pending");
         doc = documentRepository.save(doc);
 
-        // Index document synchronously for Phase 11
-        documentIndexer.indexDocument(doc.getId(), workspaceId);
+        Map<String, Object> jobData = new LinkedHashMap<>();
+        jobData.put("documentId", doc.getId());
+        jobData.put("workspaceId", workspaceId);
+        queueDispatcher.dispatch("ai", "IndexDocumentJob", jobData);
 
         return ResponseEntity.status(HttpStatus.SEE_OTHER)
                 .header("Location", "/app/ai/knowledge-bases/" + uuid)
                 .body(Map.of("message", "Document queued for indexing."));
+    }
+
+    /** Stores an uploaded KB document (e.g. PDF) under storage/app/public/kb-docs/, the same local disk MediaService writes to. */
+    private String storeUploadedFile(MultipartFile file) throws java.io.IOException {
+        String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "file";
+        String ext = "";
+        int dot = originalFilename.lastIndexOf('.');
+        if (dot > 0) ext = originalFilename.substring(dot + 1);
+
+        String relativePath = "kb-docs/" + UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
+        // MultipartFile#transferTo(File) resolves a RELATIVE destination against
+        // the servlet container's own temp work directory, not this process's
+        // working directory — must pass an absolute path or the write silently
+        // lands (or fails) somewhere under Tomcat's temp dir instead of storage/.
+        Path targetPath = Paths.get("storage/app/public", relativePath).toAbsolutePath();
+        Files.createDirectories(targetPath.getParent());
+        file.transferTo(targetPath.toFile());
+        return relativePath;
     }
 
     @PostMapping("/documents/{uuid}/reindex")
@@ -135,7 +180,10 @@ public class AiKnowledgeBaseController {
         doc.setStatus("pending");
         documentRepository.save(doc);
 
-        documentIndexer.indexDocument(doc.getId(), workspaceId);
+        Map<String, Object> jobData = new LinkedHashMap<>();
+        jobData.put("documentId", doc.getId());
+        jobData.put("workspaceId", workspaceId);
+        queueDispatcher.dispatch("ai", "IndexDocumentJob", jobData);
 
         return ResponseEntity.status(HttpStatus.SEE_OTHER)
                 .header("Location", "/app/ai/knowledge-bases/" + kb.getUuid())
