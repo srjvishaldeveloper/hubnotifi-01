@@ -1,16 +1,25 @@
 package com.whatsmine.model;
 
+import com.whatsmine.model.converter.JsonMapConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -58,7 +67,8 @@ public class Contact {
     private Boolean optInEmail = false;
 
     @Column(name = "custom_fields", length = 65535)
-    private String customFields;
+    @Convert(converter = JsonMapConverter.class)
+    private Map<String, Object> customFields;
 
     @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;
@@ -136,8 +146,8 @@ public class Contact {
     public void setOptInSms(Boolean optInSms) { this.optInSms = optInSms; }
     public Boolean getOptInEmail() { return optInEmail; }
     public void setOptInEmail(Boolean optInEmail) { this.optInEmail = optInEmail; }
-    public String getCustomFields() { return customFields; }
-    public void setCustomFields(String customFields) { this.customFields = customFields; }
+    public Map<String, Object> getCustomFields() { return customFields; }
+    public void setCustomFields(Map<String, Object> customFields) { this.customFields = customFields; }
     public LocalDateTime getLastSeenAt() { return lastSeenAt; }
     public void setLastSeenAt(LocalDateTime lastSeenAt) { this.lastSeenAt = lastSeenAt; }
     public String getSource() { return source; }

@@ -28,11 +28,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import java.util.*;
 
@@ -71,22 +77,19 @@ public class InboxController {
     private com.whatsmine.service.social.MetaMessagingApiClient metaMessagingApiClient;
 
     @Autowired
+    private com.whatsmine.realtime.RealtimeBroadcaster realtimeBroadcaster;
+
+    @Autowired
     private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @Autowired
-    private com.whatsmine.realtime.RealtimeBroadcaster realtimeBroadcaster;
+    private com.whatsmine.repository.EcommerceProductRepository ecommerceProductRepository;
 
-    /** Reads Contact.customFields (JSON) for the PSID/IGSID stored by MetaMessagingInboundProcessor. */
-    @SuppressWarnings("unchecked")
+    /** Reads Contact.customFields for the PSID/IGSID stored by MetaMessagingInboundProcessor. */
     private String contactPsid(Contact contact, String channel) {
-        if (contact.getCustomFields() == null || contact.getCustomFields().isBlank()) return null;
-        try {
-            Map<String, Object> customFields = objectMapper.readValue(contact.getCustomFields(), Map.class);
-            Object psid = customFields.get("messenger".equalsIgnoreCase(channel) ? "messenger_psid" : "instagram_psid");
-            return psid != null ? psid.toString() : null;
-        } catch (Exception e) {
-            return null;
-        }
+        if (contact.getCustomFields() == null) return null;
+        Object psid = contact.getCustomFields().get("messenger".equalsIgnoreCase(channel) ? "messenger_psid" : "instagram_psid");
+        return psid != null ? psid.toString() : null;
     }
 
     private String sendOverChannel(ChannelAccount channelAccount, Contact contact, String body) {
@@ -104,6 +107,15 @@ public class InboxController {
                     : metaMessagingApiClient.sendInstagramText(channelAccount, psid, body);
         }
         throw new IllegalStateException("Unsupported channel: " + channel);
+    }
+
+    /** mediaType is image/video/document/audio; exactly one of mediaId or link is used. */
+    private String sendMediaOverChannel(ChannelAccount channelAccount, Contact contact, String mediaType, String mediaId, String link, String caption, String filename) {
+        String channel = channelAccount.getChannel();
+        if ("whatsapp".equalsIgnoreCase(channel)) {
+            return whatsAppApiClient.sendMedia(channelAccount, contact.getPhoneE164(), mediaType, link, mediaId, caption, filename);
+        }
+        throw new IllegalStateException("Sending media over " + channel + " is not yet supported — only WhatsApp media sends are wired up.");
     }
 
     private Long getWorkspaceId(CustomUserDetails userDetails) {
@@ -289,7 +301,7 @@ public class InboxController {
         return Inertia.redirect("/app/inbox/conversations/" + conversation.getUuid());
     }
 
-    @PostMapping("/conversations/{uuid}/reply")
+    @PostMapping(value = "/conversations/{uuid}/reply", consumes = MediaType.APPLICATION_JSON_VALUE)
     public Object reply(
             HttpServletRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -307,12 +319,86 @@ public class InboxController {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("errors", Map.of("body", "Message body is required.")));
         }
 
+        return finishReply(request, userDetails, conversation, type, body, null);
+    }
+
+    /**
+     * Attachment path of PHP's InboxController::reply() — the same reply()
+     * route, but the frontend posts multipart/form-data whenever the compose
+     * bar has a file attached, so Spring routes it here by content type
+     * instead of trying to bind one method to both shapes.
+     */
+    @PostMapping(value = "/conversations/{uuid}/reply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Object replyWithAttachment(
+            HttpServletRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable String uuid,
+            @RequestParam(value = "body", required = false) String body,
+            @RequestParam(value = "type", required = false, defaultValue = "text") String type,
+            @RequestParam("attachment") MultipartFile attachment
+    ) {
+        Long workspaceId = getWorkspaceId(userDetails);
+        Conversation conversation = conversationRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        ChannelAccount sendChannelAccount = conversation.getChannelAccountId() != null
+                ? channelAccountRepository.findById(conversation.getChannelAccountId()).orElseThrow()
+                : conversation.getChannelAccount();
+        if (sendChannelAccount == null || !"whatsapp".equalsIgnoreCase(sendChannelAccount.getChannel())) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "No active WhatsApp account."));
+        }
+
+        String mimeType = attachment.getContentType() != null ? attachment.getContentType() : "application/octet-stream";
+        if ("text".equalsIgnoreCase(type)) {
+            type = mimeType.startsWith("image/") ? "image" : mimeType.startsWith("video/") ? "video" : "document";
+        }
+
+        Map<String, Object> msgPayload;
+        try {
+            byte[] bytes = attachment.getBytes();
+            String mediaId = whatsAppApiClient.uploadMedia(sendChannelAccount, bytes, attachment.getOriginalFilename(), mimeType);
+
+            String storedName = UUID.randomUUID() + extensionFor(attachment.getOriginalFilename());
+            Path targetPath = Paths.get("storage/app/public/message-media", storedName).toAbsolutePath();
+            Files.createDirectories(targetPath.getParent());
+            Files.write(targetPath, bytes);
+            String previewUrl = "/storage/message-media/" + storedName;
+
+            msgPayload = new LinkedHashMap<>();
+            msgPayload.put("media_id", mediaId);
+            msgPayload.put("preview_url", previewUrl);
+            msgPayload.put("caption", body);
+            msgPayload.put("filename", attachment.getOriginalFilename());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", e.getMessage()));
+        }
+
+        String effectiveBody = body != null && !body.isBlank() ? body : attachment.getOriginalFilename();
+        return finishReply(request, userDetails, conversation, type, effectiveBody, msgPayload);
+    }
+
+    private String extensionFor(String filename) {
+        if (filename == null) return "";
+        int dot = filename.lastIndexOf('.');
+        return dot >= 0 ? filename.substring(dot) : "";
+    }
+
+    /** Shared tail of both reply() overloads: save, send over the real channel driver, broadcast, respond. */
+    private Object finishReply(HttpServletRequest request, CustomUserDetails userDetails, Conversation conversation,
+                                String type, String body, Map<String, Object> msgPayload) {
+        Long workspaceId = getWorkspaceId(userDetails);
+
         Message msg = new Message();
         msg.setConversationId(conversation.getId());
         msg.setDirection("out");
         msg.setChannel(conversation.getChannelAccount() != null ? conversation.getChannelAccount().getChannel() : "whatsapp");
         msg.setType(type);
         msg.setBody(body);
+        if (msgPayload != null) {
+            try {
+                msg.setPayload(objectMapper.writeValueAsString(msgPayload));
+            } catch (Exception ignored) { }
+        }
         msg.setStatus("queued");
         msg.setSentBy("human");
         msg.setUserId(userDetails.getId());
@@ -325,7 +411,11 @@ public class InboxController {
             ChannelAccount sendChannelAccount = conversation.getChannelAccountId() != null
                     ? channelAccountRepository.findById(conversation.getChannelAccountId()).orElseThrow()
                     : conversation.getChannelAccount();
-            String providerMsgId = sendOverChannel(sendChannelAccount, contact, body);
+
+            String providerMsgId = msgPayload != null
+                    ? sendMediaOverChannel(sendChannelAccount, contact, type,
+                            String.valueOf(msgPayload.get("media_id")), null, (String) msgPayload.get("caption"), (String) msgPayload.get("filename"))
+                    : sendOverChannel(sendChannelAccount, contact, body);
             msg.setStatus("sent");
             msg.setProviderMessageId(providerMsgId);
         } catch (Exception e) {
@@ -342,7 +432,7 @@ public class InboxController {
         conversationRepository.save(conversation);
 
         if (realtimeBroadcaster != null) {
-            Map<String, Object> msgPayload = Map.of(
+            Map<String, Object> broadcastPayload = Map.of(
                     "id", msg.getId(),
                     "conversation_id", msg.getConversationId(),
                     "direction", msg.getDirection() != null ? msg.getDirection() : "outbound",
@@ -352,8 +442,8 @@ public class InboxController {
                     "status", msg.getStatus() != null ? msg.getStatus() : "sent",
                     "created_at", msg.getCreatedAt() != null ? msg.getCreatedAt().toString() : LocalDateTime.now().toString()
             );
-            realtimeBroadcaster.broadcast("conversation." + conversation.getId(), ".MessageSent", msgPayload);
-            realtimeBroadcaster.broadcast("workspace." + workspaceId, ".MessageSent", msgPayload);
+            realtimeBroadcaster.broadcast("conversation." + conversation.getId(), ".MessageSent", broadcastPayload);
+            realtimeBroadcaster.broadcast("workspace." + workspaceId, ".MessageSent", broadcastPayload);
         }
 
         if ("application/json".equalsIgnoreCase(request.getHeader("Accept"))) {
@@ -361,6 +451,253 @@ public class InboxController {
         }
 
         return Inertia.redirect("/app/inbox/conversations/" + conversation.getUuid());
+    }
+
+    /** Upload a media file to WhatsApp and return the media_id, matching PHP's standalone uploadMedia() (used by the template/media pickers). */
+    @PostMapping("/conversations/{uuid}/upload-media")
+    public ResponseEntity<Map<String, Object>> uploadMedia(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable String uuid,
+            @RequestParam("file") MultipartFile file
+    ) {
+        Long workspaceId = getWorkspaceId(userDetails);
+        Conversation conversation = conversationRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        ChannelAccount channelAccount = conversation.getChannelAccountId() != null
+                ? channelAccountRepository.findById(conversation.getChannelAccountId()).orElse(null)
+                : conversation.getChannelAccount();
+        if (channelAccount == null || !"whatsapp".equalsIgnoreCase(channelAccount.getChannel())) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "No active WhatsApp account."));
+        }
+
+        String mimeType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+        try {
+            byte[] bytes = file.getBytes();
+            String mediaId = whatsAppApiClient.uploadMedia(channelAccount, bytes, file.getOriginalFilename(), mimeType);
+
+            String storedName = UUID.randomUUID() + extensionFor(file.getOriginalFilename());
+            Path targetPath = Paths.get("storage/app/public/template-media", storedName).toAbsolutePath();
+            Files.createDirectories(targetPath.getParent());
+            Files.write(targetPath, bytes);
+            String previewUrl = "/storage/template-media/" + storedName;
+
+            return ResponseEntity.ok(Map.of("media_id", mediaId, "mime_type", mimeType, "preview_url", previewUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Upload failed."));
+        }
+    }
+
+    /**
+     * Proxy/lazy-download inbound WhatsApp media: serves a cached local copy
+     * if one exists, otherwise resolves the media id from the raw webhook
+     * payload, downloads it from Meta, caches it, and redirects to it.
+     */
+    @GetMapping("/conversations/{uuid}/messages/{messageId}/media")
+    @SuppressWarnings("unchecked")
+    public Object serveMedia(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable String uuid,
+            @PathVariable Long messageId
+    ) {
+        Long workspaceId = getWorkspaceId(userDetails);
+        Conversation conversation = conversationRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!message.getConversationId().equals(conversation.getId())) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        Map<String, Object> payload;
+        try {
+            payload = message.getPayload() != null ? objectMapper.readValue(message.getPayload(), Map.class) : new LinkedHashMap<>();
+        } catch (Exception e) {
+            payload = new LinkedHashMap<>();
+        }
+
+        Object cachedPreview = payload.get("preview_url");
+        if (cachedPreview != null) {
+            String relative = String.valueOf(cachedPreview).replaceFirst("^/storage/", "");
+            Path cachedPath = Paths.get("storage/app/public", relative).toAbsolutePath();
+            if (Files.exists(cachedPath)) {
+                return Inertia.redirect(String.valueOf(cachedPreview));
+            }
+            payload.put("preview_url", null);
+        }
+
+        String type = message.getType() != null ? message.getType() : "image";
+        Object typeObj = payload.get(type);
+        Object mediaIdObj = typeObj instanceof Map ? ((Map<String, Object>) typeObj).get("id") : payload.get("media_id");
+        if (mediaIdObj == null) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "No media available.");
+        }
+
+        ChannelAccount channelAccount = conversation.getChannelAccountId() != null
+                ? channelAccountRepository.findById(conversation.getChannelAccountId()).orElse(null)
+                : conversation.getChannelAccount();
+        if (channelAccount == null) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "WhatsApp account not configured.");
+        }
+
+        try {
+            Map<String, String> resolved = whatsAppApiClient.getMediaUrl(channelAccount, String.valueOf(mediaIdObj));
+            byte[] bytes = whatsAppApiClient.downloadMedia(channelAccount, resolved.get("url"));
+            String mimeType = resolved.get("mime_type");
+            String ext = mimeType != null && mimeType.contains("/") ? mimeType.substring(mimeType.indexOf('/') + 1) : "bin";
+            if ("jpeg".equals(ext)) ext = "jpg";
+
+            String storedName = message.getId() + "." + ext;
+            Path targetPath = Paths.get("storage/app/public/message-media", storedName).toAbsolutePath();
+            Files.createDirectories(targetPath.getParent());
+            Files.write(targetPath, bytes);
+            String previewUrl = "/storage/message-media/" + storedName;
+
+            payload.put("preview_url", previewUrl);
+            payload.put("mime_type", mimeType);
+            message.setPayload(objectMapper.writeValueAsString(payload));
+            messageRepository.save(message);
+
+            return Inertia.redirect(previewUrl);
+        } catch (Exception e) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_GATEWAY, "Could not fetch media: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Shares a connected-store product into the conversation as a rich image
+     * card (or a plain text card when the product has no photo) — ports
+     * PHP's InboxController::shareProduct().
+     */
+    @PostMapping("/conversations/{uuid}/share-product")
+    public ResponseEntity<Map<String, Object>> shareProduct(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable String uuid,
+            @RequestBody Map<String, Object> body
+    ) {
+        Long workspaceId = getWorkspaceId(userDetails);
+        Conversation conversation = conversationRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        Object productIdObj = body.get("product_id");
+        if (productIdObj == null) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "product_id is required."));
+        }
+        com.whatsmine.model.EcommerceProduct product = ecommerceProductRepository.findByIdAndWorkspaceId(
+                Long.valueOf(productIdObj.toString()), workspaceId).orElse(null);
+        if (product == null) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found.");
+        }
+
+        String channel = conversation.getChannelAccount() != null ? conversation.getChannelAccount().getChannel() : "whatsapp";
+        if ("whatsapp".equalsIgnoreCase(channel) && !conversation.checkWhatsappWindowOpen()) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "WhatsApp 24-hour session is closed. Use an approved template to re-engage this contact."));
+        }
+
+        String currency = "";
+        if (product.getStore() != null && product.getStore().getExternalMeta() != null) {
+            Object c = product.getStore().getExternalMeta().get("currency");
+            if (c != null) currency = String.valueOf(c);
+        }
+        String url = productShareUrl(product);
+        String caption = formatProductMessage(product, currency, url, "whatsapp".equalsIgnoreCase(channel));
+        String image = product.getImageUrl();
+        boolean useImage = image != null && !image.isBlank();
+
+        Message msg = new Message();
+        msg.setConversationId(conversation.getId());
+        msg.setDirection("out");
+        msg.setChannel(channel);
+        msg.setType(useImage ? "image" : "text");
+        msg.setBody(caption);
+        if (useImage) {
+            try {
+                msg.setPayload(objectMapper.writeValueAsString(Map.of("link", image, "preview_url", image, "caption", caption)));
+            } catch (Exception ignored) { }
+        }
+        msg.setStatus("queued");
+        msg.setSentBy("human");
+        msg.setUserId(userDetails.getId());
+        msg.setSentAt(LocalDateTime.now());
+        msg = messageRepository.save(msg);
+
+        String sendError = null;
+        try {
+            Contact contact = contactRepository.findById(conversation.getContactId()).orElseThrow();
+            ChannelAccount sendChannelAccount = conversation.getChannelAccountId() != null
+                    ? channelAccountRepository.findById(conversation.getChannelAccountId()).orElseThrow()
+                    : conversation.getChannelAccount();
+            String providerMsgId = useImage
+                    ? sendMediaOverChannel(sendChannelAccount, contact, "image", null, image, caption, null)
+                    : sendOverChannel(sendChannelAccount, contact, caption);
+            msg.setStatus("sent");
+            msg.setProviderMessageId(providerMsgId);
+        } catch (Exception e) {
+            sendError = e.getMessage();
+            msg.setStatus("failed");
+            msg.setErrorJson("{\"message\":\"" + sendError + "\"}");
+        }
+        messageRepository.save(msg);
+
+        conversation.setLastMessageAt(LocalDateTime.now());
+        if (conversation.getLastInboundAt() != null && conversation.getFirstResponseAt() == null) {
+            conversation.setFirstResponseAt(LocalDateTime.now());
+        }
+        conversationRepository.save(conversation);
+
+        return ResponseEntity.ok(Map.of("message", msg, "error", sendError != null ? sendError : ""));
+    }
+
+    private String formatProductMessage(com.whatsmine.model.EcommerceProduct product, String currency, String url, boolean bold) {
+        String name = product.getName() != null ? product.getName().trim() : "";
+        List<String> lines = new ArrayList<>();
+        lines.add(bold ? "🛍️ *" + name + "*" : "🛍️ " + name);
+
+        if (product.getPrice() != null) {
+            String price = product.getPrice().stripTrailingZeros().toPlainString();
+            lines.add("Price: " + currencyPrefix(currency) + price);
+        }
+        if (product.getSku() != null && !product.getSku().isBlank()) {
+            lines.add("SKU: " + product.getSku());
+        }
+        if (url != null && !url.isBlank()) {
+            lines.add(url);
+        }
+        return String.join("\n", lines);
+    }
+
+    private String currencyPrefix(String currency) {
+        if (currency == null || currency.isBlank()) return "";
+        String c = currency.trim().toUpperCase();
+        Map<String, String> symbols = Map.of(
+                "USD", "$", "EUR", "€", "GBP", "£", "JPY", "¥", "INR", "₹",
+                "AUD", "A$", "CAD", "C$", "NZD", "NZ$", "BRL", "R$");
+        return symbols.getOrDefault(c, c + " ");
+    }
+
+    @SuppressWarnings("unchecked")
+    private String productShareUrl(com.whatsmine.model.EcommerceProduct product) {
+        Map<String, Object> raw = product.getRaw();
+        if (raw == null) return null;
+        String domain = product.getStore() != null ? product.getStore().getDomain() : null;
+
+        if ("shopify".equalsIgnoreCase(product.getPlatform())) {
+            Object onlineUrl = raw.get("online_store_url");
+            if (onlineUrl != null) return String.valueOf(onlineUrl);
+            Object handle = raw.get("handle");
+            if (handle != null && !String.valueOf(handle).isBlank() && domain != null) {
+                return "https://" + domain + "/products/" + handle;
+            }
+            return null;
+        }
+        if ("woocommerce".equalsIgnoreCase(product.getPlatform())) {
+            Object permalink = raw.get("permalink");
+            if (permalink != null && String.valueOf(permalink).startsWith("http")) {
+                return String.valueOf(permalink);
+            }
+            return null;
+        }
+        return null;
     }
 
     @PostMapping("/conversations/{uuid}/assign")

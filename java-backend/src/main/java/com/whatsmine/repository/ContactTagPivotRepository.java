@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ContactTagPivotRepository extends JpaRepository<ContactTagPivot, ContactTagPivot.PivotId> {
     List<ContactTagPivot> findByTagId(Long tagId);
+    List<ContactTagPivot> findByContactId(Long contactId);
 }

@@ -146,11 +146,7 @@ public class MetaMessagingInboundProcessor {
             contact.setWorkspaceId(workspaceId);
             contact.setFirstName("messenger".equals(channel) ? "Messenger User" : "Instagram User");
             contact.setSource(channel + "_inbound");
-            try {
-                contact.setCustomFields(objectMapper.writeValueAsString(Map.of(psidKey, senderId)));
-            } catch (Exception ignored) {
-                contact.setCustomFields(null);
-            }
+            contact.setCustomFields(Map.of(psidKey, senderId));
             contact = contactRepository.save(contact);
         }
 
@@ -297,11 +293,10 @@ public class MetaMessagingInboundProcessor {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     private Contact findContactByPsid(Long workspaceId, String psidKey, String psid) {
         for (Contact c : contactRepository.findByWorkspaceIdAndDeletedAtIsNull(workspaceId)) {
-            Map<String, Object> customFields = parseJson(c.getCustomFields());
-            if (psid.equals(str(customFields.get(psidKey)))) return c;
+            Map<String, Object> customFields = c.getCustomFields();
+            if (customFields != null && psid.equals(str(customFields.get(psidKey)))) return c;
         }
         return null;
     }

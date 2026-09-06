@@ -4,18 +4,23 @@ import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaResponse;
 import com.whatsmine.model.Contact;
 import com.whatsmine.model.ContactTag;
+import com.whatsmine.model.ContactTagPivot;
 import com.whatsmine.model.Segment;
 import com.whatsmine.model.SegmentContact;
 import com.whatsmine.repository.ContactRepository;
+import com.whatsmine.repository.ContactTagPivotRepository;
 import com.whatsmine.repository.ContactTagRepository;
 import com.whatsmine.repository.SegmentContactRepository;
 import com.whatsmine.repository.SegmentRepository;
 import com.whatsmine.security.CustomUserDetails;
 import com.whatsmine.service.automation.AutomationTriggerService;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,10 +44,10 @@ import java.util.Map;
 
 /**
  * Core Contact CRM — list/search, view, create, update, soft-delete, bulk
- * delete, CSV export. Segments are now wired to the real SegmentController;
- * tag *association* on a contact (the checkbox pickers in Index.jsx/Show.jsx)
- * is still an empty list — there's no contact&lt;-&gt;tag join table modeled in
- * Java yet, a separate follow-up.
+ * delete, CSV export. Segments are wired to the real SegmentController, and
+ * tags are wired to the real contact_tags/contact_tag_pivot tables — the
+ * "tag" filter and each contact's tag list are both real, matching PHP
+ * (which likewise has no tag create/attach UI beyond the bulk-import grid).
  */
 @RestController
 @RequestMapping("/contacts")
@@ -53,6 +58,7 @@ public class ContactController {
 
     private final ContactRepository contactRepository;
     private final ContactTagRepository contactTagRepository;
+    private final ContactTagPivotRepository contactTagPivotRepository;
     private final SegmentRepository segmentRepository;
     private final SegmentContactRepository segmentContactRepository;
     private final AutomationTriggerService automationTriggerService;
@@ -60,11 +66,13 @@ public class ContactController {
     public ContactController(
             ContactRepository contactRepository,
             ContactTagRepository contactTagRepository,
+            ContactTagPivotRepository contactTagPivotRepository,
             SegmentRepository segmentRepository,
             SegmentContactRepository segmentContactRepository,
             AutomationTriggerService automationTriggerService) {
         this.contactRepository = contactRepository;
         this.contactTagRepository = contactTagRepository;
+        this.contactTagPivotRepository = contactTagPivotRepository;
         this.segmentRepository = segmentRepository;
         this.segmentContactRepository = segmentContactRepository;
         this.automationTriggerService = automationTriggerService;
@@ -78,11 +86,31 @@ public class ContactController {
             @RequestParam(defaultValue = "1") int page) {
 
         Long workspaceId = userDetails.getWorkspaceId();
-        PageRequest pageable = PageRequest.of(Math.max(page - 1, 0), PER_PAGE);
+        PageRequest pageable = PageRequest.of(Math.max(page - 1, 0), PER_PAGE, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Page<Contact> result = (search != null && !search.isBlank())
-                ? contactRepository.searchContactsPage(workspaceId, search, pageable)
-                : contactRepository.findByWorkspaceIdAndDeletedAtIsNullOrderByCreatedAtDesc(workspaceId, pageable);
+        Specification<Contact> spec = (root, query, cb) -> cb.and(
+                cb.equal(root.get("workspaceId"), workspaceId),
+                cb.isNull(root.get("deletedAt")));
+
+        if (search != null && !search.isBlank()) {
+            String like = "%" + search.toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("firstName")), like),
+                    cb.like(cb.lower(root.get("lastName")), like),
+                    cb.like(cb.lower(root.get("phoneE164")), like),
+                    cb.like(cb.lower(root.get("email")), like)));
+        }
+
+        if (tag != null && !tag.isBlank()) {
+            ContactTag matchedTag = contactTagRepository.findByWorkspaceIdAndName(workspaceId, tag).orElse(null);
+            List<Long> taggedContactIds = matchedTag == null ? List.of()
+                    : contactTagPivotRepository.findByTagId(matchedTag.getId()).stream()
+                            .map(ContactTagPivot::getContactId).toList();
+            List<Long> idsOrSentinel = taggedContactIds.isEmpty() ? List.of(-1L) : taggedContactIds;
+            spec = spec.and((root, query, cb) -> root.get("id").in(idsOrSentinel));
+        }
+
+        Page<Contact> result = contactRepository.findAll(spec, pageable);
 
         List<ContactTag> tags = contactTagRepository.findByWorkspaceIdOrderByNameAsc(workspaceId);
         List<Segment> segments = segmentRepository.findByWorkspaceIdOrderByNameAsc(workspaceId);
@@ -166,6 +194,12 @@ public class ContactController {
         if (payload.containsKey("opt_in_whatsapp")) contact.setOptInWhatsapp(bool(payload.get("opt_in_whatsapp"), contact.getOptInWhatsapp()));
         if (payload.containsKey("opt_in_sms")) contact.setOptInSms(bool(payload.get("opt_in_sms"), contact.getOptInSms()));
         if (payload.containsKey("opt_in_email")) contact.setOptInEmail(bool(payload.get("opt_in_email"), contact.getOptInEmail()));
+        if (payload.containsKey("custom_fields")) {
+            Object raw = payload.get("custom_fields");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> customFields = raw instanceof Map ? (Map<String, Object>) raw : null;
+            contact.setCustomFields(customFields);
+        }
 
         contactRepository.save(contact);
         if (payload.containsKey("segment_ids")) {
@@ -246,7 +280,11 @@ public class ContactController {
         m.put("opt_in_whatsapp", c.getOptInWhatsapp());
         m.put("opt_in_sms", c.getOptInSms());
         m.put("opt_in_email", c.getOptInEmail());
-        m.put("tags", List.of());
+        m.put("custom_fields", c.getCustomFields() != null ? c.getCustomFields() : Map.of());
+        List<Long> tagIds = contactTagPivotRepository.findByContactId(c.getId()).stream()
+                .map(ContactTagPivot::getTagId).toList();
+        m.put("tags", tagIds.isEmpty() ? List.of() : contactTagRepository.findAllById(tagIds).stream()
+                .map(this::tagMap).toList());
         List<Long> segmentIds = segmentContactRepository.findByContactId(c.getId()).stream()
                 .map(SegmentContact::getSegmentId).toList();
         m.put("segments", segmentIds.isEmpty() ? List.of() : segmentRepository.findAllById(segmentIds).stream()
