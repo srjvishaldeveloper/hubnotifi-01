@@ -105,11 +105,11 @@ public class SendCampaignMessageHandler implements JobHandler {
                 recipient.setStatus("sent");
                 recipient.setProviderMessageId(providerId);
             } else if ("sms".equalsIgnoreCase(channel)) {
-                String sid = smsApiClient.sendText(contact.getPhoneE164(), "Broadcast: " + campaign.getName());
+                String sid = smsApiClient.sendText(campaign.getWorkspaceId(), contact.getPhoneE164(), "Broadcast: " + campaign.getName());
                 recipient.setStatus("sent");
                 recipient.setProviderMessageId(sid);
             } else if ("email".equalsIgnoreCase(channel)) {
-                emailApiClient.send(contact.getEmail(), campaign.getName(), "Broadcast: " + campaign.getName());
+                emailApiClient.send(campaign.getWorkspaceId(), contact.getEmail(), campaign.getName(), "Broadcast: " + campaign.getName());
                 recipient.setStatus("sent");
                 recipient.setProviderMessageId("email-" + UUID.randomUUID());
             } else {

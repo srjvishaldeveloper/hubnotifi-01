@@ -1,6 +1,8 @@
 package com.whatsmine.service.sms;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.whatsmine.model.SmsProviderConfig;
+import com.whatsmine.repository.SmsProviderConfigRepository;
 import com.whatsmine.service.IntegrationCredentialsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,20 +35,48 @@ public class SmsApiClient {
     private static final String PROVIDER = "sms_twilio";
 
     private final IntegrationCredentialsService integrationCredentialsService;
+    private final SmsProviderConfigRepository smsProviderConfigRepository;
     private final ObjectMapper objectMapper;
 
-    public SmsApiClient(IntegrationCredentialsService integrationCredentialsService, ObjectMapper objectMapper) {
+    public SmsApiClient(IntegrationCredentialsService integrationCredentialsService,
+                         SmsProviderConfigRepository smsProviderConfigRepository,
+                         ObjectMapper objectMapper) {
         this.integrationCredentialsService = integrationCredentialsService;
+        this.smsProviderConfigRepository = smsProviderConfigRepository;
         this.objectMapper = objectMapper;
     }
 
-    /** Returns the Twilio message SID on success. Throws IllegalStateException on missing config or API error. */
+    /**
+     * Returns the Twilio message SID on success. Throws IllegalStateException
+     * on missing config or API error. Checks the workspace's own default SMS
+     * gateway (Broadcasting > SMS Gateways) first; falls back to the
+     * system-wide "sms_twilio" integration (Admin > Integrations) if the
+     * workspace has none configured.
+     */
     @SuppressWarnings("unchecked")
-    public String sendText(String to, String body) {
-        Map<String, String> creds = integrationCredentialsService.getCredentials(PROVIDER);
-        String accountSid = creds.get("account_sid");
-        String authToken = creds.get("auth_token");
-        String fromNumber = creds.get("from_number");
+    public String sendText(Long workspaceId, String to, String body) {
+        SmsProviderConfig workspaceConfig = workspaceId != null
+                ? smsProviderConfigRepository.findByWorkspaceIdAndIsDefaultTrue(workspaceId).orElse(null)
+                : null;
+
+        String accountSid;
+        String authToken;
+        String fromNumber;
+
+        if (workspaceConfig != null) {
+            if (!"twilio".equals(workspaceConfig.getProvider())) {
+                throw new IllegalStateException(workspaceConfig.getProvider() + " is not implemented yet — no real API integration exists for this SMS gateway.");
+            }
+            Map<String, Object> creds = workspaceConfig.getCredentials() != null ? workspaceConfig.getCredentials() : Map.of();
+            accountSid = str(creds.get("account_sid"));
+            authToken = str(creds.get("auth_token"));
+            fromNumber = str(creds.get("from_number"));
+        } else {
+            Map<String, String> creds = integrationCredentialsService.getCredentials(PROVIDER);
+            accountSid = creds.get("account_sid");
+            authToken = creds.get("auth_token");
+            fromNumber = creds.get("from_number");
+        }
 
         if (accountSid == null || accountSid.isBlank() || authToken == null || authToken.isBlank()) {
             throw new IllegalStateException("No SMS provider configured — add a Twilio Account SID/Auth Token under Admin > Integrations > SMS (Twilio).");
@@ -86,5 +116,9 @@ public class SmsApiClient {
             log.error("Twilio API call failed: {}", e.getMessage());
             throw new IllegalStateException("Twilio API call failed: " + e.getMessage(), e);
         }
+    }
+
+    private String str(Object o) {
+        return o != null ? String.valueOf(o) : null;
     }
 }

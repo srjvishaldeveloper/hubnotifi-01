@@ -85,6 +85,15 @@ public class ZiggyController {
                         "client.whatsapp.widgets.store": { "uri": "app/whatsapp/widgets", "methods": ["POST"] },
                         "client.whatsapp.widgets.update": { "uri": "app/whatsapp/widgets/{id}", "methods": ["PUT"] },
                         "client.whatsapp.widgets.destroy": { "uri": "app/whatsapp/widgets/{id}", "methods": ["DELETE"] },
+                        "client.sms-gateways.index": { "uri": "app/broadcasts/sms-gateways", "methods": ["GET", "HEAD"] },
+                        "client.sms-gateways.update": { "uri": "app/broadcasts/sms-gateways/{provider}", "methods": ["PUT"] },
+                        "client.sms-gateways.destroy": { "uri": "app/broadcasts/sms-gateways/{provider}", "methods": ["DELETE"] },
+                        "client.email-server.index": { "uri": "app/broadcasts/email-server", "methods": ["GET", "HEAD"] },
+                        "client.email-server.store": { "uri": "app/broadcasts/email-server", "methods": ["POST"] },
+                        "client.email-server.update": { "uri": "app/broadcasts/email-server", "methods": ["PUT"] },
+                        "client.email-server.destroy": { "uri": "app/broadcasts/email-server", "methods": ["DELETE"] },
+                        "client.email-server.test": { "uri": "app/broadcasts/email-server/test", "methods": ["POST"] },
+                        "client.channels.social.index": { "uri": "app/channels/social", "methods": ["GET", "HEAD"] },
                         "client.campaigns.index": { "uri": "app/broadcasts/campaigns", "methods": ["GET", "HEAD"] },
                         "client.campaigns.create": { "uri": "app/broadcasts/campaigns/create", "methods": ["GET", "HEAD"] },
                         "client.campaigns.show": { "uri": "app/broadcasts/campaigns/{uuid}", "methods": ["GET", "HEAD"] },
@@ -148,8 +157,7 @@ public class ZiggyController {
 
                         // NOTE: the following nav items have NO backend controller at all yet
                         // (not a routing bug — the page was never built in Java): client.settings.*,
-                        // client.social.* (composer/posts/calendar/accounts), client.sms-gateways.*,
-                        // client.email-server.*,
+                        // client.social.* (composer/posts/calendar/accounts),
                         // client.whatsapp.setup.* (no GET page, actions only), client.inbox.setup,
                         // client.api-tokens.*,
                         // admin.search, admin.integrations.audit-log/edit/update/test/rotate/

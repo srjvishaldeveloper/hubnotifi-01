@@ -613,7 +613,7 @@ public class AutomationEngine {
         if (body.isEmpty()) return Map.of("status", "error", "message", "SMS body is required.");
 
         try {
-            String sid = smsApiClient.sendText(contact.getPhoneE164(), body);
+            String sid = smsApiClient.sendText(contact.getWorkspaceId(), contact.getPhoneE164(), body);
             return Map.of("status", "ok", "message", "SMS sent.", "output", Map.of("message_id", sid != null ? sid : ""));
         } catch (Exception e) {
             return Map.of("status", "error", "message", "SMS send failed: " + e.getMessage());
@@ -633,7 +633,7 @@ public class AutomationEngine {
         String body = renderTokens(str(data.get("body")), contact, context);
 
         try {
-            emailApiClient.send(contact.getEmail(), subject, body);
+            emailApiClient.send(contact.getWorkspaceId(), contact.getEmail(), subject, body);
             return Map.of("status", "ok", "message", "Email sent.");
         } catch (Exception e) {
             return Map.of("status", "error", "message", "Email send failed: " + e.getMessage());

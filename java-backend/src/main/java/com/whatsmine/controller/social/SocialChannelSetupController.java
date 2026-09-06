@@ -2,10 +2,13 @@ package com.whatsmine.controller.social;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whatsmine.inertia.Inertia;
+import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.ChannelAccount;
 import com.whatsmine.repository.ChannelAccountRepository;
 import com.whatsmine.security.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,16 +43,36 @@ public class SocialChannelSetupController {
     private final ChannelAccountRepository channelAccountRepository;
     private final ObjectMapper objectMapper;
 
+    @Autowired
+    private InertiaRenderer inertiaRenderer;
+
     public SocialChannelSetupController(ChannelAccountRepository channelAccountRepository, ObjectMapper objectMapper) {
         this.channelAccountRepository = channelAccountRepository;
         this.objectMapper = objectMapper;
     }
 
     @GetMapping
-    public List<ChannelAccount> index(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return channelAccountRepository.findByWorkspaceId(userDetails.getWorkspaceId()).stream()
-                .filter(ca -> "messenger".equalsIgnoreCase(ca.getChannel()) || "instagram".equalsIgnoreCase(ca.getChannel()))
-                .toList();
+    public Object index(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<ChannelAccount> accounts = channelAccountRepository.findByWorkspaceId(userDetails.getWorkspaceId());
+
+        List<Map<String, Object>> messengerAccounts = new ArrayList<>();
+        List<Map<String, Object>> instagramAccounts = new ArrayList<>();
+        for (ChannelAccount ca : accounts) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", ca.getId());
+            row.put("display_name", ca.getDisplayName());
+            row.put("status", ca.getStatus());
+            if ("messenger".equalsIgnoreCase(ca.getChannel())) {
+                messengerAccounts.add(row);
+            } else if ("instagram".equalsIgnoreCase(ca.getChannel())) {
+                instagramAccounts.add(row);
+            }
+        }
+
+        Map<String, Object> props = new LinkedHashMap<>();
+        props.put("messengerAccounts", messengerAccounts);
+        props.put("instagramAccounts", instagramAccounts);
+        return inertiaRenderer.render("Social/ChannelSetup/Index", props, request);
     }
 
     @PostMapping("/messenger")

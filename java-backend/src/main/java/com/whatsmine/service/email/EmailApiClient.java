@@ -1,6 +1,8 @@
 package com.whatsmine.service.email;
 
+import com.whatsmine.model.WorkspaceSmtpConfig;
 import com.whatsmine.repository.SystemSettingRepository;
+import com.whatsmine.repository.WorkspaceSmtpConfigRepository;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +27,25 @@ public class EmailApiClient {
     private static final Logger log = LoggerFactory.getLogger(EmailApiClient.class);
 
     private final SystemSettingRepository systemSettingRepository;
+    private final WorkspaceSmtpConfigRepository workspaceSmtpConfigRepository;
 
-    public EmailApiClient(SystemSettingRepository systemSettingRepository) {
+    public EmailApiClient(SystemSettingRepository systemSettingRepository,
+                           WorkspaceSmtpConfigRepository workspaceSmtpConfigRepository) {
         this.systemSettingRepository = systemSettingRepository;
+        this.workspaceSmtpConfigRepository = workspaceSmtpConfigRepository;
     }
 
+    /** Platform-wide send (admin test email, etc.) — no workspace override consulted. */
     public void send(String toEmail, String subject, String htmlBody) {
-        Map<String, String> smtp = loadSmtpSettings();
+        send(null, toEmail, subject, htmlBody);
+    }
+
+    /**
+     * Sends using the workspace's own active SMTP config if one exists,
+     * otherwise falls back to the admin's platform-wide SMTP settings.
+     */
+    public void send(Long workspaceId, String toEmail, String subject, String htmlBody) {
+        Map<String, String> smtp = loadSmtpSettings(workspaceId);
 
         String host = smtp.get("host");
         String username = smtp.get("username");
@@ -79,7 +93,23 @@ public class EmailApiClient {
         }
     }
 
-    private Map<String, String> loadSmtpSettings() {
+    private Map<String, String> loadSmtpSettings(Long workspaceId) {
+        if (workspaceId != null) {
+            WorkspaceSmtpConfig config = workspaceSmtpConfigRepository.findByWorkspaceId(workspaceId).orElse(null);
+            if (config != null && Boolean.TRUE.equals(config.getIsActive())) {
+                Map<String, String> smtp = new HashMap<>();
+                smtp.put("host", config.getHost());
+                smtp.put("port", config.getPort() != null ? String.valueOf(config.getPort()) : null);
+                smtp.put("username", config.getUsername());
+                Object password = config.getSecrets() != null ? config.getSecrets().get("password") : null;
+                smtp.put("password", password != null ? String.valueOf(password) : null);
+                smtp.put("encryption", config.getEncryption());
+                smtp.put("from_email", config.getFromEmail());
+                smtp.put("from_name", config.getFromName());
+                return smtp;
+            }
+        }
+
         Map<String, String> smtp = new HashMap<>();
         systemSettingRepository.findByGroup("smtp").forEach(s -> smtp.put(s.getKey(), s.getValue()));
         return smtp;
