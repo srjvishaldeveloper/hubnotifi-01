@@ -160,11 +160,26 @@ public class ZiggyController {
                         "admin.license.activate": { "uri": "admin/license/activate", "methods": ["POST"] },
                         "admin.license.deactivate": { "uri": "admin/license/deactivate", "methods": ["POST"] },
                         "license.show": { "uri": "license", "methods": ["GET", "HEAD"] },
-                        "license.activate": { "uri": "license/activate", "methods": ["POST"] }
+                        "license.activate": { "uri": "license/activate", "methods": ["POST"] },
+                        "client.social.accounts.index": { "uri": "app/social/accounts", "methods": ["GET", "HEAD"] },
+                        "client.social.accounts.connect": { "uri": "app/social/accounts/connect/{network}", "methods": ["GET", "HEAD"] },
+                        "client.social.oauth.callback": { "uri": "app/social/accounts/callback/{network}", "methods": ["GET", "HEAD"] },
+                        "client.social.accounts.disconnect": { "uri": "app/social/accounts/{account}", "methods": ["DELETE"] },
+                        "client.social.posts.index": { "uri": "app/social/posts", "methods": ["GET", "HEAD"] },
+                        "client.social.composer": { "uri": "app/social/composer", "methods": ["GET", "HEAD"] },
+                        "client.social.posts.store": { "uri": "app/social/posts", "methods": ["POST"] },
+                        "client.social.posts.edit": { "uri": "app/social/posts/{post}/edit", "methods": ["GET", "HEAD"] },
+                        "client.social.posts.update": { "uri": "app/social/posts/{post}", "methods": ["PUT"] },
+                        "client.social.posts.destroy": { "uri": "app/social/posts/{post}", "methods": ["DELETE"] },
+                        "client.social.posts.publish-now": { "uri": "app/social/posts/{post}/publish-now", "methods": ["POST"] },
+                        "client.social.posts.cancel": { "uri": "app/social/posts/{post}/cancel", "methods": ["POST"] },
+                        "client.social.ai-generate": { "uri": "app/social/ai-generate", "methods": ["POST"] },
+                        "client.social.ai-plan": { "uri": "app/social/ai-plan", "methods": ["POST"] },
+                        "client.social.posts.bulk": { "uri": "app/social/posts/bulk", "methods": ["POST"] },
+                        "client.social.calendar": { "uri": "app/social/calendar", "methods": ["GET", "HEAD"] }
 
                         // NOTE: the following nav items have NO backend controller at all yet
                         // (not a routing bug — the page was never built in Java): client.settings.*,
-                        // client.social.* (composer/posts/calendar/accounts),
                         // client.whatsapp.setup.* (no GET page, actions only), client.inbox.setup,
                         // client.api-tokens.*,
                         // admin.search, admin.integrations.audit-log/edit/update/test/rotate/

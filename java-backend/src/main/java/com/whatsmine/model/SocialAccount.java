@@ -30,6 +30,9 @@ public class SocialAccount {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "picture_url", length = 1024)
+    private String pictureUrl;
+
     @Column(name = "token", length = 65535)
     private String token;
 
@@ -38,6 +41,9 @@ public class SocialAccount {
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
+
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -75,6 +81,9 @@ public class SocialAccount {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
+    public String getPictureUrl() { return pictureUrl; }
+    public void setPictureUrl(String pictureUrl) { this.pictureUrl = pictureUrl; }
+
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
 
@@ -83,6 +92,9 @@ public class SocialAccount {
 
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

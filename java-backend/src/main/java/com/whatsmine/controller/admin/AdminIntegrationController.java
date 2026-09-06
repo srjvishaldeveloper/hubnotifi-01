@@ -94,6 +94,22 @@ public class AdminIntegrationController {
                 field("client_id", "Client ID", "text", true, null),
                 field("client_secret", "Client Secret", "password", true, null)
         ));
+        FIELDS.put("oauth_linkedin", List.of(
+                field("client_id", "Client ID", "text", true, null),
+                field("client_secret", "Client Secret", "password", true, null)
+        ));
+        FIELDS.put("oauth_twitter", List.of(
+                field("client_id", "Client ID", "text", true, null),
+                field("client_secret", "Client Secret", "password", true, null)
+        ));
+        FIELDS.put("oauth_youtube", List.of(
+                field("client_id", "Client ID", "text", true, null),
+                field("client_secret", "Client Secret", "password", true, null)
+        ));
+        FIELDS.put("oauth_tiktok", List.of(
+                field("client_id", "Client Key", "text", true, null),
+                field("client_secret", "Client Secret", "password", true, null)
+        ));
     }
 
     private static Map<String, Object> field(String key, String label, String type, boolean required, String hint) {

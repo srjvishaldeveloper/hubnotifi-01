@@ -24,12 +24,18 @@ public class SocialPost {
     @Column(name = "workspace_id", nullable = false)
     private Long workspaceId;
 
+    @Column(name = "title", length = 256)
+    private String title;
+
     @Column(name = "content", length = 65535, nullable = false)
     private String content;
 
     @Convert(converter = JsonAttributeConverter.class)
     @Column(name = "media_urls", length = 65535)
     private List<String> mediaUrls;
+
+    @Column(name = "timezone", length = 64)
+    private String timezone;
 
     @Column(name = "status", length = 32)
     private String status = "draft";
@@ -67,11 +73,17 @@ public class SocialPost {
     public Long getWorkspaceId() { return workspaceId; }
     public void setWorkspaceId(Long workspaceId) { this.workspaceId = workspaceId; }
 
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
 
     public List<String> getMediaUrls() { return mediaUrls; }
     public void setMediaUrls(List<String> mediaUrls) { this.mediaUrls = mediaUrls; }
+
+    public String getTimezone() { return timezone; }
+    public void setTimezone(String timezone) { this.timezone = timezone; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
