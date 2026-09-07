@@ -20,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Component
 @Profile("!test")
@@ -125,17 +127,60 @@ public class DataSeeder implements CommandLineRunner {
             Plan proPlan = new Plan();
             proPlan.setName("Pro Plan");
             proPlan.setSlug("pro");
+            proPlan.setDescription("For growing businesses that need automation and broadcasting.");
             proPlan.setPriceCents(2900L);
+            proPlan.setMonthlyPriceCents(2900L);
+            proPlan.setYearlyPriceCents(27840L);
             proPlan.setCurrencyCode("USD");
             proPlan.setInterval("month");
+            proPlan.setTrialDays(14);
+            proPlan.setPopular(true);
+            proPlan.setSortOrder(1);
+            proPlan.setEnabled(true);
+            Map<String, Object> proFeatures = new LinkedHashMap<>();
+            proFeatures.put("Up to 5,000 contacts", true);
+            proFeatures.put("Unlimited broadcast campaigns", true);
+            proFeatures.put("WhatsApp, SMS & email channels", true);
+            proFeatures.put("Automation workflows", true);
+            proFeatures.put("5 team members", true);
+            proFeatures.put("Email support", true);
+            proPlan.setFeatures(proFeatures);
+            Map<String, Object> proLimits = new LinkedHashMap<>();
+            proLimits.put("contacts", 5000);
+            proLimits.put("team_members", 5);
+            proLimits.put("storage_gb", 10);
+            proPlan.setLimits(proLimits);
             planRepository.save(proPlan);
 
             Plan enterprisePlan = new Plan();
             enterprisePlan.setName("Enterprise Plan");
             enterprisePlan.setSlug("enterprise");
+            enterprisePlan.setDescription("For high-volume teams that need white-label branding and priority support.");
             enterprisePlan.setPriceCents(9900L);
+            enterprisePlan.setMonthlyPriceCents(9900L);
+            enterprisePlan.setYearlyPriceCents(95040L);
             enterprisePlan.setCurrencyCode("USD");
             enterprisePlan.setInterval("month");
+            enterprisePlan.setTrialDays(14);
+            enterprisePlan.setFeatured(true);
+            enterprisePlan.setWhiteLabelEnabled(true);
+            enterprisePlan.setSortOrder(2);
+            enterprisePlan.setEnabled(true);
+            Map<String, Object> enterpriseFeatures = new LinkedHashMap<>();
+            enterpriseFeatures.put("Unlimited contacts", true);
+            enterpriseFeatures.put("Unlimited broadcast campaigns", true);
+            enterpriseFeatures.put("All messaging channels", true);
+            enterpriseFeatures.put("Advanced automation & AI replies", true);
+            enterpriseFeatures.put("Unlimited team members", true);
+            enterpriseFeatures.put("White-label branding", true);
+            enterpriseFeatures.put("Priority 24/7 support", true);
+            enterpriseFeatures.put("Dedicated account manager", true);
+            enterprisePlan.setFeatures(enterpriseFeatures);
+            Map<String, Object> enterpriseLimits = new LinkedHashMap<>();
+            enterpriseLimits.put("contacts", null);
+            enterpriseLimits.put("team_members", null);
+            enterpriseLimits.put("storage_gb", 100);
+            enterprisePlan.setLimits(enterpriseLimits);
             planRepository.save(enterprisePlan);
 
             log.info("[DataSeeder] Default Plans created");

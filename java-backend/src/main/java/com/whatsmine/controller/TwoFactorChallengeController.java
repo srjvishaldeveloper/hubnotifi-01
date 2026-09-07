@@ -7,12 +7,14 @@ import com.whatsmine.inertia.InertiaResponse;
 import com.whatsmine.model.User;
 import com.whatsmine.repository.UserRepository;
 import com.whatsmine.security.CustomUserDetails;
+import com.whatsmine.security.SessionMetadataStore;
 import com.whatsmine.security.TotpService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,11 +30,20 @@ public class TwoFactorChallengeController {
     private final UserRepository userRepository;
     private final TotpService totpService;
     private final ObjectMapper objectMapper;
+    private final SessionRegistry sessionRegistry;
+    private final SessionMetadataStore sessionMetadataStore;
 
-    public TwoFactorChallengeController(UserRepository userRepository, TotpService totpService, ObjectMapper objectMapper) {
+    public TwoFactorChallengeController(
+            UserRepository userRepository,
+            TotpService totpService,
+            ObjectMapper objectMapper,
+            SessionRegistry sessionRegistry,
+            SessionMetadataStore sessionMetadataStore) {
         this.userRepository = userRepository;
         this.totpService = totpService;
         this.objectMapper = objectMapper;
+        this.sessionRegistry = sessionRegistry;
+        this.sessionMetadataStore = sessionMetadataStore;
     }
 
     @GetMapping("/two-factor-challenge")
@@ -88,6 +99,9 @@ public class TwoFactorChallengeController {
 
         session.removeAttribute("2fa_user_id");
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+
+        sessionRegistry.registerNewSession(session.getId(), userDetails);
+        sessionMetadataStore.record(session.getId(), request.getRemoteAddr(), request.getHeader("User-Agent"));
 
         return Inertia.redirect("/app/dashboard");
     }

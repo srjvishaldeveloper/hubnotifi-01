@@ -3994,11 +3994,11 @@
         "com": "Com"
     },
     "about_page": {
-        "values_title": "Values Title"
+        "values_title": "What we stand for"
     },
     "integrations_page": {
-        "cta_title": "Cta Title",
-        "cta_subtitle": "Cta Subtitle"
+        "cta_title": "Need a custom integration?",
+        "cta_subtitle": "Use our REST API and webhooks to connect Hub Notification to anything, or talk to our team."
     },
     "install": {
         "run": "Run"

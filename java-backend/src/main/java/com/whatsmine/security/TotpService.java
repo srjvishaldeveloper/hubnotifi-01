@@ -7,12 +7,46 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 @Service
 public class TotpService {
 
     private static final int TIME_STEP_SECONDS = 30;
     private static final int DIGITS = 6;
+    private static final String BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+    /**
+     * Generate a random 160-bit Base32 secret suitable for a new authenticator enrollment.
+     */
+    public String generateSecret() {
+        byte[] randomBytes = new byte[20];
+        new SecureRandom().nextBytes(randomBytes);
+        return base32Encode(randomBytes);
+    }
+
+    private String base32Encode(byte[] data) {
+        StringBuilder sb = new StringBuilder();
+        int buffer = 0;
+        int bitsLeft = 0;
+
+        for (byte b : data) {
+            buffer = (buffer << 8) | (b & 0xff);
+            bitsLeft += 8;
+            while (bitsLeft >= 5) {
+                int index = (buffer >> (bitsLeft - 5)) & 0x1f;
+                bitsLeft -= 5;
+                sb.append(BASE32_ALPHABET.charAt(index));
+            }
+        }
+
+        if (bitsLeft > 0) {
+            int index = (buffer << (5 - bitsLeft)) & 0x1f;
+            sb.append(BASE32_ALPHABET.charAt(index));
+        }
+
+        return sb.toString();
+    }
 
     /**
      * Verify a 6-digit TOTP code against a Base32 secret.

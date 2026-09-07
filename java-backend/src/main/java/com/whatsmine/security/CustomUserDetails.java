@@ -71,4 +71,20 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return "active".equalsIgnoreCase(user.getStatus());
     }
+
+    // A fresh CustomUserDetails is loaded on every login, but SessionRegistry
+    // indexes sessions by principal equality — without this, Spring Security
+    // can never associate two logins of the same user with each other, so the
+    // Sessions page would only ever see the current session.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CustomUserDetails other)) return false;
+        return getId() != null && getId().equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId() != null ? getId().hashCode() : 0;
+    }
 }

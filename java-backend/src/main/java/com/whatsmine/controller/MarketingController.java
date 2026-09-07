@@ -113,7 +113,7 @@ public class MarketingController {
                     m.put("description", p.getDescription() != null ? p.getDescription() : "");
                     m.put("price_monthly", (p.getMonthlyPriceCents() != null ? p.getMonthlyPriceCents() : 0) / 100.0);
                     m.put("price_yearly", (p.getYearlyPriceCents() != null ? p.getYearlyPriceCents() : 0) / 100.0);
-                    m.put("features", p.getFeatures() != null ? p.getFeatures() : Map.of());
+                    m.put("features", p.getFeatureList());
                     m.put("is_featured", Boolean.TRUE.equals(p.getFeatured()) || Boolean.TRUE.equals(p.getPopular()));
                     m.put("trial_days", p.getTrialDays() != null ? p.getTrialDays() : 0);
                     return m;

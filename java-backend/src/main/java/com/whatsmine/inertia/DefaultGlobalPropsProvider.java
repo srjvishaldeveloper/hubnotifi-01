@@ -1,5 +1,9 @@
 package com.whatsmine.inertia;
 
+import com.whatsmine.model.Workspace;
+import com.whatsmine.model.WorkspaceUser;
+import com.whatsmine.repository.WorkspaceRepository;
+import com.whatsmine.repository.WorkspaceUserRepository;
 import com.whatsmine.security.AdminUserDetails;
 import com.whatsmine.security.CustomUserDetails;
 
@@ -11,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +52,14 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
     @Value("${app.demo-mode:false}")
     private boolean demoMode;
 
+    private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceUserRepository workspaceUserRepository;
+
+    public DefaultGlobalPropsProvider(WorkspaceRepository workspaceRepository, WorkspaceUserRepository workspaceUserRepository) {
+        this.workspaceRepository = workspaceRepository;
+        this.workspaceUserRepository = workspaceUserRepository;
+    }
+
     @Override
     public Map<String, Object> getSharedProps(HttpServletRequest request) {
         Map<String, Object> shared = new HashMap<>();
@@ -73,6 +86,10 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
         Map<String, Object> authMap = new HashMap<>();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
+        // Workspace switcher (Topbar) — populated below for CLIENT principals only.
+        shared.put("workspaces", Collections.emptyList());
+        shared.put("currentWorkspace", null);
+
         if (auth != null && auth.isAuthenticated()) {
             if (auth.getPrincipal() instanceof CustomUserDetails clientDetails) {
                 Map<String, Object> userMap = new HashMap<>();
@@ -84,6 +101,16 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
                 userMap.put("client_id", clientDetails.getClientId());
                 userMap.put("workspace_id", clientDetails.getWorkspaceId());
                 authMap.put("user", userMap);
+
+                List<WorkspaceUser> memberships = workspaceUserRepository.findByUserId(clientDetails.getId());
+                List<Long> workspaceIds = memberships.stream().map(WorkspaceUser::getWorkspaceId).toList();
+                shared.put("workspaces", workspaceRepository.findAllById(workspaceIds));
+
+                Long currentWorkspaceId = clientDetails.getWorkspaceId();
+                if (currentWorkspaceId != null) {
+                    Workspace currentWorkspace = workspaceRepository.findById(currentWorkspaceId).orElse(null);
+                    shared.put("currentWorkspace", currentWorkspace);
+                }
             } else if (auth.getPrincipal() instanceof AdminUserDetails adminDetails) {
                 Map<String, Object> adminMap = new HashMap<>();
                 adminMap.put("id", adminDetails.getId());

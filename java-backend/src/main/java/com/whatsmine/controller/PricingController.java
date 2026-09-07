@@ -56,7 +56,7 @@ public class PricingController {
             item.put("yearly_price_display", yearlyCents != null ? "$" + String.format("%.2f", yearlyCents / 100.0) : null);
             item.put("monthly_price_cents", monthlyCents);
             item.put("yearly_price_cents", yearlyCents);
-            item.put("features", plan.getFeatures() != null ? plan.getFeatures() : Map.of());
+            item.put("features", plan.getFeatureList());
             item.put("limits", plan.getLimits() != null ? plan.getLimits() : Map.of());
             item.put("white_label_enabled", Boolean.TRUE.equals(plan.getWhiteLabelEnabled()));
             item.put("popular", Boolean.TRUE.equals(plan.getPopular()));

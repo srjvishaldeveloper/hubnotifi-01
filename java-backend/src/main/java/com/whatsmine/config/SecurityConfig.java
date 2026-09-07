@@ -18,6 +18,8 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,6 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
@@ -58,6 +61,23 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+
+    // Backs the "Active Sessions" profile page (list/revoke other devices).
+    // Client login is performed manually (AuthService / TwoFactorChallengeController set
+    // the SecurityContext directly rather than going through the standard authentication
+    // filter), so those call sites register the session with this registry themselves.
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    // Required for SessionRegistry to be notified when a session is invalidated
+    // (logout, expiry, or a revoke-other-sessions request) so it stops listing it.
+    // Spring Boot auto-registers HttpSessionListener beans with the servlet container.
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     /**
@@ -161,6 +181,10 @@ public class SecurityConfig {
         http
                 .securityContext(sc -> sc
                         .securityContextRepository(new HttpSessionSecurityContextRepository())
+                )
+                .sessionManagement(session -> session
+                        .maximumSessions(-1) // no cap — just track sessions so they can be listed/revoked
+                        .sessionRegistry(sessionRegistry())
                 )
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())

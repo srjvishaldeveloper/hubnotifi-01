@@ -11,6 +11,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Entity
@@ -222,6 +223,35 @@ public class Plan {
 
     public void setFeatures(Map<String, Object> features) {
         this.features = features;
+    }
+
+    /**
+     * Feature names whose value is truthy, in insertion order — the display
+     * list expected by the marketing/pricing pages (they render a bullet per
+     * entry), as opposed to {@link #getFeatures()} which is the raw
+     * name-&gt;enabled map used by the admin plan editor.
+     */
+    public List<String> getFeatureList() {
+        if (features == null || features.isEmpty()) {
+            return List.of();
+        }
+        return features.entrySet().stream()
+                .filter(e -> isTruthy(e.getValue()))
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    private static boolean isTruthy(Object value) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof Boolean b) {
+            return b;
+        }
+        if (value instanceof String s) {
+            return !s.isBlank() && !s.equalsIgnoreCase("false") && !s.equals("0");
+        }
+        return true;
     }
 
     public Map<String, Object> getLimits() {

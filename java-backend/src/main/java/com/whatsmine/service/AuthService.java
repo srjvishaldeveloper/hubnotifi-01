@@ -11,6 +11,7 @@ import com.whatsmine.repository.UserRepository;
 import com.whatsmine.repository.WorkspaceRepository;
 import com.whatsmine.repository.WorkspaceUserRepository;
 import com.whatsmine.security.CustomUserDetails;
+import com.whatsmine.security.SessionMetadataStore;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,6 +20,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,8 @@ public class AuthService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceUserRepository workspaceUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SessionRegistry sessionRegistry;
+    private final SessionMetadataStore sessionMetadataStore;
 
     public AuthService(
             @Qualifier("clientAuthenticationManager") AuthenticationManager clientAuthenticationManager,
@@ -40,13 +44,17 @@ public class AuthService {
             ClientRepository clientRepository,
             WorkspaceRepository workspaceRepository,
             WorkspaceUserRepository workspaceUserRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            SessionRegistry sessionRegistry,
+            SessionMetadataStore sessionMetadataStore) {
         this.clientAuthenticationManager = clientAuthenticationManager;
         this.userRepository = userRepository;
         this.clientRepository = clientRepository;
         this.workspaceRepository = workspaceRepository;
         this.workspaceUserRepository = workspaceUserRepository;
         this.passwordEncoder = passwordEncoder;
+        this.sessionRegistry = sessionRegistry;
+        this.sessionMetadataStore = sessionMetadataStore;
     }
 
     public boolean login(LoginRequest request, HttpServletRequest httpRequest) {
@@ -73,6 +81,12 @@ public class AuthService {
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
         new HttpSessionSecurityContextRepository().saveContext(SecurityContextHolder.getContext(), httpRequest, null);
+
+        // Login happens outside the standard authentication filter chain, so Spring
+        // Security's automatic session registration never fires — register manually
+        // so this session shows up on the "Active Sessions" profile page.
+        sessionRegistry.registerNewSession(session.getId(), userDetails);
+        sessionMetadataStore.record(session.getId(), httpRequest.getRemoteAddr(), httpRequest.getHeader("User-Agent"));
 
         return true; // Fully authenticated
     }
