@@ -37,7 +37,7 @@ public class Automation {
     private String triggerType;
 
     @Convert(converter = JsonMapConverter.class)
-    @Column(name = "trigger_config")
+    @Column(name = "trigger_config", columnDefinition = "json")
     @JsonProperty("trigger_config")
     private Map<String, Object> triggerConfig;
 
@@ -46,11 +46,11 @@ public class Automation {
     private String triggerToken;
 
     @Convert(converter = JsonListMapConverter.class)
-    @Column(name = "nodes")
+    @Column(name = "nodes", columnDefinition = "json")
     private List<Map<String, Object>> nodes;
 
     @Convert(converter = JsonListMapConverter.class)
-    @Column(name = "edges")
+    @Column(name = "edges", columnDefinition = "json")
     private List<Map<String, Object>> edges;
 
     @Column(name = "run_count", nullable = false)

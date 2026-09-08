@@ -3,7 +3,6 @@ package com.whatsmine.controller;
 import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaResponse;
 import com.whatsmine.security.CustomUserDetails;
-import com.whatsmine.security.WorkspaceContext;
 import com.whatsmine.service.admin.AdminAnalyticsService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,20 +20,6 @@ public class InertiaDemoController {
 
     @Autowired
     private AdminAnalyticsService analytics;
-
-    @GetMapping({"/dashboard", "/app/dashboard"})
-    public InertiaResponse dashboard(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        Map<String, Object> props = new HashMap<>();
-        props.put("title", "Workspace Dashboard");
-        props.put("unreadCount", 5);
-        if (userDetails != null) {
-            props.put("user_id", userDetails.getId());
-            props.put("active_workspace_id", WorkspaceContext.getWorkspaceId());
-            props.put("active_workspace_role", WorkspaceContext.getWorkspaceRole());
-        }
-
-        return Inertia.render("client/Dashboard", props);
-    }
 
     @PostMapping("/app/settings")
     public Object updateSettings(HttpSession session) {

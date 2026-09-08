@@ -1,5 +1,6 @@
 package com.whatsmine.controller.client;
 
+import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.Automation;
 import com.whatsmine.model.AutomationRun;
@@ -11,6 +12,7 @@ import com.whatsmine.security.CustomUserDetails;
 import com.whatsmine.service.automation.AutomationEngine;
 import com.whatsmine.service.automation.WorkflowGenerator;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,7 @@ public class AutomationController {
     @Autowired private InertiaRenderer inertiaRenderer;
     @Autowired private AutomationRepository automationRepository;
     @Autowired private AutomationRunRepository automationRunRepository;
+    @Autowired private AutomationRunLogRepository automationRunLogRepository;
     @Autowired private AutomationEngine automationEngine;
     @Autowired private WorkflowGenerator workflowGenerator;
     @Autowired private WhatsappTemplateRepository whatsappTemplateRepository;
@@ -49,7 +52,8 @@ public class AutomationController {
     }
 
     @PostMapping
-    public Object store(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody(required = false) Map<String, Object> body) {
+    public Object store(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails userDetails,
+                         @RequestBody(required = false) Map<String, Object> body, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         String name = body != null ? (String) body.get("name") : null;
         if (name == null || name.isBlank()) {
@@ -66,6 +70,7 @@ public class AutomationController {
         Map<String, Object> triggerNode = Map.of(
                 "id", "trigger_1",
                 "type", "trigger",
+                "position", Map.of("x", 250, "y", 50),
                 "data", Map.of("triggerType", automation.getTriggerType(), "label", "Trigger")
         );
         automation.setNodes(List.of(triggerNode));
@@ -73,9 +78,8 @@ public class AutomationController {
 
         automation = automationRepository.save(automation);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/automations/" + automation.getUuid() + "/edit")
-                .body(Map.of("uuid", automation.getUuid(), "redirect", "/app/automations/" + automation.getUuid() + "/edit"));
+        Inertia.flashSuccess(session, "Automation created.");
+        return Inertia.redirect("/app/automations/" + automation.getUuid() + "/edit");
     }
 
     @PostMapping("/generate")
@@ -104,7 +108,8 @@ public class AutomationController {
 
     @PutMapping("/{uuid}")
     @SuppressWarnings("unchecked")
-    public Object update(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String uuid, @RequestBody Map<String, Object> body) {
+    public Object update(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String uuid,
+                          @RequestBody Map<String, Object> body, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         Automation automation = automationRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -122,20 +127,20 @@ public class AutomationController {
             automation.setEdges((List<Map<String, Object>>) body.get("edges"));
         }
 
-        automation = automationRepository.save(automation);
-        return ResponseEntity.ok(automation);
+        automationRepository.save(automation);
+        Inertia.flashSuccess(session, "Automation saved.");
+        return Inertia.redirect("/app/automations/" + uuid + "/edit");
     }
 
     @DeleteMapping("/{uuid}")
-    public Object destroy(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String uuid) {
+    public Object destroy(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String uuid, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         Automation automation = automationRepository.findByWorkspaceIdAndUuid(workspaceId, uuid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         automationRepository.delete(automation);
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/automations")
-                .body(Map.of("message", "Deleted"));
+        Inertia.flashSuccess(session, "Automation deleted.");
+        return Inertia.redirect("/app/automations");
     }
 
     @GetMapping("/{uuid}/runs")
@@ -145,9 +150,10 @@ public class AutomationController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         List<AutomationRun> runs = automationRunRepository.findByAutomationIdOrderByStartedAtDesc(automation.getId());
+        runs.forEach(run -> run.setLogs(automationRunLogRepository.findByRunIdOrderByIdAsc(run.getId())));
         Map<String, Object> props = Map.of(
                 "automation", automation,
-                "runs", runs
+                "runs", Map.of("data", runs)
         );
         return inertiaRenderer.render("Automation/Runs", props, request);
     }

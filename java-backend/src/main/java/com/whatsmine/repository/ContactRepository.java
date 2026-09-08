@@ -9,11 +9,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ContactRepository extends JpaRepository<Contact, Long>, JpaSpecificationExecutor<Contact> {
+
+    long countByWorkspaceId(Long workspaceId);
+
+    long countByWorkspaceIdAndCreatedAtBetween(Long workspaceId, LocalDateTime from, LocalDateTime to);
+
+    List<Contact> findByWorkspaceIdAndCreatedAtBetween(Long workspaceId, LocalDateTime from, LocalDateTime to);
 
     Optional<Contact> findByUuid(String uuid);
 

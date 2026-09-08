@@ -1,7 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
-import { CheckCircle, XCircle, Clock, ChevronRight, ToggleLeft, ToggleRight, FlaskConical, Star, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, ChevronRight, ToggleLeft, ToggleRight, FlaskConical, Star, BookOpen, ChevronDown, ChevronUp, ShoppingBag, Store, Grid3x3 } from 'lucide-react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
@@ -448,11 +448,30 @@ const BRAND = {
     oauth_twitter:   { bg: null, color: '#000000', logo: 'x' },
     oauth_youtube:   { bg: null, color: '#FF0000', logo: 'youtube' },
     oauth_tiktok:    { bg: null, color: '#000000', logo: 'tiktok' },
+    sms_twilio:      { bg: null, color: '#F22F46', logo: 'twilio' },
     llm_openai_default:     { bg: null, color: '#10a37f', logo: 'openai' },
     llm_anthropic_default:  { bg: null, color: '#d4793b', logo: 'anthropic' },
     llm_gemini_default:     { bg: null, color: '#4285F4', logo: 'googlegemini' },
     google_places:   { bg: null, color: '#34A853', logo: 'googlemaps' },
     qdrant:          { bg: null, color: '#DC143C', logo: 'qdrant' },
+    // No official brand SVG shipped for these three — a plain lucide glyph on a
+    // brand-colored tile (same pattern as storage_local below) beats either a
+    // broken <img> or the generic warning-triangle fallback.
+    oauth_shopify: {
+        bg: 'bg-[#95BF47]/15 dark:bg-[#95BF47]/20',
+        color: '#95BF47',
+        icon: <ShoppingBag className="h-5 w-5" />,
+    },
+    oauth_bigcommerce: {
+        bg: 'bg-[#34313F]/10 dark:bg-[#34313F]/30',
+        color: '#34313F',
+        icon: <Store className="h-5 w-5" />,
+    },
+    google_workspace: {
+        bg: 'bg-[#4285F4]/15 dark:bg-[#4285F4]/20',
+        color: '#4285F4',
+        icon: <Grid3x3 className="h-5 w-5" />,
+    },
 };
 
 const DEFAULT_BRAND = {

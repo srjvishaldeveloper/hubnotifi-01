@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.whatsmine.model.converter.JsonMapConverter;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Entity
@@ -32,7 +33,7 @@ public class AutomationRun {
     private String status = "running";
 
     @Convert(converter = JsonMapConverter.class)
-    @Column(name = "context")
+    @Column(name = "context", columnDefinition = "json")
     private Map<String, Object> context;
 
     @Column(name = "current_node_id", length = 64)
@@ -62,6 +63,11 @@ public class AutomationRun {
     @Column(name = "updated_at")
     @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
+
+    // Populated on demand by the controller (equivalent to Laravel's with('logs')).
+    @Transient
+    @JsonProperty("logs")
+    private List<AutomationRunLog> logs;
 
     @PrePersist
     protected void onCreate() {
@@ -114,4 +120,7 @@ public class AutomationRun {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public List<AutomationRunLog> getLogs() { return logs; }
+    public void setLogs(List<AutomationRunLog> logs) { this.logs = logs; }
 }

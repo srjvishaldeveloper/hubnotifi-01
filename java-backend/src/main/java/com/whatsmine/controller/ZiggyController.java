@@ -350,17 +350,47 @@ public class ZiggyController {
                     window.Ziggy = Ziggy;
                 }
 
+                // Converts a route's {param} URI template into a matcher regex — a literal
+                // path === uri comparison (the old behavior) never matches routes that take
+                // parameters, e.g. "contacts/{contact}" vs "/contacts/42".
+                function ziggyUriToRegex(uri) {
+                    var normalized = uri.replace(/^\\//, '');
+                    var segments = normalized.split('/').map(function (seg) {
+                        if (/^\\{.+\\}$/.test(seg)) return '[^/]+';
+                        return seg.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+                    }).join('/');
+                    return new RegExp('^' + segments + '$');
+                }
+
+                // route().current(pattern) must support Ziggy-style wildcards ("client.social.accounts.*"),
+                // which is how the sidebar (useClientNav.jsx) decides what to highlight. The previous
+                // implementation only did an exact Ziggy.routes[pattern] lookup, which is always undefined
+                // for a wildcard string — so every nav item whose activePattern contained "*" (i.e. every
+                // multi-route section) never highlighted, even while genuinely on one of its pages.
+                function ziggyCurrentMatches(pattern, ziggy) {
+                    if (typeof window === 'undefined') return false;
+                    var path = window.location.pathname.replace(/^\\//, '');
+                    if (!pattern) return path;
+                    if (pattern.indexOf('*') === -1) {
+                        var r = ziggy.routes[pattern];
+                        if (!r) return false;
+                        return ziggyUriToRegex(r.uri).test(path);
+                    }
+                    var nameRegex = new RegExp('^' + pattern.split('*').map(function (part) {
+                        return part.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+                    }).join('.*') + '$');
+                    for (var routeName in ziggy.routes) {
+                        if (nameRegex.test(routeName) && ziggyUriToRegex(ziggy.routes[routeName].uri).test(path)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
                 function route(name, params, absolute = false, customZiggy = Ziggy) {
                     if (!name) {
                         return {
-                            current: (currentName) => {
-                                if (typeof window === 'undefined') return false;
-                                const path = window.location.pathname.replace(/^\\//, '');
-                                if (!currentName) return path;
-                                const r = customZiggy.routes[currentName];
-                                if (!r) return false;
-                                return path === r.uri.replace(/^\\//, '');
-                            }
+                            current: (currentName) => ziggyCurrentMatches(currentName, customZiggy)
                         };
                     }
 
@@ -393,14 +423,7 @@ public class ZiggyController {
                     return absolute ? (customZiggy.url + uri) : uri;
                 }
 
-                route.current = (name) => {
-                    if (typeof window === 'undefined') return false;
-                    const path = window.location.pathname.replace(/^\\//, '');
-                    if (!name) return path;
-                    const r = Ziggy.routes[name];
-                    if (!r) return false;
-                    return path === r.uri.replace(/^\\//, '');
-                };
+                route.current = (name) => ziggyCurrentMatches(name, Ziggy);
 
                 if (typeof window !== 'undefined') {
                     window.route = route;

@@ -40,7 +40,7 @@ public class AutomationRunLog {
     private String message;
 
     @Convert(converter = JsonMapConverter.class)
-    @Column(name = "output")
+    @Column(name = "output", columnDefinition = "json")
     private Map<String, Object> output;
 
     @Column(name = "created_at", updatable = false)

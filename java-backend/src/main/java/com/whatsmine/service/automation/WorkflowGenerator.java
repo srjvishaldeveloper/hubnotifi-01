@@ -205,17 +205,41 @@ public class WorkflowGenerator {
         return id;
     }
 
+    /**
+     * Guarantee the trigger reaches the rest of the flow. If the model produced no edge from the
+     * trigger, or no edges at all, fall back to a linear chain in node order.
+     */
     private List<Map<String, Object>> ensureConnectivity(List<Map<String, Object>> nodes, List<Map<String, Object>> edges) {
         List<String> actionIds = nodes.stream().map(n -> (String) n.get("id")).filter(id -> !"trigger-1".equals(id)).toList();
         if (actionIds.isEmpty()) return edges;
 
+        if (edges.isEmpty()) {
+            List<String> chain = new ArrayList<>();
+            chain.add("trigger-1");
+            chain.addAll(actionIds);
+            List<Map<String, Object>> out = new ArrayList<>();
+            for (int k = 0; k < chain.size() - 1; k++) {
+                Map<String, Object> edge = new HashMap<>();
+                edge.put("id", "e" + k);
+                edge.put("source", chain.get(k));
+                edge.put("target", chain.get(k + 1));
+                edge.put("sourceHandle", null);
+                out.add(edge);
+            }
+            return out;
+        }
+
         boolean hasTriggerEdge = edges.stream().anyMatch(e -> "trigger-1".equals(e.get("source")));
         if (!hasTriggerEdge) {
+            // Connect the trigger to the first node that nothing else points to (a natural entry).
+            Set<Object> targets = edges.stream().map(e -> e.get("target")).collect(java.util.stream.Collectors.toSet());
+            String entry = actionIds.stream().filter(id -> !targets.contains(id)).findFirst().orElse(actionIds.get(0));
+
             List<Map<String, Object>> newEdges = new ArrayList<>(edges);
             Map<String, Object> triggerEdge = new HashMap<>();
             triggerEdge.put("id", "e-trigger");
             triggerEdge.put("source", "trigger-1");
-            triggerEdge.put("target", actionIds.get(0));
+            triggerEdge.put("target", entry);
             triggerEdge.put("sourceHandle", null);
             newEdges.add(0, triggerEdge);
             return newEdges;

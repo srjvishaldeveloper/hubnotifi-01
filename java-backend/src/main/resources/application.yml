@@ -15,6 +15,15 @@ spring:
       hibernate:
         globally_quoted_identifiers: true
 
+  flyway:
+    enabled: true
+    # The schema already existed (created by hand / by Hibernate ddl-auto over time) before
+    # Flyway was introduced — baseline it as version 0 instead of demanding a full schema dump,
+    # so migrations only need to cover changes going forward.
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+
 server:
   port: ${PORT:8080}
   servlet:

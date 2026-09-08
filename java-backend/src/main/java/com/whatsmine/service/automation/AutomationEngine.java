@@ -44,6 +44,9 @@ public class AutomationEngine {
     @Autowired private com.whatsmine.service.sms.SmsApiClient smsApiClient;
     @Autowired private com.whatsmine.service.email.EmailApiClient emailApiClient;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private com.whatsmine.queue.QueueDispatcher queueDispatcher;
+    @Autowired private com.whatsmine.repository.ConversationRepository conversationRepository;
+    @Autowired private com.whatsmine.repository.UserRepository userRepository;
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -54,6 +57,8 @@ public class AutomationEngine {
         if (auto == null) return Map.of("status", "error", "message", "Automation not found.");
 
         Contact contact = run.getContactId() != null ? contactRepository.findById(run.getContactId()).orElse(null) : null;
+        if (contact == null) return Map.of("status", "skipped", "message", "Contact not found.");
+
         String prompt = str(data.getOrDefault("prompt", "Reply to the user politely."));
         prompt = renderTokens(prompt, contact, context);
 
@@ -62,13 +67,24 @@ public class AutomationEngine {
                 Map.of("role", "user", "content", str(context.getOrDefault("message_body", "Hello")))
         );
 
+        String reply;
         try {
             com.whatsmine.service.ai.llm.LlmResponse response = llmGateway.chat(auto.getWorkspaceId(), messages, Map.of("max_tokens", 512));
-            String reply = response.content();
-            return Map.of("status", "ok", "message", "AI generated reply.", "context_update", Map.of("last_ai_reply", reply));
+            reply = response.content();
         } catch (Exception e) {
             return Map.of("status", "error", "message", "AI reply failed: " + e.getMessage());
         }
+        if (reply == null || reply.isEmpty()) {
+            return Map.of("status", "skipped", "message", "AI returned no reply.");
+        }
+
+        Map<String, Object> send = deliverText(contact, (String) data.get("channel"), reply);
+        String sendStatus = str(send.getOrDefault("status", "ok"));
+        return Map.of(
+                "status", sendStatus,
+                "message", "ok".equals(sendStatus) ? "AI reply sent." : str(send.get("message")),
+                "context_update", Map.of("last_ai_reply", reply)
+        );
     }
 
     private Map<String, Object> executeRunChatbot(Map<String, Object> data, AutomationRun run, Map<String, Object> context) {
@@ -88,13 +104,51 @@ public class AutomationEngine {
 
         if (bot == null) return Map.of("status", "error", "message", "Chatbot not found.");
 
+        Contact contact = run.getContactId() != null ? contactRepository.findById(run.getContactId()).orElse(null) : null;
+        if (contact == null) return Map.of("status", "skipped", "message", "Contact not found.");
+
         String messageText = str(context.getOrDefault("message_body", "Hello"));
         Map<String, Object> apiRes = chatbotRunner.runForApi(bot, messageText, auto.getWorkspaceId(), List.of());
         String reply = str(apiRes.getOrDefault("reply", ""));
+        if (reply.isEmpty()) {
+            return Map.of("status", "skipped", "message", "Chatbot returned no reply.");
+        }
 
-        return Map.of("status", "ok", "message", "Executed chatbot '" + bot.getName() + "'.", "context_update", Map.of("last_ai_reply", reply));
+        Map<String, Object> send = deliverText(contact, (String) data.get("channel"), reply);
+        String sendStatus = str(send.getOrDefault("status", "ok"));
+        return Map.of(
+                "status", sendStatus,
+                "message", "ok".equals(sendStatus) ? "Chatbot reply sent." : str(send.get("message")),
+                "context_update", Map.of("last_ai_reply", reply)
+        );
     }
 
+    /**
+     * Delivers a plain-text message (AI Reply / Run Chatbot output) to a contact over
+     * WhatsApp or SMS — the two channels this Java port has real send clients for.
+     * Mirrors PHP's sendTextViaChannel(); previously these nodes generated a reply and
+     * never sent it.
+     */
+    private Map<String, Object> deliverText(Contact contact, String channel, String text) {
+        String ch = (channel == null || channel.isEmpty()) ? "whatsapp" : channel;
+        if (contact.getPhoneE164() == null || contact.getPhoneE164().isBlank()) {
+            return Map.of("status", "error", "message", "Contact has no phone number.");
+        }
+        try {
+            if ("sms".equals(ch)) {
+                String sid = smsApiClient.sendText(contact.getWorkspaceId(), contact.getPhoneE164(), text);
+                return Map.of("status", "ok", "message", "SMS sent.", "output", Map.of("message_id", sid != null ? sid : ""));
+            }
+            ChannelAccount channelAccount = resolveWhatsappChannel(contact.getWorkspaceId());
+            if (channelAccount == null) {
+                return Map.of("status", "error", "message", "No active WhatsApp channel connected for this workspace.");
+            }
+            String id = whatsAppApiClient.sendText(channelAccount, contact.getPhoneE164(), text);
+            return sent(id);
+        } catch (Exception e) {
+            return Map.of("status", "error", "message", "Reply delivery failed: " + e.getMessage());
+        }
+    }
 
     // ─── Entry Points ─────────────────────────────────────────────────────────
 
@@ -137,7 +191,7 @@ public class AutomationEngine {
             run.setResumeNodeId(null);
             runRepository.save(run);
         } else {
-            Map<String, Object> triggerNode = findNodeByType(nodes, "trigger");
+            Map<String, Object> triggerNode = findTriggerNode(nodes);
             if (triggerNode == null) {
                 run.setStatus("failed");
                 run.setError("No trigger node.");
@@ -371,8 +425,14 @@ public class AutomationEngine {
         run.setResumeNodeId(nextNodeId);
         runRepository.save(run);
 
-        // In a full implementation, a delayed job would wake this up.
-        // For Phase 10, we mark it as waiting. Phase 15 adds the scheduler.
+        int delayMinutes = switch (unit) {
+            case "hours" -> amount * 60;
+            case "days" -> amount * 1440;
+            default -> amount;
+        };
+        queueDispatcher.dispatchDelayed("automation", "ExecuteAutomationRunJob",
+                Map.of("runId", run.getId()), delayMinutes * 60, 3, new int[]{60, 120, 300});
+
         return Map.of("status", "waiting", "message", "Waiting " + amount + " " + unit + ".");
     }
 
@@ -425,8 +485,11 @@ public class AutomationEngine {
             case "language" -> contact.setLanguage(value);
             case "country" -> contact.setCountry(value);
             default -> {
-                // Store as custom field
-                // Custom fields handling deferred
+                String key = field.startsWith("custom.") ? field.substring(7) : field;
+                Map<String, Object> custom = contact.getCustomFields() != null
+                        ? new HashMap<>(contact.getCustomFields()) : new HashMap<>();
+                custom.put(key, value);
+                contact.setCustomFields(custom);
             }
         }
         contactRepository.save(contact);
@@ -575,7 +638,34 @@ public class AutomationEngine {
 
     private Map<String, Object> executeAssignAgent(Map<String, Object> data, AutomationRun run) {
         if (run.getContactId() == null) return Map.of("status", "skipped", "message", "No contact to assign.");
-        return Map.of("status", "ok", "message", "Agent assignment recorded.");
+
+        Automation automation = automationRepository.findById(run.getAutomationId()).orElse(null);
+        if (automation == null) return Map.of("status", "error", "message", "Automation not found.");
+        Long workspaceId = automation.getWorkspaceId();
+
+        Conversation conversation = conversationRepository
+                .findFirstByWorkspaceIdAndContactIdOrderByLastMessageAtDesc(workspaceId, run.getContactId())
+                .orElse(null);
+        if (conversation == null) return Map.of("status", "skipped", "message", "No conversation found for contact.");
+
+        User user = null;
+        Object userIdRaw = data.get("user_id");
+        if (userIdRaw != null && !str(userIdRaw).isEmpty()) {
+            try {
+                Long userId = Long.parseLong(str(userIdRaw));
+                user = userRepository.findByIdAndWorkspaceId(userId, workspaceId).orElse(null);
+                if (user == null) return Map.of("status", "error", "message", "Assigned user not found in workspace.");
+            } catch (NumberFormatException e) {
+                return Map.of("status", "error", "message", "Assigned user not found in workspace.");
+            }
+        }
+
+        conversation.setAssignedUserId(user != null ? user.getId() : null);
+        conversation.setAssignedTo("human");
+        conversation.setHandoverAt(LocalDateTime.now());
+        conversationRepository.save(conversation);
+
+        return Map.of("status", "ok", "message", user != null ? "Assigned to " + user.getName() + "." : "Handed off to a human agent.");
     }
 
     // ─── Run Subflow ──────────────────────────────────────────────────────────
@@ -1023,6 +1113,20 @@ public class AutomationEngine {
 
     private Map<String, Object> findNodeByType(List<Map<String, Object>> nodes, String type) {
         return nodes.stream().filter(n -> type.equals(n.get("type"))).findFirst().orElse(null);
+    }
+
+    /**
+     * The builder saves the trigger node as type "trigger" (fresh automations) or
+     * "triggerNode" (once re-saved from the canvas — see Builder.jsx's serializeNodes),
+     * and older saves may only carry data.triggerType. Match all three, same as testRun().
+     */
+    private Map<String, Object> findTriggerNode(List<Map<String, Object>> nodes) {
+        return nodes.stream().filter(n -> {
+            String type = (String) n.getOrDefault("type", "");
+            Map<String, Object> data = asMap(n.get("data"));
+            return "trigger".equals(type) || "triggerNode".equals(type)
+                    || (data != null && data.containsKey("triggerType"));
+        }).findFirst().orElse(null);
     }
 
     private Map<String, Object> findNodeById(List<Map<String, Object>> nodes, String id) {

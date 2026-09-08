@@ -92,11 +92,14 @@ public class SocialPostController {
                 .map(this::postRow)
                 .toList();
 
+        int lastPage = Math.max(1, posts.getTotalPages());
+
         Map<String, Object> paginated = new LinkedHashMap<>();
         paginated.put("data", rows);
         paginated.put("current_page", page);
-        paginated.put("last_page", Math.max(1, posts.getTotalPages()));
+        paginated.put("last_page", lastPage);
         paginated.put("total", posts.getTotalElements());
+        paginated.put("links", buildPaginationLinks(page, lastPage, status, network));
 
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("posts", paginated);
@@ -115,7 +118,10 @@ public class SocialPostController {
     public Object calendar(
             HttpServletRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = false) String month
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) String status,
+            @RequestParam(name = "account_id", required = false) Long accountId,
+            @RequestParam(required = false) String network
     ) {
         Long workspaceId = getWorkspaceId(userDetails);
         YearMonth ym;
@@ -129,13 +135,22 @@ public class SocialPostController {
         LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
 
         List<SocialPost> posts = postRepository.findByWorkspaceIdAndScheduledAtBetween(workspaceId, start, end);
-        List<Map<String, Object>> rows = posts.stream().map(this::postRow).toList();
+        List<Map<String, Object>> rows = posts.stream()
+                .filter(p -> status == null || status.isBlank() || status.equals(p.getStatus()))
+                .filter(p -> network == null || network.isBlank() || postTargetsNetwork(p, network))
+                .filter(p -> accountId == null || postTargetsAccount(p, accountId))
+                .map(this::postRow)
+                .toList();
 
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("posts", rows);
         props.put("month", ym.toString());
         props.put("accounts", activeAccountRows(workspaceId));
-        props.put("filters", Map.of());
+        Map<String, Object> filters = new LinkedHashMap<>();
+        filters.put("status", status != null ? status : "");
+        filters.put("account_id", accountId);
+        filters.put("network", network != null ? network : "");
+        props.put("filters", filters);
         return inertiaRenderer.render("Social/Calendar", props, request);
     }
 
@@ -470,6 +485,41 @@ public class SocialPostController {
         return postAccountRepository.findBySocialPostId(post.getId()).stream()
                 .anyMatch(link -> accountRepository.findById(link.getSocialAccountId())
                         .map(a -> network.equals(a.getProvider())).orElse(false));
+    }
+
+    private boolean postTargetsAccount(SocialPost post, Long accountId) {
+        return postAccountRepository.findBySocialPostId(post.getId()).stream()
+                .anyMatch(link -> accountId.equals(link.getSocialAccountId()));
+    }
+
+    /** Laravel-paginator-shaped link list ([Previous, 1..N, Next]) — Social/Posts/Index.jsx renders posts.links directly. */
+    private List<Map<String, Object>> buildPaginationLinks(int currentPage, int lastPage, String status, String network) {
+        List<Map<String, Object>> links = new ArrayList<>();
+        links.add(paginationLink("&laquo; Previous", currentPage > 1 ? currentPage - 1 : null, status, network, false));
+        for (int p = 1; p <= lastPage; p++) {
+            links.add(paginationLink(String.valueOf(p), p, status, network, p == currentPage));
+        }
+        links.add(paginationLink("Next &raquo;", currentPage < lastPage ? currentPage + 1 : null, status, network, false));
+        return links;
+    }
+
+    private Map<String, Object> paginationLink(String label, Integer page, String status, String network, boolean active) {
+        Map<String, Object> link = new LinkedHashMap<>();
+        link.put("label", label);
+        link.put("active", active);
+        if (page == null) {
+            link.put("url", null);
+        } else {
+            StringBuilder url = new StringBuilder("/app/social/posts?page=").append(page);
+            if (status != null && !status.isBlank()) {
+                url.append("&status=").append(java.net.URLEncoder.encode(status, java.nio.charset.StandardCharsets.UTF_8));
+            }
+            if (network != null && !network.isBlank()) {
+                url.append("&network=").append(java.net.URLEncoder.encode(network, java.nio.charset.StandardCharsets.UTF_8));
+            }
+            link.put("url", url.toString());
+        }
+        return link;
     }
 
     private List<Map<String, Object>> activeAccountRows(Long workspaceId) {

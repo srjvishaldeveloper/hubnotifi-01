@@ -20,5 +20,7 @@ public interface SocialPostRepository extends JpaRepository<SocialPost, Long> {
 
     List<SocialPost> findByWorkspaceIdAndScheduledAtBetween(Long workspaceId, LocalDateTime from, LocalDateTime to);
 
+    List<SocialPost> findByWorkspaceIdAndCreatedAtBetween(Long workspaceId, LocalDateTime from, LocalDateTime to);
+
     List<SocialPost> findByStatusAndScheduledAtLessThanEqual(String status, LocalDateTime cutoff);
 }

@@ -28,4 +28,6 @@ public interface AutomationRepository extends JpaRepository<Automation, Long> {
     List<Automation> findSubflowCandidates(@Param("wid") Long workspaceId, @Param("excludeId") Long excludeId);
 
     long countByWorkspaceId(Long workspaceId);
+
+    long countByWorkspaceIdAndStatus(Long workspaceId, String status);
 }

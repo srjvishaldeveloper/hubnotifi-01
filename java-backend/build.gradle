@@ -34,6 +34,11 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2' // Included for dev/testing fallback
 
+    // Schema migrations — flyway-mysql is required alongside flyway-core for
+    // MySQL support on Flyway 10+ (Spring Boot's dependency management pins
+    // both to a compatible version).
+    implementation 'org.flywaydb:flyway-mysql'
+
     // Payments
     implementation 'com.stripe:stripe-java:28.2.0'
 

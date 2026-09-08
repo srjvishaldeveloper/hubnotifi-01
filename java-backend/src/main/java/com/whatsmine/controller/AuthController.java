@@ -97,6 +97,12 @@ public class AuthController {
 
     @PostMapping("/register")
     public Object register(@Valid @RequestBody RegisterRequest registerRequest, HttpServletRequest request) {
+        if (!registerRequest.getPassword().equals(registerRequest.getPasswordConfirmation())) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                    "message", "The given data was invalid.",
+                    "errors", Map.of("password_confirmation", "The password confirmation does not match.")
+            ));
+        }
         try {
             authService.register(registerRequest);
         } catch (IllegalArgumentException e) {

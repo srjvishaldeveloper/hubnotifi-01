@@ -1,0 +1,80 @@
+# Production stack for one VPS: app + mysql + nginx (reverse proxy / TLS termination).
+#
+# Lives on the server at ${PROD_APP_DIR} (see Jenkinsfile / DEPLOY.md), NOT built by Jenkins —
+# Jenkins only edits the `app` image tag (via `sed`, see Jenkinsfile's Deploy stage) and runs
+# `docker compose up -d app`. mysql/nginx are started once by hand during first-time setup and
+# are left running across deploys.
+#
+# Secrets (DB password, etc.) live in a server-local `.env` next to this file — Jenkins never
+# sees it. Copy .env.example to .env on the server and fill in real values before first boot.
+
+services:
+  app:
+    image: docker.io/YOUR_DOCKERHUB_USER/hubnotifi-java-backend:latest # Jenkins rewrites this tag on deploy
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-whatsmine}
+      DB_USERNAME: ${DB_USERNAME:-whatsmine}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_URL: ${APP_URL}
+    ports:
+      - "127.0.0.1:8080:8080" # only nginx talks to this; not exposed publicly
+    volumes:
+      - app_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE:-whatsmine}
+      MYSQL_USER: ${DB_USERNAME:-whatsmine}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/hubnotification.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot_www:/var/www/certbot:ro
+      - certbot_certs:/etc/letsencrypt:ro
+
+  # One-shot certificate issuance/renewal. Run manually the first time:
+  #   docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d yourdomain.com
+  # then set up a host cron job (or a second `certbot renew` cron container) to renew every ~60 days.
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+    profiles: ["tools"] # not started by `up -d`; run explicitly via `docker compose run`
+
+volumes:
+  mysql_data:
+  app_storage:
+  certbot_www:
+  certbot_certs:
