@@ -1,6 +1,6 @@
 package com.whatsmine.model;
 
-import com.whatsmine.model.converter.JsonAttributeConverter;
+import com.whatsmine.model.converter.JsonListConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -30,7 +30,7 @@ public class SocialPost {
     @Column(name = "content", length = 65535, nullable = false)
     private String content;
 
-    @Convert(converter = JsonAttributeConverter.class)
+    @Convert(converter = JsonListConverter.class)
     @Column(name = "media_urls", length = 65535)
     private List<String> mediaUrls;
 

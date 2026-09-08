@@ -18,6 +18,9 @@ repositories {
 }
 
 dependencies {
+    // .env file support (reads java-backend/.env automatically, same convention as the PHP side)
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'

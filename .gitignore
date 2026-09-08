@@ -1,4 +1,7 @@
 
+### Java backend local secrets ###
+java-backend/.env
+
 ### Java ###
 # Compiled class file
 *.class

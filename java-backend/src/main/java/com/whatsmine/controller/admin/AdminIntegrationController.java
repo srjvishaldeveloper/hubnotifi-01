@@ -1,18 +1,29 @@
 package com.whatsmine.controller.admin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whatsmine.inertia.Inertia;
 import com.whatsmine.model.IntegrationConfig;
 import com.whatsmine.service.IntegrationCredentialsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,10 +137,16 @@ public class AdminIntegrationController {
         return f;
     }
 
-    private final IntegrationCredentialsService credentialsService;
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
-    public AdminIntegrationController(IntegrationCredentialsService credentialsService) {
+    private final IntegrationCredentialsService credentialsService;
+    private final ObjectMapper objectMapper;
+
+    public AdminIntegrationController(IntegrationCredentialsService credentialsService, ObjectMapper objectMapper) {
         this.credentialsService = credentialsService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -187,6 +204,9 @@ public class AdminIntegrationController {
         config.put("enabled", existing != null && Boolean.TRUE.equals(existing.getEnabled()));
         config.put("mode", existing != null ? existing.getMode() : "live");
         config.put("credentials", credentialsForForm);
+        config.put("last_test_status", existing != null && existing.getLastTestStatus() != null ? existing.getLastTestStatus() : "untested");
+        config.put("last_test_message", existing != null ? existing.getLastTestMessage() : null);
+        config.put("last_tested_at", existing != null ? existing.getLastTestedAt() : null);
 
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("provider", provider);
@@ -199,7 +219,7 @@ public class AdminIntegrationController {
     }
 
     @SuppressWarnings("unchecked")
-    @PutMapping("/{provider}")
+    @RequestMapping(value = "/{provider}", method = { RequestMethod.PUT, RequestMethod.POST })
     public Object update(@PathVariable String provider, @RequestBody Map<String, Object> body) {
         if (!LABELS.containsKey(provider)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -214,6 +234,123 @@ public class AdminIntegrationController {
         credentialsService.saveCredentials(provider, LABELS.get(provider), credentials, enabled, "live");
 
         return edit(provider);
+    }
+
+    @PostMapping("/{provider}/test")
+    public Map<String, Object> test(@PathVariable String provider) {
+        if (!LABELS.containsKey(provider)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        Map<String, Object> result = testConnection(provider);
+        credentialsService.recordTestResult(provider, Boolean.TRUE.equals(result.get("ok")), (String) result.get("message"));
+        return result;
+    }
+
+    @PostMapping("/{provider}/rotate")
+    public Map<String, Object> rotate(@PathVariable String provider) {
+        if (!LABELS.containsKey(provider)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        if (!"meta_app".equals(provider)) {
+            return Map.of("ok", false, "message", "This integration does not use a webhook secret.");
+        }
+
+        byte[] bytes = new byte[32];
+        new SecureRandom().nextBytes(bytes);
+        String newToken = HexFormat.of().formatHex(bytes);
+        credentialsService.updateCredentialField(provider, "verify_token", newToken);
+        return Map.of("ok", true, "message", "Webhook verify token rotated.");
+    }
+
+    /** Mirrors the PHP ConnectionTester: a real live check for the providers this UI actually configures. */
+    private Map<String, Object> testConnection(String provider) {
+        Map<String, String> creds = credentialsService.getCredentials(provider);
+        try {
+            return switch (provider) {
+                case "meta_app" -> testMeta(creds);
+                case "sms_twilio" -> testTwilio(creds);
+                case "google_places" -> testGooglePlaces(creds);
+                case "oauth_shopify", "oauth_bigcommerce", "oauth_linkedin", "oauth_twitter", "oauth_youtube", "oauth_tiktok" -> testOAuthPresence(creds);
+                default -> Map.of("ok", false, "message", "No test available for this provider.");
+            };
+        } catch (Exception e) {
+            return Map.of("ok", false, "message", "Connection test failed: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> testMeta(Map<String, String> creds) throws Exception {
+        String token = creds.get("system_user_token");
+        if (token == null || token.isBlank()) {
+            return Map.of("ok", false, "message", "System user token is not configured.");
+        }
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://graph.facebook.com/v20.0/me?access_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8)))
+                .timeout(Duration.ofSeconds(10))
+                .GET()
+                .build();
+        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        Map<String, Object> body = objectMapper.readValue(response.body(), Map.class);
+        if (response.statusCode() < 400 && body.get("id") != null) {
+            return Map.of("ok", true, "message", "Connected. User ID: " + body.get("id"));
+        }
+        Object error = body.get("error");
+        String message = error instanceof Map ? String.valueOf(((Map<String, Object>) error).getOrDefault("message", "Meta API error.")) : "Meta API error.";
+        return Map.of("ok", false, "message", message);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> testTwilio(Map<String, String> creds) throws Exception {
+        String sid = creds.get("account_sid");
+        String token = creds.get("auth_token");
+        if (sid == null || sid.isBlank() || token == null || token.isBlank()) {
+            return Map.of("ok", false, "message", "Account SID and Auth Token required.");
+        }
+        String basicAuth = java.util.Base64.getEncoder().encodeToString((sid + ":" + token).getBytes(StandardCharsets.UTF_8));
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.twilio.com/2010-04-01/Accounts/" + sid + ".json"))
+                .timeout(Duration.ofSeconds(10))
+                .header("Authorization", "Basic " + basicAuth)
+                .GET()
+                .build();
+        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        Map<String, Object> body = objectMapper.readValue(response.body(), Map.class);
+        if (response.statusCode() < 400) {
+            return Map.of("ok", true, "message", "Twilio account connected: " + body.get("friendly_name"));
+        }
+        return Map.of("ok", false, "message", String.valueOf(body.getOrDefault("message", "Twilio error.")));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> testGooglePlaces(Map<String, String> creds) throws Exception {
+        String key = creds.get("api_key");
+        if (key == null || key.isBlank()) {
+            return Map.of("ok", false, "message", "API Key is required.");
+        }
+        String query = "query=" + URLEncoder.encode("restaurants in New York", StandardCharsets.UTF_8) + "&key=" + URLEncoder.encode(key, StandardCharsets.UTF_8);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://maps.googleapis.com/maps/api/place/textsearch/json?" + query))
+                .timeout(Duration.ofSeconds(10))
+                .GET()
+                .build();
+        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        Map<String, Object> body = objectMapper.readValue(response.body(), Map.class);
+        String status = String.valueOf(body.getOrDefault("status", ""));
+        if ("OK".equals(status) || "ZERO_RESULTS".equals(status)) {
+            return Map.of("ok", true, "message", "Google Places API connected.");
+        }
+        return Map.of("ok", false, "message", "Places API error: " + status);
+    }
+
+    private Map<String, Object> testOAuthPresence(Map<String, String> creds) {
+        String id = creds.get("client_id");
+        String secret = creds.get("client_secret");
+        if (id == null || id.isBlank() || secret == null || secret.isBlank()) {
+            return Map.of("ok", false, "message", "Client ID and Secret are required.");
+        }
+        return Map.of("ok", true, "message", "Credentials are present. OAuth flow will validate them at runtime.");
     }
 
     private List<String> requiredFieldKeys(String provider) {

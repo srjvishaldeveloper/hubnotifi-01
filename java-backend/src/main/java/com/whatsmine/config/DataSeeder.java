@@ -6,12 +6,14 @@ import com.whatsmine.model.Contact;
 import com.whatsmine.model.Plan;
 import com.whatsmine.model.User;
 import com.whatsmine.model.Workspace;
+import com.whatsmine.model.WorkspaceUser;
 import com.whatsmine.repository.AdminUserRepository;
 import com.whatsmine.repository.ClientRepository;
 import com.whatsmine.repository.ContactRepository;
 import com.whatsmine.repository.PlanRepository;
 import com.whatsmine.repository.UserRepository;
 import com.whatsmine.repository.WorkspaceRepository;
+import com.whatsmine.repository.WorkspaceUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -33,6 +35,7 @@ public class DataSeeder implements CommandLineRunner {
     private final ClientRepository clientRepository;
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceUserRepository workspaceUserRepository;
     private final PlanRepository planRepository;
     private final ContactRepository contactRepository;
     private final PasswordEncoder passwordEncoder;
@@ -42,6 +45,7 @@ public class DataSeeder implements CommandLineRunner {
             ClientRepository clientRepository,
             UserRepository userRepository,
             WorkspaceRepository workspaceRepository,
+            WorkspaceUserRepository workspaceUserRepository,
             PlanRepository planRepository,
             ContactRepository contactRepository,
             PasswordEncoder passwordEncoder) {
@@ -49,6 +53,7 @@ public class DataSeeder implements CommandLineRunner {
         this.clientRepository = clientRepository;
         this.userRepository = userRepository;
         this.workspaceRepository = workspaceRepository;
+        this.workspaceUserRepository = workspaceUserRepository;
         this.planRepository = planRepository;
         this.contactRepository = contactRepository;
         this.passwordEncoder = passwordEncoder;
@@ -107,6 +112,12 @@ public class DataSeeder implements CommandLineRunner {
 
             workspace.setOwnerId(user.getId());
             workspaceRepository.save(workspace);
+
+            WorkspaceUser workspaceUser = new WorkspaceUser();
+            workspaceUser.setWorkspaceId(workspace.getId());
+            workspaceUser.setUserId(user.getId());
+            workspaceUser.setRole("owner");
+            workspaceUserRepository.save(workspaceUser);
 
             // Seed initial contact
             Contact contact = new Contact();

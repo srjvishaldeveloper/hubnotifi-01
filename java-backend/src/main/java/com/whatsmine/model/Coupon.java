@@ -1,6 +1,6 @@
 package com.whatsmine.model;
 
-import com.whatsmine.model.converter.JsonAttributeConverter;
+import com.whatsmine.model.converter.JsonListConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -37,9 +37,9 @@ public class Coupon {
     @Column(name = "duration_in_months")
     private Integer durationInMonths;
 
-    @Convert(converter = JsonAttributeConverter.class)
+    @Convert(converter = JsonListConverter.class)
     @Column(name = "applies_to_plan_ids", length = 65535)
-    private List<Object> appliesToPlanIds;
+    private List<String> appliesToPlanIds;
 
     @Column(name = "max_redemptions")
     private Integer maxRedemptions;
@@ -147,11 +147,11 @@ public class Coupon {
         this.durationInMonths = durationInMonths;
     }
 
-    public List<Object> getAppliesToPlanIds() {
+    public List<String> getAppliesToPlanIds() {
         return appliesToPlanIds;
     }
 
-    public void setAppliesToPlanIds(List<Object> appliesToPlanIds) {
+    public void setAppliesToPlanIds(List<String> appliesToPlanIds) {
         this.appliesToPlanIds = appliesToPlanIds;
     }
 

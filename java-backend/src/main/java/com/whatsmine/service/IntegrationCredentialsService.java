@@ -4,6 +4,7 @@ import com.whatsmine.model.IntegrationConfig;
 import com.whatsmine.repository.IntegrationConfigRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -73,5 +74,26 @@ public class IntegrationCredentialsService {
         config.setEnabled(enabled);
 
         return repository.save(config);
+    }
+
+    /** Records the outcome of a "Test Connection" attempt for the admin Integrations page. */
+    public void recordTestResult(String provider, boolean ok, String message) {
+        IntegrationConfig config = find(provider);
+        if (config == null) return;
+        config.setLastTestedAt(LocalDateTime.now());
+        config.setLastTestStatus(ok ? "ok" : "fail");
+        config.setLastTestMessage(message);
+        repository.save(config);
+    }
+
+    /** Overwrites a single credential field (e.g. rotating a webhook verify token) without touching the rest. */
+    public void updateCredentialField(String provider, String key, String value) {
+        IntegrationConfig config = find(provider);
+        if (config == null) return;
+        Map<String, Object> existing = new LinkedHashMap<>();
+        if (config.getCredentials() != null) existing.putAll(config.getCredentials());
+        existing.put(key, value);
+        config.setCredentials(existing);
+        repository.save(config);
     }
 }

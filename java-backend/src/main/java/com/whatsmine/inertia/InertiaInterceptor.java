@@ -30,7 +30,12 @@ public class InertiaInterceptor implements HandlerInterceptor {
 
         if (isInertiaRequest) {
             request.setAttribute(IS_INERTIA_REQUEST_ATTR, true);
-            response.setHeader(INERTIA_HEADER, "true");
+            // Deliberately NOT setting the X-Inertia response header here: if the
+            // handler throws (e.g. ResponseStatusException for a 404), postHandle
+            // below never runs, but a header set here would still be on the
+            // response — tricking the Inertia client into parsing a plain error
+            // JSON body as a page object and crashing the SPA instead of showing
+            // a normal error. postHandle sets it only on successful completion.
             response.setHeader("Vary", "Accept");
 
             // Asset Version Check on GET requests

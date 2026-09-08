@@ -97,7 +97,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public Object register(@Valid @RequestBody RegisterRequest registerRequest, HttpServletRequest request) {
-        User user = authService.register(registerRequest);
+        try {
+            authService.register(registerRequest);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                    "message", "The given data was invalid.",
+                    "errors", Map.of("email", e.getMessage())
+            ));
+        }
         authService.login(new LoginRequest(registerRequest.getEmail(), registerRequest.getPassword(), false), request);
         return Inertia.redirect("/app/dashboard");
     }

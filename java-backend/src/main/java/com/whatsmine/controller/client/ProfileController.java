@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -53,7 +54,7 @@ public class ProfileController {
         return Inertia.render("Profile/Edit", props);
     }
 
-    @PutMapping
+    @RequestMapping(method = { RequestMethod.PUT, RequestMethod.PATCH })
     public Object update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody ProfileUpdateRequest request,

@@ -63,10 +63,8 @@ public class AdminCouponController {
         if (payload.get("duration_in_months") != null) {
             coupon.setDurationInMonths(Integer.valueOf(payload.get("duration_in_months").toString()));
         }
-        if (payload.get("applies_to_plan_ids") instanceof List) {
-            @SuppressWarnings("unchecked")
-            List<Object> planIds = (List<Object>) payload.get("applies_to_plan_ids");
-            coupon.setAppliesToPlanIds(planIds);
+        if (payload.get("applies_to_plan_ids") instanceof List<?> rawPlanIds) {
+            coupon.setAppliesToPlanIds(rawPlanIds.stream().map(String::valueOf).toList());
         }
         if (payload.get("max_redemptions") != null) {
             coupon.setMaxRedemptions(Integer.valueOf(payload.get("max_redemptions").toString()));
@@ -107,10 +105,8 @@ public class AdminCouponController {
         if (payload.containsKey("duration_in_months")) {
             coupon.setDurationInMonths(payload.get("duration_in_months") != null ? Integer.valueOf(payload.get("duration_in_months").toString()) : null);
         }
-        if (payload.get("applies_to_plan_ids") instanceof List) {
-            @SuppressWarnings("unchecked")
-            List<Object> planIds = (List<Object>) payload.get("applies_to_plan_ids");
-            coupon.setAppliesToPlanIds(planIds);
+        if (payload.get("applies_to_plan_ids") instanceof List<?> rawPlanIds) {
+            coupon.setAppliesToPlanIds(rawPlanIds.stream().map(String::valueOf).toList());
         }
         if (payload.containsKey("max_redemptions")) {
             coupon.setMaxRedemptions(payload.get("max_redemptions") != null ? Integer.valueOf(payload.get("max_redemptions").toString()) : null);
