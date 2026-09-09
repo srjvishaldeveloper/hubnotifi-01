@@ -213,7 +213,7 @@ export default function AuthLayout({
                     <Link href={route('home')} className="flex items-center gap-2 lg:hidden">
                         <ApplicationLogo className="h-7 w-7 fill-current text-brand-600 dark:text-brand-400" />
                         <span className="text-sm font-semibold text-neutral-900 dark:text-white">
-                            {import.meta.env.VITE_APP_NAME || 'WhatsMine'}
+                            {import.meta.env.VITE_APP_NAME || 'Hub Notification'}
                         </span>
                     </Link>
                     <span className="hidden lg:block" />
