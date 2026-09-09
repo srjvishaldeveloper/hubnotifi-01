@@ -1,16 +1,27 @@
-# Production stack for one VPS: app + mysql + nginx (reverse proxy / TLS termination).
+# Production stack for one VPS: app + mysql. Reverse proxy / TLS termination is
+# handled by a HOST-LEVEL nginx (NOT a container here) — this box also runs an
+# unrelated CRM stack for a teammate, and both apps' domains are served by that
+# one shared host nginx via separate sites-available/* server blocks, each with
+# its own certbot-issued cert. Our app is reached at 127.0.0.1:8080 (published
+# below) from the host nginx site at /etc/nginx/sites-available/hubnotification.*.
+# Do NOT add an nginx/certbot service back here — it would fight the host nginx
+# for ports 80/443.
 #
 # Lives on the server at ${PROD_APP_DIR} (see Jenkinsfile / DEPLOY.md), NOT built by Jenkins —
 # Jenkins only edits the `app` image tag (via `sed`, see Jenkinsfile's Deploy stage) and runs
-# `docker compose up -d app`. mysql/nginx are started once by hand during first-time setup and
-# are left running across deploys.
+# `docker compose up -d app`. mysql is started once by hand during first-time setup and
+# is left running across deploys.
 #
 # Secrets (DB password, etc.) live in a server-local `.env` next to this file — Jenkins never
 # sees it. Copy .env.example to .env on the server and fill in real values before first boot.
 
 services:
   app:
-    image: docker.io/YOUR_DOCKERHUB_USER/hubnotifi-java-backend:latest # Jenkins rewrites this tag on deploy
+    # No CI/CD registry in use on this deployment — built locally on the server
+    # from source each deploy (see ./app, populated by copying java-backend/
+    # there and running `docker compose build app`). If Jenkins/a registry
+    # workflow is set up later, swap this back to an `image:` reference.
+    build: ./app
     restart: unless-stopped
     depends_on:
       mysql:
@@ -24,7 +35,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       APP_URL: ${APP_URL}
     ports:
-      - "127.0.0.1:8080:8080" # only nginx talks to this; not exposed publicly
+      - "127.0.0.1:8080:8080" # only the host nginx talks to this; not exposed publicly
     volumes:
       - app_storage:/app/storage
     healthcheck:
@@ -50,31 +61,6 @@ services:
       timeout: 5s
       retries: 10
 
-  nginx:
-    image: nginx:1.27-alpine
-    restart: unless-stopped
-    depends_on:
-      - app
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/hubnotification.conf:/etc/nginx/conf.d/default.conf:ro
-      - certbot_www:/var/www/certbot:ro
-      - certbot_certs:/etc/letsencrypt:ro
-
-  # One-shot certificate issuance/renewal. Run manually the first time:
-  #   docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d yourdomain.com
-  # then set up a host cron job (or a second `certbot renew` cron container) to renew every ~60 days.
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - certbot_www:/var/www/certbot
-      - certbot_certs:/etc/letsencrypt
-    profiles: ["tools"] # not started by `up -d`; run explicitly via `docker compose run`
-
 volumes:
   mysql_data:
   app_storage:
-  certbot_www:
-  certbot_certs:

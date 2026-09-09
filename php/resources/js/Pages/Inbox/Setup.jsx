@@ -9,6 +9,17 @@ import {
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// Raw fetch() calls on this page (bypassing Inertia's own axios instance,
+// which auto-attaches this from the cookie) must set the CSRF header by hand.
+// Spring Security's CookieCsrfTokenRepository validates X-XSRF-TOKEN against
+// the XSRF-TOKEN cookie — NOT X-CSRF-TOKEN from the <meta> tag, which is a
+// Laravel-era header name that this Java backend never checks, silently
+// failing every request here with 403 until this matched the real check.
+function getXsrfToken() {
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
 /* brand logos (accurate official paths) */
 
 function WhatsAppLogo({ className = 'h-5 w-5' }) {
@@ -238,7 +249,7 @@ function PhoneStatusCard({ num, wabaId, onRefreshed }) {
         try {
             const res = await fetch(
                 route('client.whatsapp.setup.refresh-phone-status', { waba: wabaId, phoneNumberId: phoneId }),
-                { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } }
+                { method: 'POST', headers: { 'X-XSRF-TOKEN': getXsrfToken(), 'Accept': 'application/json' } }
             );
             const json = await res.json();
             if (res.ok && json.data) { setLiveData({ ...num, ...json.data }); onRefreshed?.(); }
@@ -254,7 +265,7 @@ function PhoneStatusCard({ num, wabaId, onRefreshed }) {
                 route('client.whatsapp.setup.change-display-name', { waba: wabaId, phoneNumberId: phoneId }),
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getXsrfToken(), 'Accept': 'application/json' },
                     body: JSON.stringify({ name: newName.trim() }),
                 }
             );
@@ -412,7 +423,7 @@ function WabaCard({ waba, webhookGlobalUrl, channelAccounts, chatbots }) {
             const res = await fetch(route('client.whatsapp.setup.reregister-webhook', { waba: waba.id }), {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-XSRF-TOKEN': getXsrfToken(),
                     'Accept': 'application/json',
                 },
             });
@@ -560,7 +571,7 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, channelAccountsByWaba, chatb
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-XSRF-TOKEN': getXsrfToken(),
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ code, waba_id: wabaId, phone_number_id: phoneNumberId }),
@@ -848,6 +859,17 @@ function EmbeddedSignupButton({ configId, appId, channel, label, color, onCode, 
     const [loading, setLoading] = useState(false);
     const [error, setError]     = useState(null);
 
+    // Preload the Facebook JS SDK as soon as this button mounts, not on click.
+    // FB.login() opens its OAuth popup via window.open(), which browsers only
+    // allow without blocking/FedCM interference when it happens essentially
+    // synchronously within the click's user-activation window. Fetching the
+    // SDK script on click first (previously: await loadFbSdk() before
+    // FB.login()) reliably blew past that window on a cold page load, so the
+    // popup silently never opened and the button hung on "Opening Meta...".
+    useEffect(() => {
+        if (resolvedAppId) loadFbSdk(resolvedAppId).catch(() => {});
+    }, [resolvedAppId]);
+
     const launch = useCallback(async () => {
         setError(null);
 
@@ -952,7 +974,7 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-XSRF-TOKEN': getXsrfToken(),
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ code }),
@@ -1023,7 +1045,7 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-XSRF-TOKEN': getXsrfToken(),
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ code }),

@@ -147,13 +147,14 @@ flowchart TD
 1. **Create the Meta App** at [developers.facebook.com](https://developers.facebook.com) → copy **App ID** and **App Secret** into this page.
 2. **WhatsApp Business API**: create a System User with **ADMIN** role in Meta Business Settings → generate a **permanent token** with `whatsapp_business_management`, `whatsapp_business_messaging`, `business_management` permissions → paste as **System User Access Token**. Set the WhatsApp webhook callback URL to:
    ```
-   https://yourdomain.com/webhooks/whatsapp/{VERIFY_TOKEN}
+   https://yourdomain.com/webhooks/whatsapp/global
    ```
+   (verify token = whatever you set in the Webhook Verify Token field above — the path is literally `global`, not the token itself)
 3. **Embedded Signup**: add the **"Facebook Login for Business"** product to your Meta App → create **two** Configurations:
    - One scoped to WhatsApp permissions → copy its `config_id` into **Embedded Signup Config ID (WhatsApp)**.
    - One scoped to `instagram_basic`, `instagram_manage_messages`, `pages_messaging`, `pages_manage_metadata`, `pages_read_engagement`, `pages_show_list` → copy into **Embedded Signup Config ID (Instagram/Messenger)**.
    - Add OAuth redirect URI: `https://yourdomain.com/app/inbox/setup`
-4. **Instagram DMs webhook**: `https://yourdomain.com/webhooks/meta/{VERIFY_TOKEN}`, subscribe fields: `messages`, `messaging_postbacks`, `messaging_optins`, `message_deliveries`, `message_reads`.
+4. **Instagram DMs webhook**: `https://yourdomain.com/webhooks/meta/global` (verify token = whatever you set in step 1's Webhook Verify Token field — the URL has no token in the path, unlike the WhatsApp one), subscribe fields: `messages`, `messaging_postbacks`, `messaging_optins`, `message_deliveries`, `message_reads`.
 5. **Messenger DMs webhook**: same URL and fields as step 4.
 6. **Facebook/Instagram social *posting*** (separate from DMs): add the plain **"Facebook Login"** product, redirect URI `https://yourdomain.com/auth/facebook/callback`, permissions `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`, `instagram_basic`, `instagram_content_publish`, `public_profile`, `email`.
 7. **Go Live**: switch the Meta App from Development to Live mode, request Advanced Access for the permissions above, and add Privacy Policy + Terms of Service URLs (Meta requires these before Live mode).

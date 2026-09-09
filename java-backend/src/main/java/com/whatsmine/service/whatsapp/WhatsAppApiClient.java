@@ -544,7 +544,14 @@ public class WhatsAppApiClient {
         }
     }
 
+    // The admin's "Webhook Verify Token" field on Integrations > Meta App
+    // (IntegrationConfig["meta_app"].verify_token) takes precedence — it's
+    // what the setup guide tells admins to paste into Meta's dashboard. The
+    // whatsapp.api.global-verify-token property is only a fallback for
+    // deployments that predate that field, so a fresh install with the field
+    // left blank doesn't get locked out with an unguessable token.
     public String getGlobalVerifyToken() {
-        return globalVerifyToken;
+        String configured = integrationCredentialsService.getCredential("meta_app", "verify_token");
+        return (configured != null && !configured.isBlank()) ? configured : globalVerifyToken;
     }
 }

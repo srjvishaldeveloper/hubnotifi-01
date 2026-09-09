@@ -54,10 +54,12 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
 
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceUserRepository workspaceUserRepository;
+    private final TranslationLoader translationLoader;
 
-    public DefaultGlobalPropsProvider(WorkspaceRepository workspaceRepository, WorkspaceUserRepository workspaceUserRepository) {
+    public DefaultGlobalPropsProvider(WorkspaceRepository workspaceRepository, WorkspaceUserRepository workspaceUserRepository, TranslationLoader translationLoader) {
         this.workspaceRepository = workspaceRepository;
         this.workspaceUserRepository = workspaceUserRepository;
+        this.translationLoader = translationLoader;
     }
 
     @Override
@@ -85,6 +87,7 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
         // Auth Prop
         Map<String, Object> authMap = new HashMap<>();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String activeLocale = "en";
 
         // Workspace switcher (Topbar) — populated below for CLIENT principals only.
         shared.put("workspaces", Collections.emptyList());
@@ -101,6 +104,9 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
                 userMap.put("client_id", clientDetails.getClientId());
                 userMap.put("workspace_id", clientDetails.getWorkspaceId());
                 authMap.put("user", userMap);
+                if (clientDetails.getUser().getLocale() != null && !clientDetails.getUser().getLocale().isBlank()) {
+                    activeLocale = clientDetails.getUser().getLocale();
+                }
 
                 List<WorkspaceUser> memberships = workspaceUserRepository.findByUserId(clientDetails.getId());
                 List<Long> workspaceIds = memberships.stream().map(WorkspaceUser::getWorkspaceId).toList();
@@ -142,6 +148,17 @@ public class DefaultGlobalPropsProvider implements GlobalPropsProvider {
         // App System Specs
         shared.put("app_version", appVersion);
         shared.put("demo_mode", demoMode);
+
+        // Locale + full translation dictionary, seeded synchronously into i18next on
+        // the client (see app.jsx's setup()) so <Head title={t(...)}> and other
+        // translated strings are correct on the very first render — without this,
+        // every page waits on the async GET /i18n/{locale} fetch before t() resolves
+        // to real text instead of falling back to the untranslated key.
+        shared.put("locale", activeLocale);
+        Map<String, Object> i18nProp = new HashMap<>();
+        i18nProp.put("locale", activeLocale);
+        i18nProp.put("translations", translationLoader.load(activeLocale));
+        shared.put("i18n", i18nProp);
 
         // Impersonation banner (ClientLayout reads impersonation.active/clientName/returnUrl)
         Map<String, Object> impersonation = new HashMap<>();

@@ -164,13 +164,34 @@ public class InertiaRenderer {
                 </html>
                 """.formatted(
                     extractCsrfToken(inertiaResponse),
-                    inertiaResponse.getComponent(),
+                    humanizeComponentTitle(inertiaResponse.getComponent()),
                     headAssetTags,
                     escapedJson
             );
         } catch (Exception e) {
             throw new RuntimeException("Failed to render Inertia HTML bootstrap", e);
         }
+    }
+
+    // Server has no access to the page's own <Head title={t(...)}> translation, so
+    // this is only a readable placeholder for the brief window before client-side
+    // hydration replaces it with the real, translated title — e.g.
+    // "Admin/Integrations/Edit" becomes "Edit · Integrations · Admin" instead of
+    // the raw path a user would otherwise see if hydration is ever slow/interrupted.
+    private String humanizeComponentTitle(String component) {
+        if (component == null || component.isBlank()) {
+            return "Hub Notification";
+        }
+        String[] segments = component.split("/");
+        StringBuilder title = new StringBuilder();
+        for (int i = segments.length - 1; i >= 0; i--) {
+            String readable = segments[i].replaceAll("([a-z0-9])([A-Z])", "$1 $2");
+            if (title.length() > 0) {
+                title.append(" · ");
+            }
+            title.append(readable);
+        }
+        return title.toString();
     }
 
     private String extractCsrfToken(InertiaResponse response) {

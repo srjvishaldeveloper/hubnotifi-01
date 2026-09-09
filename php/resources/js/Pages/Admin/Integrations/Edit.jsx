@@ -775,15 +775,17 @@ export default function IntegrationsEdit({ provider, label, category, fields, co
                         >
                             {processing ? t('integrations.saving') : t('common.save')}
                         </button>
-                        <button
-                            type="button"
-                            disabled={testing}
-                            onClick={handleTest}
-                            className="flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-60 transition"
-                        >
-                            <FlaskConical className="h-4 w-4" />
-                            {testing ? t('integrations.testing') : t('integrations.test_connection')}
-                        </button>
+                        {provider !== 'storage_local' && (
+                            <button
+                                type="button"
+                                disabled={testing}
+                                onClick={handleTest}
+                                className="flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-60 transition"
+                            >
+                                <FlaskConical className="h-4 w-4" />
+                                {testing ? t('integrations.testing') : t('integrations.test_connection')}
+                            </button>
+                        )}
                         {!STORAGE_PROVIDERS.includes(provider) && (
                             <button
                                 type="button"
