@@ -165,6 +165,7 @@ public class ZiggyController {
                         "client.sms-gateways.index": { "uri": "app/broadcasts/sms-gateways", "methods": ["GET", "HEAD"] },
                         "client.sms-gateways.update": { "uri": "app/broadcasts/sms-gateways/{provider}", "methods": ["PUT"] },
                         "client.sms-gateways.destroy": { "uri": "app/broadcasts/sms-gateways/{provider}", "methods": ["DELETE"] },
+                        "client.sms-gateways.test": { "uri": "app/broadcasts/sms-gateways/test", "methods": ["POST"] },
                         "client.email-server.index": { "uri": "app/broadcasts/email-server", "methods": ["GET", "HEAD"] },
                         "client.email-server.store": { "uri": "app/broadcasts/email-server", "methods": ["POST"] },
                         "client.email-server.update": { "uri": "app/broadcasts/email-server", "methods": ["PUT"] },

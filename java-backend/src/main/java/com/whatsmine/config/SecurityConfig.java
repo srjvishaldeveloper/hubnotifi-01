@@ -207,6 +207,7 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/invitations/**",
                                 "/build/**",
+                                "/assets/**",
                                 "/storage/**",
                                 "/images/**",
                                 "/i18n/**",

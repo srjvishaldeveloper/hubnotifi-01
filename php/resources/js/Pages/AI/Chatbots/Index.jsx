@@ -5,6 +5,7 @@ import { Plus, Bot, Trash2, Play, Settings, Send, X, BookOpen, Zap, MessageSquar
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import MarkdownLite from '@/Components/MarkdownLite';
+import { getXsrfToken } from '@/Utils/csrf';
 
 const TONE_OPTIONS = ['professional', 'friendly', 'formal', 'casual'];
 
@@ -52,7 +53,7 @@ function PlaygroundPanel({ chatbot }) {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content,
+                    'X-XSRF-TOKEN': getXsrfToken(),
                 },
                 body: JSON.stringify({ message: userMsg.content, history: messages }),
             });

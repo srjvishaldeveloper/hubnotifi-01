@@ -6,6 +6,7 @@ import { SocialBrandIcon } from '@/Components/BrandIcons';
 import { browserTz, tzLocalToUtcIso } from '@/Utils/datetime';
 import TimezonePicker from '@/Components/TimezonePicker';
 import { DatePicker } from '@/Components/ui';
+import { getXsrfToken } from '@/Utils/csrf';
 
 const TONES = [
     { value: 'professional',  labelKey: 'social.tone_professional' },
@@ -316,11 +317,10 @@ export default function AiPlannerModal({ show, onClose, accounts, onSuccess }) {
 
     if (!show) return null;
 
-    const csrfToken = document.querySelector('meta[name=csrf-token]')?.content;
     const headers = {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': csrfToken,
+        'X-XSRF-TOKEN': getXsrfToken(),
     };
 
     const selectedAccounts = accounts.filter(a => brief.target_accounts.includes(a.id));

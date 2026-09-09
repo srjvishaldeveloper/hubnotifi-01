@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import LandingLayout from '@/Layouts/LandingLayout';
 import SeoHead from '@/Components/SeoHead';
+import HeroSection from '@/Components/Hero/HeroSection';
 import { BrandMark } from '@/Components/BrandIcons';
 import { useTranslation } from 'react-i18next';
 
@@ -114,8 +115,13 @@ function ChannelIcon({ name, className = 'h-6 w-6' }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
         ),
+        'push': (
+            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+            </svg>
+        ),
     };
-    return icons[name] || icons['email'];
+    return icons[name] || icons['push'];
 }
 
 const CHANNEL_STYLES = {
@@ -124,6 +130,7 @@ const CHANNEL_STYLES = {
     'instagram': { bg: 'bg-[#E1306C]/12', text: 'text-[#E1306C]' },
     'sms':       { bg: 'bg-[#5a8b38]/15', text: 'text-[#467235] dark:text-[#5a8b38]' },
     'email':     { bg: 'bg-[#F59E0B]/12', text: 'text-[#F59E0B]' },
+    'push':      { bg: 'bg-[#8B5CF6]/12', text: 'text-[#8B5CF6]' },
 };
 
 // ─── Section Badge ─────────────────────────────────────────────────────────────
@@ -135,106 +142,6 @@ function Badge({ text }) {
             <span className="h-1.5 w-1.5 rounded-full bg-brand-400 inline-block" />
             {text}
         </span>
-    );
-}
-
-// ─── Hero Section ─────────────────────────────────────────────────────────────
-
-function HeroSection({ landing, canLogin, canRegister, auth }) {
-    const { t } = useTranslation();
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('hero_enabled') !== '1') return null;
-
-    return (
-        <section
-            className="relative overflow-hidden"
-            style={{
-                background: 'radial-gradient(ellipse 70% 65% at 62% 45%, rgba(118,168,78,0.22) 0%, rgba(74,222,128,0.08) 40%, transparent 70%), #162610',
-            }}
-        >
-            {/* Background grid */}
-            <div
-                className="pointer-events-none absolute inset-0"
-                style={{
-                    backgroundImage: `
-                        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)
-                    `,
-                    backgroundSize: '60px 60px',
-                    maskImage: 'radial-gradient(ellipse 80% 80% at 50% 0%, black 40%, transparent 100%)',
-                    WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 0%, black 40%, transparent 100%)',
-                }}
-            />
-
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-16 sm:pt-24 sm:pb-20 text-center relative">
-                {s('hero_badge') && (
-                    <div className="mb-6 flex justify-center">
-                        <Badge text={s('hero_badge')} />
-                    </div>
-                )}
-
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white max-w-4xl mx-auto leading-tight">
-                    {s('hero_title')}
-                </h1>
-
-                <p className="mt-6 text-lg sm:text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed">
-                    {s('hero_subtitle')}
-                </p>
-
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-                    {auth?.user ? (
-                        <Link
-                            href={route('client.dashboard')}
-                            className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90"
-                            style={{ background: '#5a8b38' }}
-                        >
-                            {t('welcome.goToDashboard')}
-                        </Link>
-                    ) : (
-                        <>
-                            {canRegister && s('hero_cta_primary') && (
-                                <Link
-                                    href={route('register')}
-                                    className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90"
-                                    style={{ background: '#5a8b38' }}
-                                >
-                                    {s('hero_cta_primary')}
-                                </Link>
-                            )}
-                            {s('hero_cta_secondary') && (
-                                <Link
-                                    href={route('pricing')}
-                                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm px-7 py-3.5 text-base font-semibold text-white hover:bg-white/15 transition-all duration-200"
-                                >
-                                    {s('hero_cta_secondary')}
-                                </Link>
-                            )}
-                        </>
-                    )}
-                </div>
-
-                {/* Trust badges */}
-                {(() => {
-                    const badges = [1, 2, 3].map((i) => s(`hero_trust_${i}`)).filter(Boolean);
-                    if (!badges.length) return null;
-                    return (
-                        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                            {badges.map((badge, idx) => (
-                                <span
-                                    key={idx}
-                                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white/90"
-                                >
-                                    <svg className="h-4 w-4 flex-shrink-0 text-[#5a8b38]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {badge}
-                                </span>
-                            ))}
-                        </div>
-                    );
-                })()}
-            </div>
-        </section>
     );
 }
 
@@ -829,11 +736,17 @@ function ChannelsSection({ landing }) {
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
     if (s('channels_enabled') !== '1') return null;
 
-    const channels = [1, 2, 3, 4, 5].map((i) => ({
-        key: s(`channel_${i}_key`, 'email'),
-        title: s(`channel_${i}_title`),
-        desc: s(`channel_${i}_desc`),
-    })).filter((c) => c.title);
+    const channels = [1, 2, 3, 4, 5, 6].map((i) => {
+        const defaultTitle = i === 6 ? 'Push Notifications' : '';
+        const defaultDesc = i === 6 ? 'Send real-time browser and mobile push notifications to re-engage active users instantly.' : '';
+        const defaultKey = i === 6 ? 'push' : 'email';
+
+        return {
+            key: s(`channel_${i}_key`, defaultKey),
+            title: s(`channel_${i}_title`, defaultTitle),
+            desc: s(`channel_${i}_desc`, defaultDesc),
+        };
+    }).filter((c) => c.title);
 
     if (!channels.length) return null;
 

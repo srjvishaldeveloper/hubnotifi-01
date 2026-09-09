@@ -12,6 +12,8 @@ import com.whatsmine.repository.WhatsappBusinessAccountRepository;
 import com.whatsmine.repository.WhatsappPhoneNumberRepository;
 import com.whatsmine.security.CustomUserDetails;
 import com.whatsmine.service.IntegrationCredentialsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +49,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/app/inbox/setup")
 public class InboxSetupController {
+
+    private static final Logger log = LoggerFactory.getLogger(InboxSetupController.class);
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10)).build();
@@ -390,18 +394,35 @@ public class InboxSetupController {
                 .findFirst().orElse(null);
     }
 
+    // A code is single-use: Meta appears to consume/invalidate it on the
+    // FIRST exchange attempt regardless of whether that attempt succeeds, so
+    // a cascade that retries the SAME code with different redirect_uri
+    // values only ever gets a clean read on its first try — every later
+    // candidate is being tested against an already-burned code and its
+    // result (and error message) is meaningless. Send exactly one request,
+    // matching Meta's own current official example for this exact endpoint
+    // (no redirect_uri at all), instead of guessing further.
     private String exchangeCodeForToken(String code) {
         String appId = integrationCredentialsService.getCredential("meta_app", "app_id");
         String appSecret = integrationCredentialsService.getCredential("meta_app", "app_secret");
         if (appId == null || appSecret == null) return null;
+
+        log.warn("meta.exchangeCodeForToken diag: appId={} appIdLen={} codeLen={}",
+                appId, appId.length(), code == null ? -1 : code.length());
+
         try {
-            Map<String, Object> resp = graphGetAbsolute("https://graph.facebook.com/v20.0/oauth/access_token",
-                    Map.of("client_id", appId, "client_secret", appSecret, "code", code, "redirect_uri", ""));
+            Map<String, String> params = new LinkedHashMap<>();
+            params.put("client_id", appId);
+            params.put("client_secret", appSecret);
+            params.put("code", code);
+            Map<String, Object> resp = graphGetAbsolute("https://graph.facebook.com/v25.0/oauth/access_token", params);
             if (Boolean.TRUE.equals(resp.get("_success")) && resp.get("access_token") != null) {
                 return str(resp.get("access_token"));
             }
+            log.warn("meta.exchangeCodeForToken failed: {}", resp.get("error"));
             return null;
         } catch (Exception e) {
+            log.error("meta.exchangeCodeForToken threw", e);
             return null;
         }
     }
@@ -411,13 +432,15 @@ public class InboxSetupController {
         String appSecret = integrationCredentialsService.getCredential("meta_app", "app_secret");
         if (appId == null || appSecret == null) return shortToken;
         try {
-            Map<String, Object> resp = graphGetAbsolute("https://graph.facebook.com/v20.0/oauth/access_token",
+            Map<String, Object> resp = graphGetAbsolute("https://graph.facebook.com/v25.0/oauth/access_token",
                     Map.of("grant_type", "fb_exchange_token", "client_id", appId, "client_secret", appSecret, "fb_exchange_token", shortToken));
             if (Boolean.TRUE.equals(resp.get("_success")) && resp.get("access_token") != null) {
                 return str(resp.get("access_token"));
             }
+            log.warn("meta.exchangeForLongLivedToken failed: {}", resp.get("error"));
             return shortToken;
         } catch (Exception e) {
+            log.error("meta.exchangeForLongLivedToken threw", e);
             return shortToken;
         }
     }
@@ -431,7 +454,7 @@ public class InboxSetupController {
 
         try {
             String callbackUrl = appUrl + "/webhooks/meta/" + verifyToken;
-            postForm("https://graph.facebook.com/v20.0/" + appId + "/subscriptions", Map.of(
+            postForm("https://graph.facebook.com/v25.0/" + appId + "/subscriptions", Map.of(
                     "access_token", appId + "|" + appSecret,
                     "object", object,
                     "callback_url", callbackUrl,
@@ -445,7 +468,7 @@ public class InboxSetupController {
     private void subscribePageTo(String pageId, String pageToken, String fields) {
         if (pageId == null || pageId.isBlank()) return;
         try {
-            postFormBearer("https://graph.facebook.com/v20.0/" + pageId + "/subscribed_apps", Map.of("subscribed_fields", fields), pageToken);
+            postFormBearer("https://graph.facebook.com/v25.0/" + pageId + "/subscribed_apps", Map.of("subscribed_fields", fields), pageToken);
         } catch (Exception ignored) { }
     }
 
@@ -457,7 +480,7 @@ public class InboxSetupController {
             qs.append(enc(e.getKey())).append('=').append(enc(e.getValue()));
         }
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://graph.facebook.com/v20.0/" + path + "?" + qs))
+                .uri(URI.create("https://graph.facebook.com/v25.0/" + path + "?" + qs))
                 .timeout(Duration.ofSeconds(20))
                 .header("Authorization", "Bearer " + accessToken)
                 .GET().build();

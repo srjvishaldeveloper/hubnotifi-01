@@ -8,6 +8,7 @@ import MediaUpload from '@/Components/MediaUpload';
 import TimezonePicker from '@/Components/TimezonePicker';
 import { DatePicker } from '@/Components/ui';
 import { browserTz, tzLocalToUtcIso, formatInTz } from '@/Utils/datetime';
+import { getXsrfToken } from '@/Utils/csrf';
 
 const CHAR_LIMITS = { twitter: 280, tiktok: 2200, linkedin: 3000, facebook: 63206, instagram: 2200, youtube: 5000 };
 
@@ -247,7 +248,7 @@ export default function SocialComposer({ accounts }) {
         try {
             const res = await fetch(route('client.social.ai-generate'), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content },
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-XSRF-TOKEN': getXsrfToken() },
                 body: JSON.stringify({ prompt: aiPrompt, network: selectedNetworks[0] ?? '' }),
             });
             const json = await res.json();

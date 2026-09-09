@@ -4,6 +4,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Bell, Check, CheckCheck, Trash2, Settings } from 'lucide-react';
 import { formatInTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { getXsrfToken } from '@/Utils/csrf';
 
 const KNOWN_EVENTS = [
     { key: 'subscription.created', labelKey: 'notifications_page.event_subscription_created' },
@@ -90,14 +91,14 @@ export default function NotificationsIndex({ notifications, preferences }) {
     const markRead = (id) => {
         fetch(route('client.notifications.read', id), {
             method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },
+            headers: { 'X-XSRF-TOKEN': getXsrfToken() },
         }).then(() => router.reload({ only: ['notifications'] }));
     };
 
     const remove = (id) => {
         fetch(route('client.notifications.destroy', id), {
             method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },
+            headers: { 'X-XSRF-TOKEN': getXsrfToken() },
         }).then(() => router.reload({ only: ['notifications'] }));
     };
 

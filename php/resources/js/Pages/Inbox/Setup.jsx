@@ -8,17 +8,7 @@ import {
 } from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-
-// Raw fetch() calls on this page (bypassing Inertia's own axios instance,
-// which auto-attaches this from the cookie) must set the CSRF header by hand.
-// Spring Security's CookieCsrfTokenRepository validates X-XSRF-TOKEN against
-// the XSRF-TOKEN cookie — NOT X-CSRF-TOKEN from the <meta> tag, which is a
-// Laravel-era header name that this Java backend never checks, silently
-// failing every request here with 403 until this matched the real check.
-function getXsrfToken() {
-    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
-    return match ? decodeURIComponent(match[1]) : '';
-}
+import { getXsrfToken } from '@/Utils/csrf';
 
 /* brand logos (accurate official paths) */
 
@@ -756,7 +746,7 @@ function waitForWabaSessionInfo(timeout = 120000) {
 function initFbSdk(appId) {
     if (typeof window.FB === 'undefined' || !appId) return false;
     try {
-        FB.init({ appId, autoLogAppEvents: true, xfbml: false, version: 'v20.0' });
+        FB.init({ appId, autoLogAppEvents: true, xfbml: false, version: 'v25.0' });
         window.__fbSdkReady = true;
         return true;
     } catch (_) {
@@ -923,6 +913,12 @@ function EmbeddedSignupButton({ configId, appId, channel, label, color, onCode, 
                 config_id: configId,
                 response_type: 'code',
                 override_default_response_type: true,
+                // Deliberately no redirect_uri here — matches Meta's own
+                // current documented example for this exact config_id-based
+                // popup flow. Explicitly setting one (tried previously) made
+                // the server-side exchange fail with error_subcode 36008
+                // ("redirect_uri is identical to the one you used..."),
+                // regardless of what value was sent server-side to match it.
                 extras: extrasMap[channel] ?? {},
             },
         );

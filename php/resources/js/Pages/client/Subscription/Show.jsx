@@ -4,6 +4,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Package, ArrowRightCircle, CreditCard, ChevronDown, FileText, RefreshCw } from 'lucide-react';
 import { formatDateTz } from '@/Utils/datetime';
+import { getXsrfToken } from '@/Utils/csrf';
 
 function formatCurrency(cents, currency = 'USD') {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency: (currency ?? 'USD').toUpperCase() }).format(cents / 100);
@@ -23,7 +24,7 @@ function ChangePlanModal({ subscription, plans, onClose }) {
         if (!couponCode) return;
         const res = await fetch(route('client.coupon.check'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },
+            headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getXsrfToken() },
             body: JSON.stringify({ code: couponCode, plan_id: data.plan_id }),
         });
         const json = await res.json();

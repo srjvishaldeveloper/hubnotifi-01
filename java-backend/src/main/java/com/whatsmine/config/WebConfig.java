@@ -30,7 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(inertiaInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/build/**", "/storage/**", "/i18n/**", "/images/**", "/favicon.ico", "/whatsmine-logo.png", "/*.png", "/*.svg", "/*.ico", "/*.js");
+                .excludePathPatterns("/build/**", "/assets/**", "/storage/**", "/i18n/**", "/images/**", "/favicon.ico", "/whatsmine-logo.png", "/*.png", "/*.svg", "/*.ico", "/*.js");
     }
 
     @Override
@@ -43,6 +43,10 @@ public class WebConfig implements WebMvcConfigurer {
         // Serve static build assets (compiled Vite JS/CSS)
         registry.addResourceHandler("/build/**")
                 .addResourceLocations("classpath:/static/build/", "file:src/main/resources/static/build/", "file:../php/public/build/", "file:public/build/");
+
+        // Serve assets under /assets/**
+        registry.addResourceHandler("/assets/**")
+                .addResourceLocations("classpath:/static/assets/", "file:src/main/resources/static/assets/", "file:../php/public/assets/", "file:public/assets/");
 
         // Serve static public assets under /images/** (provider brand logos, etc.) —
         // location must include the "images/" segment since the "**" match only

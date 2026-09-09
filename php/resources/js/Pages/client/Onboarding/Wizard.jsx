@@ -2,6 +2,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { CheckCircle, Circle, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getXsrfToken } from '@/Utils/csrf';
 
 const STEP_LINKS = {
     verify_email:                  null,
@@ -22,7 +23,7 @@ export default function OnboardingWizard({ progress }) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                'X-XSRF-TOKEN': getXsrfToken(),
             },
             body: JSON.stringify({ step: stepKey }),
         }).then(() => router.reload());

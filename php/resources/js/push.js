@@ -2,6 +2,7 @@
  * push.js — registers the service worker and subscribes the user to Web Push.
  * Call subscribeToPush() from the notification settings page after user opts in.
  */
+import { getXsrfToken } from '@/Utils/csrf';
 
 // Read the VAPID public key at runtime from the meta tag the server renders
 // (config('webpush.vapid_public_key')). This keeps it in sync with the server's
@@ -81,7 +82,7 @@ export async function subscribeToPush() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+            'X-XSRF-TOKEN': getXsrfToken(),
         },
         body: JSON.stringify({
             endpoint:  sub.endpoint,
@@ -107,7 +108,7 @@ export async function unsubscribeFromPush() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+            'X-XSRF-TOKEN': getXsrfToken(),
         },
         body: JSON.stringify({ endpoint: subscription.endpoint }),
     });

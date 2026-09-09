@@ -5,10 +5,12 @@ import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.SmsProviderConfig;
 import com.whatsmine.repository.SmsProviderConfigRepository;
 import com.whatsmine.security.CustomUserDetails;
+import com.whatsmine.service.sms.SmsApiClient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -88,6 +90,9 @@ public class SmsProviderController {
 
     @Autowired
     private SmsProviderConfigRepository smsProviderConfigRepository;
+
+    @Autowired
+    private SmsApiClient smsApiClient;
 
     private Long getWorkspaceId(CustomUserDetails userDetails) {
         if (userDetails == null || userDetails.getWorkspaceId() == null) {
@@ -187,6 +192,31 @@ public class SmsProviderController {
         smsProviderConfigRepository.save(config);
         Inertia.flashSuccess(session, "SMS gateway saved.");
         return Inertia.redirect("/app/broadcasts/sms-gateways");
+    }
+
+    @PostMapping("/test")
+    public ResponseEntity<Map<String, String>> testSms(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody Map<String, String> body
+    ) {
+        Long workspaceId = getWorkspaceId(userDetails);
+        SmsProviderConfig config = smsProviderConfigRepository.findByWorkspaceIdAndIsDefaultTrue(workspaceId).orElse(null);
+        if (config == null) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(Map.of("message", "Save and set a default SMS gateway before sending a test message."));
+        }
+
+        String to = body.get("phone");
+        if (to == null || to.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("message", "Enter a phone number to test."));
+        }
+
+        try {
+            String sid = smsApiClient.sendText(workspaceId, to, "Test SMS from Hub Notification — your gateway is working.");
+            return ResponseEntity.ok(Map.of("message", "Test SMS sent to " + to + " (SID: " + sid + ")."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("message", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{provider}")

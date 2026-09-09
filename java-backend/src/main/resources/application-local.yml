@@ -9,9 +9,12 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+  flyway:
+    enabled: false
 
 logging:
   level:
     root: INFO
     com.whatsmine: INFO
     org.springframework.web: INFO
+

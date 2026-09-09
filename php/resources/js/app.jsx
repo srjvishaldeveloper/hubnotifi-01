@@ -13,17 +13,16 @@ import { toast } from 'sonner';
 
 initI18n();
 
-// Keep the CSRF token fresh across SPA navigations. The token is shared on every
-// Inertia response (HandleInertiaRequests::share → csrf_token); sync it into both
-// the global axios header and the <meta> tag (used by raw fetch() calls) so it can
-// never go stale. Without this, the boot-time token survives a session-token
-// rotation (e.g. impersonation) and every POST 419s until a full page reload.
+// Keep the <meta name="csrf-token"> tag in sync across SPA navigations, for any
+// code that still reads it directly for non-CSRF purposes. axios (window.axios
+// and Inertia's own instance) already reads the live XSRF-TOKEN cookie itself
+// on every request via its built-in xsrfCookieName/xsrfHeaderName handling, so
+// it needs no help here — Spring Security's CookieCsrfTokenRepository only
+// ever validates that cookie's value against the X-XSRF-TOKEN header, not
+// X-CSRF-TOKEN from this tag.
 function syncCsrfToken(page) {
     const token = page?.props?.csrf_token;
     if (!token) return;
-    if (window.axios?.defaults) {
-        window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
-    }
     document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', token);
 }
 

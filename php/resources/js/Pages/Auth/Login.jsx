@@ -4,6 +4,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { LogIn, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { getXsrfToken } from '@/Utils/csrf';
 
 const PROVIDERS = [
     { id: 'google',    label: 'Google',    color: 'text-red-500' },
@@ -51,12 +52,11 @@ function FirebaseGoogleButton() {
         try {
             const { signInWithGoogle } = await import('@/lib/firebase');
             const idToken = await signInWithGoogle();
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
             const res = await fetch(route('auth.firebase'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': getXsrfToken(),
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ id_token: idToken }),

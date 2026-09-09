@@ -138,8 +138,9 @@ public class SegmentController {
 
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("segment", segmentMap(segment));
-        props.put("members", members);
-        props.put("available", available);
+        props.put("segmentContacts", members);
+        props.put("availableContacts", available);
+        props.put("filters", Map.of("search", search != null ? search : ""));
 
         return Inertia.render("Contacts/SegmentContacts", props);
     }

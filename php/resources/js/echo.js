@@ -1,5 +1,6 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { getXsrfToken } from '@/Utils/csrf';
 
 window.Pusher = Pusher;
 
@@ -11,10 +12,6 @@ function readInertiaProps() {
             window.__INERTIA_PAGE_PROPS__ = page.props ?? {};
         }
     } catch {}
-}
-
-function getCsrfToken() {
-    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 }
 
 function initEcho() {
@@ -37,10 +34,10 @@ function initEcho() {
         return;
     }
 
-    const csrf = getCsrfToken();
+    const csrf = getXsrfToken();
     if (!csrf) {
         // eslint-disable-next-line no-console
-        console.warn('[echo] CSRF meta tag missing — broadcasting/auth will likely fail.');
+        console.warn('[echo] XSRF-TOKEN cookie missing — broadcasting/auth will likely fail.');
     }
 
     window.Echo = new Echo({
@@ -55,7 +52,7 @@ function initEcho() {
         authEndpoint: '/broadcasting/auth',
         auth: {
             headers: {
-                'X-CSRF-TOKEN': csrf,
+                'X-XSRF-TOKEN': csrf,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
             },

@@ -3,7 +3,8 @@ import { router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff, CheckCircle, Trash2, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, Trash2, BookOpen, ChevronDown, ChevronUp, Send, AlertCircle } from 'lucide-react';
+import axios from 'axios';
 
 const SETUP_GUIDES = {
     twilio: {
@@ -385,6 +386,25 @@ export default function SmsProvidersIndex({ providers }) {
     const { props } = usePage();
     const flash = props.flash ?? {};
 
+    const [testPhone, setTestPhone] = useState('');
+    const [testLoading, setTestLoading] = useState(false);
+    const [testResult, setTestResult] = useState(null);
+    const hasDefault = providers.some(p => p.default);
+
+    const handleTest = async () => {
+        if (!testPhone) return;
+        setTestLoading(true);
+        setTestResult(null);
+        try {
+            const res = await axios.post(route('client.sms-gateways.test'), { phone: testPhone });
+            setTestResult({ ok: true, message: res.data.message });
+        } catch (err) {
+            setTestResult({ ok: false, message: err.response?.data?.message ?? 'Test SMS failed.' });
+        } finally {
+            setTestLoading(false);
+        }
+    };
+
     return (
         <ClientLayout title={t('sms.title')}>
             <Head title={t('sms.title')} />
@@ -411,6 +431,58 @@ export default function SmsProvidersIndex({ providers }) {
                     {providers.map(p => (
                         <ProviderCard key={p.provider} provider={p} />
                     ))}
+                </div>
+
+                {/* Test SMS */}
+                <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 shrink-0">
+                            <Send className="h-4 w-4" />
+                        </div>
+                        <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Send a test SMS</h3>
+                    </div>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                        Sends a test message using your default SMS gateway to confirm it's working.
+                    </p>
+
+                    {!hasDefault && (
+                        <div className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm mb-4 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            Save a gateway and mark it as default before testing.
+                        </div>
+                    )}
+
+                    {testResult && (
+                        <div className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm mb-4 ${
+                            testResult.ok
+                                ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+                                : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+                        }`}>
+                            {testResult.ok
+                                ? <CheckCircle className="h-4 w-4 shrink-0" />
+                                : <AlertCircle className="h-4 w-4 shrink-0" />}
+                            {testResult.message}
+                        </div>
+                    )}
+
+                    <div className="flex gap-3">
+                        <input
+                            type="tel"
+                            value={testPhone}
+                            onChange={e => setTestPhone(e.target.value)}
+                            placeholder="+15551234567"
+                            className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleTest}
+                            disabled={testLoading || !testPhone || !hasDefault}
+                            className="flex items-center gap-1.5 rounded-lg bg-neutral-900 dark:bg-neutral-700 hover:bg-neutral-700 dark:hover:bg-neutral-600 disabled:opacity-60 px-4 py-2 text-sm font-medium text-white transition"
+                        >
+                            <Send className="h-4 w-4" />
+                            {testLoading ? 'Sending…' : 'Send test'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </ClientLayout>

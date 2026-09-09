@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { router } from '@inertiajs/react';
 import { Search, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getXsrfToken } from '@/Utils/csrf';
 
 export default function GlobalSearch() {
     const { t } = useTranslation();
@@ -43,7 +44,7 @@ export default function GlobalSearch() {
         setLoading(true);
         try {
             const res = await fetch(route('client.search') + '?q=' + encodeURIComponent(q), {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },
+                headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrfToken() },
                 credentials: 'include',
             });
             const json = await res.json();

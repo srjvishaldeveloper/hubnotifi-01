@@ -4,6 +4,7 @@ import { Head, router, useForm, usePage, Link } from '@inertiajs/react';
 import { Webhook, Plus, Pencil, Trash2, RefreshCw, Play, Eye, ChevronRight, Check, X } from 'lucide-react';
 import { formatInTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { getXsrfToken } from '@/Utils/csrf';
 
 const EVENTS = [
     'subscription.created', 'subscription.cancelled', 'subscription.renewed',
@@ -113,7 +114,7 @@ export default function WebhooksIndex({ endpoints }) {
         if (!confirm(t('webhook.rotate_confirm'))) return;
         const res = await fetch(route('client.webhooks.rotate-secret', ep.id), {
             method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },
+            headers: { 'X-XSRF-TOKEN': getXsrfToken() },
         });
         const json = await res.json();
         if (json.secret) {

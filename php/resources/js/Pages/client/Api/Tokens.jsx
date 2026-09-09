@@ -5,6 +5,7 @@ import { Key, Plus, Trash2, Copy, Check } from 'lucide-react';
 import { DatePicker } from '@/Components/ui';
 import { formatDateTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { getXsrfToken } from '@/Utils/csrf';
 
 const ALL_SCOPES = [
     { scope: 'contacts:read',       labelKey: 'api.scope_contacts_read' },
@@ -56,7 +57,7 @@ function CreateTokenModal({ onClose, onCreated }) {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    'X-XSRF-TOKEN': getXsrfToken(),
                 },
                 credentials: 'include',
                 body: JSON.stringify({ name, abilities, expires_at: expiresAt || undefined }),
@@ -193,7 +194,7 @@ export default function ApiTokens({ tokens: initialTokens }) {
         if (!confirm(t('api.revoke_confirm'))) return;
         await fetch(`/api/v1/tokens/${id}`, {
             method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },
+            headers: { 'X-XSRF-TOKEN': getXsrfToken() },
             credentials: 'include',
         });
         setTokens(prev => prev.filter(tk => tk.id !== id));

@@ -39,7 +39,7 @@ public class WhatsAppApiClient {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    @Value("${whatsapp.api.base-url:https://graph.facebook.com/v18.0}")
+    @Value("${whatsapp.api.base-url:https://graph.facebook.com/v25.0}")
     private String baseUrl;
 
     @Value("${whatsapp.api.app-secret:demo_meta_app_secret}")
