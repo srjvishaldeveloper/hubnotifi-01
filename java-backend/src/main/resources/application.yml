@@ -15,6 +15,11 @@ spring:
       hibernate:
         globally_quoted_identifiers: true
 
+        # Without this, Hibernate also backtick-quotes raw columnDefinition strings
+        # (e.g. "json" becomes `json`), which is invalid SQL and silently fails
+        # CREATE TABLE for every entity using columnDefinition = "json".
+        globally_quoted_identifiers_skip_column_definitions: true
+
   flyway:
     enabled: true
     # The schema already existed (created by hand / by Hibernate ddl-auto over time) before
