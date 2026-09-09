@@ -31,6 +31,11 @@ spring:
 
 server:
   port: ${PORT:8080}
+  # App runs behind the nginx reverse proxy, which terminates TLS and forwards
+  # X-Forwarded-Proto. Without this, request.isSecure() is always false here
+  # (Tomcat only sees the plain HTTP hop from nginx), which affects the
+  # Secure flag on cookies and any scheme-dependent logic.
+  forward-headers-strategy: framework
   servlet:
     context-path: /
     session:
