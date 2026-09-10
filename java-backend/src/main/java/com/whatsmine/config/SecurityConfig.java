@@ -163,7 +163,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/health", "/actuator/health", "/api/ziggy.js").permitAll()
+                        .requestMatchers("/api/v1/health", "/actuator/health", "/api/app-routes.js").permitAll()
                         .requestMatchers("/api/**").authenticated()
                 )
                 .addFilterBefore(sanctumFilter, UsernamePasswordAuthenticationFilter.class);
@@ -216,7 +216,7 @@ public class SecurityConfig {
                                 "/*.png",
                                 "/*.svg",
                                 "/*.ico",
-                                "/api/ziggy.js",
+                                "/api/app-routes.js",
                                 "/favicon.ico",
                                 "/webhooks/**",
                                 "/widgets/**",

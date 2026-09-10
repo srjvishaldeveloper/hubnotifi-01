@@ -155,7 +155,7 @@ public class InertiaRenderer {
                     <link rel="icon" type="image/svg+xml" href="/whatsmine-icon.svg">
                     <link rel="preconnect" href="https://fonts.bunny.net">
                     <link href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700&display=swap" rel="stylesheet" />
-                    <script src="/api/ziggy.js"></script>
+                    <script src="/api/app-routes.js"></script>
                     %s
                 </head>
                 <body class="font-sans antialiased">

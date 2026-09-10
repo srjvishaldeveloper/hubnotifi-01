@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class ZiggyController {
 
-    @GetMapping(value = "/ziggy.js", produces = "application/javascript")
-    public ResponseEntity<String> ziggyJs() {
+    @GetMapping(value = "/app-routes.js", produces = "application/javascript")
+    public ResponseEntity<String> appRoutesJs() {
         String js = """
             (function () {
-                const Ziggy = {
+                const AppRoutes = {
                     url: (typeof window !== 'undefined' ? window.location.origin : "http://localhost:8080"),
                     port: (typeof window !== 'undefined' && window.location.port ? parseInt(window.location.port) : 8080),
                     defaults: {},
@@ -345,17 +345,17 @@ public class ZiggyController {
                     }
                 };
 
-                if (typeof window !== 'undefined' && window.Ziggy && window.Ziggy.routes) {
-                    Object.assign(Ziggy.routes, window.Ziggy.routes);
+                if (typeof window !== 'undefined' && window.AppRoutes && window.AppRoutes.routes) {
+                    Object.assign(AppRoutes.routes, window.AppRoutes.routes);
                 }
                 if (typeof window !== 'undefined') {
-                    window.Ziggy = Ziggy;
+                    window.AppRoutes = AppRoutes;
                 }
 
                 // Converts a route's {param} URI template into a matcher regex — a literal
                 // path === uri comparison (the old behavior) never matches routes that take
                 // parameters, e.g. "contacts/{contact}" vs "/contacts/42".
-                function ziggyUriToRegex(uri) {
+                function routeUriToRegex(uri) {
                     var normalized = uri.replace(/^\\//, '');
                     var segments = normalized.split('/').map(function (seg) {
                         if (/^\\{.+\\}$/.test(seg)) return '[^/]+';
@@ -364,39 +364,39 @@ public class ZiggyController {
                     return new RegExp('^' + segments + '$');
                 }
 
-                // route().current(pattern) must support Ziggy-style wildcards ("client.social.accounts.*"),
+                // route().current(pattern) must support wildcards ("client.social.accounts.*"),
                 // which is how the sidebar (useClientNav.jsx) decides what to highlight. The previous
-                // implementation only did an exact Ziggy.routes[pattern] lookup, which is always undefined
-                // for a wildcard string — so every nav item whose activePattern contained "*" (i.e. every
-                // multi-route section) never highlighted, even while genuinely on one of its pages.
-                function ziggyCurrentMatches(pattern, ziggy) {
+                // implementation only did an exact AppRoutes.routes[pattern] lookup, which is always
+                // undefined for a wildcard string — so every nav item whose activePattern contained "*"
+                // (i.e. every multi-route section) never highlighted, even while genuinely on one of its pages.
+                function routeCurrentMatches(pattern, registry) {
                     if (typeof window === 'undefined') return false;
                     var path = window.location.pathname.replace(/^\\//, '');
                     if (!pattern) return path;
                     if (pattern.indexOf('*') === -1) {
-                        var r = ziggy.routes[pattern];
+                        var r = registry.routes[pattern];
                         if (!r) return false;
-                        return ziggyUriToRegex(r.uri).test(path);
+                        return routeUriToRegex(r.uri).test(path);
                     }
                     var nameRegex = new RegExp('^' + pattern.split('*').map(function (part) {
                         return part.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
                     }).join('.*') + '$');
-                    for (var routeName in ziggy.routes) {
-                        if (nameRegex.test(routeName) && ziggyUriToRegex(ziggy.routes[routeName].uri).test(path)) {
+                    for (var routeName in registry.routes) {
+                        if (nameRegex.test(routeName) && routeUriToRegex(registry.routes[routeName].uri).test(path)) {
                             return true;
                         }
                     }
                     return false;
                 }
 
-                function route(name, params, absolute = false, customZiggy = Ziggy) {
+                function route(name, params, absolute = false, customRegistry = AppRoutes) {
                     if (!name) {
                         return {
-                            current: (currentName) => ziggyCurrentMatches(currentName, customZiggy)
+                            current: (currentName) => routeCurrentMatches(currentName, customRegistry)
                         };
                     }
 
-                    let routeObj = customZiggy.routes[name];
+                    let routeObj = customRegistry.routes[name];
                     let uri = routeObj ? routeObj.uri : name.replace(/\\./g, '/');
                     if (!uri.startsWith('/')) uri = '/' + uri;
 
@@ -422,10 +422,10 @@ public class ZiggyController {
                         }
                     }
 
-                    return absolute ? (customZiggy.url + uri) : uri;
+                    return absolute ? (customRegistry.url + uri) : uri;
                 }
 
-                route.current = (name) => ziggyCurrentMatches(name, Ziggy);
+                route.current = (name) => routeCurrentMatches(name, AppRoutes);
 
                 if (typeof window !== 'undefined') {
                     window.route = route;

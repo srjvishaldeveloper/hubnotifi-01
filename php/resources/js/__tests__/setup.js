@@ -8,5 +8,5 @@ vi.mock('@inertiajs/react', () => ({
     Link:    ({ href, children, ...props }) => <a href={href} {...props}>{children}</a>,
 }));
 
-// Mock the route() helper (Ziggy)
+// Mock the route() helper (backed by our own /api/app-routes.js in prod)
 global.route = (name, params) => `/${name}${params ? '/' + JSON.stringify(params) : ''}`;

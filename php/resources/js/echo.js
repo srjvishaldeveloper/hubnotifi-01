@@ -1,5 +1,5 @@
-import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import BroadcastClient from '@/Utils/broadcastClient';
 import { getXsrfToken } from '@/Utils/csrf';
 
 window.Pusher = Pusher;
@@ -40,8 +40,7 @@ function initEcho() {
         console.warn('[echo] XSRF-TOKEN cookie missing — broadcasting/auth will likely fail.');
     }
 
-    window.Echo = new Echo({
-        broadcaster:       'pusher',
+    window.Echo = new BroadcastClient(Pusher, {
         key,
         cluster,
         forceTLS:          true,
