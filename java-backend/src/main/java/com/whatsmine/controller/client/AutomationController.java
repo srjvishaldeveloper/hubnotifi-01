@@ -83,13 +83,36 @@ public class AutomationController {
     }
 
     @PostMapping("/generate")
+    @SuppressWarnings("unchecked")
     public Object generate(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, Object> body) {
+        Long workspaceId = getWorkspaceId(userDetails);
         String prompt = body != null ? (String) body.get("prompt") : "";
+        boolean persist = body != null && Boolean.TRUE.equals(body.get("persist"));
+
+        Map<String, Object> spec;
         try {
-            return ResponseEntity.ok(workflowGenerator.generate(getWorkspaceId(userDetails), prompt));
+            spec = workflowGenerator.generate(workspaceId, prompt);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+
+        if (!persist) {
+            return ResponseEntity.ok(Map.of("ok", true, "workflow", spec));
+        }
+
+        Automation automation = new Automation();
+        automation.setWorkspaceId(workspaceId);
+        automation.setName((String) spec.get("name"));
+        automation.setStatus("draft");
+        automation.setTriggerType((String) spec.get("trigger_type"));
+        if (spec.get("trigger_config") instanceof Map) {
+            automation.setTriggerConfig((Map<String, Object>) spec.get("trigger_config"));
+        }
+        automation.setNodes((List<Map<String, Object>>) spec.get("nodes"));
+        automation.setEdges((List<Map<String, Object>>) spec.get("edges"));
+        automation = automationRepository.save(automation);
+
+        return ResponseEntity.ok(Map.of("ok", true, "redirect", "/app/automations/" + automation.getUuid() + "/edit"));
     }
 
     @GetMapping("/{uuid}/edit")

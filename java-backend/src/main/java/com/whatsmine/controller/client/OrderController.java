@@ -1,5 +1,6 @@
 package com.whatsmine.controller.client;
 
+import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.Contact;
 import com.whatsmine.model.EcommerceOrder;
@@ -9,6 +10,7 @@ import com.whatsmine.repository.EcommerceOrderRepository;
 import com.whatsmine.repository.EcommerceStoreRepository;
 import com.whatsmine.security.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -168,21 +170,21 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/refresh")
-    public Object refresh(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
+    public Object refresh(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         EcommerceOrder order = orderRepository.findByIdAndWorkspaceId(id, workspaceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found."));
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ecommerce/orders/" + id)
-                .body(Map.of("success", "Order refreshed."));
+        Inertia.flashSuccess(session, "Order refreshed.");
+        return Inertia.redirect("/app/ecommerce/orders/" + id);
     }
 
     @PostMapping("/{id}/fulfill")
     public Object fulfill(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id,
-            @RequestBody(required = false) Map<String, String> body
+            @RequestBody(required = false) Map<String, String> body,
+            HttpSession session
     ) {
         Long workspaceId = getWorkspaceId(userDetails);
         EcommerceOrder order = orderRepository.findByIdAndWorkspaceId(id, workspaceId)
@@ -199,8 +201,7 @@ public class OrderController {
         order.setFulfillmentStatus("fulfilled");
         orderRepository.save(order);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ecommerce/orders/" + id)
-                .body(Map.of("success", "Order marked as fulfilled."));
+        Inertia.flashSuccess(session, "Order marked as fulfilled.");
+        return Inertia.redirect("/app/ecommerce/orders/" + id);
     }
 }

@@ -148,6 +148,7 @@ public class ChatbotRunner {
                     "tokens_used", response.promptTokens() + response.completionTokens()
             );
         } catch (Exception e) {
+            log.error("ChatbotRunner.runForApi (Playground) failed for chatbot {}: {}", bot.getId(), e.getMessage(), e);
             return Map.of(
                     "reply", bot.getFallbackReply() != null ? bot.getFallbackReply() : "No response.",
                     "tokens_used", 0

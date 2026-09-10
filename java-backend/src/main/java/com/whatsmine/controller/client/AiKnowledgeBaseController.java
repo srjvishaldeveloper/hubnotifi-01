@@ -1,5 +1,6 @@
 package com.whatsmine.controller.client;
 
+import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.AiKbDocument;
 import com.whatsmine.model.AiKnowledgeBase;
@@ -77,9 +78,10 @@ public class AiKnowledgeBaseController {
         kb.setName(name.trim());
         kb = knowledgeBaseRepository.save(kb);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ai/knowledge-bases")
-                .body(Map.of("message", "Knowledge base created.", "uuid", kb.getUuid()));
+        // See AiChatbotController.store() for why this must be Inertia.redirect()
+        // and not a raw ResponseEntity<Map> (Inertia's real Accept header fails
+        // Jackson content negotiation, causing a 406 instead of the redirect).
+        return Inertia.redirect("/app/ai/knowledge-bases");
     }
 
     @GetMapping("/knowledge-bases/{uuid}")
@@ -141,9 +143,7 @@ public class AiKnowledgeBaseController {
         jobData.put("workspaceId", workspaceId);
         queueDispatcher.dispatch("ai", "IndexDocumentJob", jobData);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ai/knowledge-bases/" + uuid)
-                .body(Map.of("message", "Document queued for indexing."));
+        return Inertia.redirect("/app/ai/knowledge-bases/" + uuid);
     }
 
     /** Stores an uploaded KB document (e.g. PDF) under storage/app/public/kb-docs/, the same local disk MediaService writes to. */
@@ -185,9 +185,7 @@ public class AiKnowledgeBaseController {
         jobData.put("workspaceId", workspaceId);
         queueDispatcher.dispatch("ai", "IndexDocumentJob", jobData);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ai/knowledge-bases/" + kb.getUuid())
-                .body(Map.of("message", "Re-indexing queued."));
+        return Inertia.redirect("/app/ai/knowledge-bases/" + kb.getUuid());
     }
 
     @DeleteMapping("/documents/{uuid}")
@@ -206,8 +204,6 @@ public class AiKnowledgeBaseController {
         chunkRepository.deleteByDocumentId(doc.getId());
         documentRepository.delete(doc);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ai/knowledge-bases/" + kb.getUuid())
-                .body(Map.of("message", "Document removed."));
+        return Inertia.redirect("/app/ai/knowledge-bases/" + kb.getUuid());
     }
 }

@@ -1,5 +1,6 @@
 package com.whatsmine.controller.client;
 
+import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.Contact;
 import com.whatsmine.model.Lead;
@@ -10,6 +11,7 @@ import com.whatsmine.repository.LeadScrapeJobRepository;
 import com.whatsmine.security.CustomUserDetails;
 import com.whatsmine.service.leads.GooglePlacesScraper;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,7 +71,7 @@ public class LeadController {
     }
 
     @PostMapping("/scrape")
-    public Object scrape(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, Object> body) {
+    public Object scrape(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, Object> body, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         String keyword = (String) body.get("keyword");
         String location = (String) body.get("location");
@@ -90,14 +92,13 @@ public class LeadController {
         // Run scraper execution synchronously / background task
         placesScraper.run(job);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/leads")
-                .body(Map.of("success", "Scrape job started. Results will appear shortly."));
+        Inertia.flashSuccess(session, "Scrape job started. Results will appear shortly.");
+        return Inertia.redirect("/app/leads");
     }
 
     @PostMapping("/push-to-contacts")
     @SuppressWarnings("unchecked")
-    public Object pushToContacts(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, Object> body) {
+    public Object pushToContacts(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, Object> body, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         List<Object> rawIds = body.get("ids") instanceof List ? (List<Object>) body.get("ids") : List.of();
 
@@ -136,21 +137,19 @@ public class LeadController {
             count++;
         }
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/leads")
-                .body(Map.of("success", count + " lead(s) pushed to contacts."));
+        Inertia.flashSuccess(session, count + " lead(s) pushed to contacts.");
+        return Inertia.redirect("/app/leads");
     }
 
     @DeleteMapping("/{id}")
-    public Object destroy(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
+    public Object destroy(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         Lead lead = leadRepository.findByIdAndWorkspaceId(id, workspaceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lead not found."));
 
         leadRepository.delete(lead);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/leads")
-                .body(Map.of("success", "Lead deleted."));
+        Inertia.flashSuccess(session, "Lead deleted.");
+        return Inertia.redirect("/app/leads");
     }
 }

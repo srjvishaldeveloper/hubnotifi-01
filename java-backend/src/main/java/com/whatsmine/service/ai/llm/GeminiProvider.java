@@ -21,8 +21,8 @@ public class GeminiProvider implements LlmProviderInterface {
 
     public GeminiProvider(String apiKey, String chatModel, String embedModel) {
         this.apiKey = apiKey != null ? apiKey : "";
-        this.chatModel = chatModel != null && !chatModel.isEmpty() ? chatModel : "gemini-1.5-flash";
-        this.embedModel = embedModel != null && !embedModel.isEmpty() ? embedModel : "text-embedding-004";
+        this.chatModel = chatModel != null && !chatModel.isEmpty() ? chatModel : "gemini-3-flash-preview";
+        this.embedModel = embedModel != null && !embedModel.isEmpty() ? embedModel : "gemini-embedding-001";
         this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
         this.objectMapper = new ObjectMapper();
     }

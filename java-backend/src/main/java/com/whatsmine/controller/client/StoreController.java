@@ -1,5 +1,6 @@
 package com.whatsmine.controller.client;
 
+import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.EcommerceStore;
 import com.whatsmine.repository.EcommerceStoreRepository;
@@ -7,6 +8,7 @@ import com.whatsmine.security.CustomUserDetails;
 import com.whatsmine.service.ecommerce.StoreConnectionTester;
 import com.whatsmine.service.ecommerce.StoreConnector;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -104,7 +106,7 @@ public class StoreController {
 
     @PostMapping
     @SuppressWarnings("unchecked")
-    public Object store(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, Object> body) {
+    public Object store(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, Object> body, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
 
         String platform = (String) body.get("platform");
@@ -120,47 +122,49 @@ public class StoreController {
         boolean ok = Boolean.TRUE.equals(result.get("ok"));
 
         String flashMessage = ok ? "Store connected. " + result.get("message") : "Could not connect: " + result.get("message");
-        String flashKey = ok ? "success" : "error";
-
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ecommerce/stores")
-                .body(Map.of(flashKey, flashMessage));
+        if (ok) {
+            Inertia.flashSuccess(session, flashMessage);
+        } else {
+            Inertia.flashError(session, flashMessage);
+        }
+        return Inertia.redirect("/app/ecommerce/stores");
     }
 
     @PostMapping("/{id}/test")
-    public Object test(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String id) {
+    public Object test(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String id, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         EcommerceStore store = findStore(workspaceId, id);
 
         Map<String, Object> result = connectionTester.test(store);
         boolean ok = Boolean.TRUE.equals(result.get("ok"));
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ecommerce/stores")
-                .body(Map.of(ok ? "success" : "error", result.get("message")));
+        if (ok) {
+            Inertia.flashSuccess(session, String.valueOf(result.get("message")));
+        } else {
+            Inertia.flashError(session, String.valueOf(result.get("message")));
+        }
+        return Inertia.redirect("/app/ecommerce/stores");
     }
 
     @PostMapping("/{id}/sync")
-    public Object sync(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String id) {
+    public Object sync(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String id, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         EcommerceStore store = findStore(workspaceId, id);
 
         // Best effort sync trigger
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ecommerce/stores")
-                .body(Map.of("success", "Customer & product sync started."));
+        Inertia.flashSuccess(session, "Customer & product sync started.");
+        return Inertia.redirect("/app/ecommerce/stores");
     }
 
     @DeleteMapping("/{id}")
-    public Object destroy(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String id) {
+    public Object destroy(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String id, HttpSession session) {
         Long workspaceId = getWorkspaceId(userDetails);
         EcommerceStore store = findStore(workspaceId, id);
 
         storeRepository.delete(store);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ecommerce/stores")
-                .body(Map.of("success", "Store disconnected."));
+        Inertia.flashSuccess(session, "Store disconnected.");
+        return Inertia.redirect("/app/ecommerce/stores");
     }
 
     private EcommerceStore findStore(Long workspaceId, String idOrUuid) {

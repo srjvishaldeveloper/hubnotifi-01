@@ -46,6 +46,35 @@ public class CampaignReportController {
     @Autowired
     private CampaignRecipientRepository campaignRecipientRepository;
 
+    @GetMapping
+    public Object index(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null || userDetails.getWorkspaceId() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthenticated");
+        }
+        Long workspaceId = userDetails.getWorkspaceId();
+
+        List<Campaign> campaigns = campaignRepository.findByWorkspaceIdOrderByCreatedAtDesc(workspaceId);
+        List<Map<String, Object>> rows = campaigns.stream().map(c -> {
+            List<CampaignRecipient> recipients = campaignRecipientRepository.findByCampaignId(c.getId());
+            long total = recipients.size();
+
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("uuid", c.getUuid());
+            row.put("name", c.getName());
+            row.put("channel", c.getChannel());
+            row.put("status", c.getStatus());
+            row.put("created_at", c.getCreatedAt());
+            row.put("total", total);
+            row.put("delivered_pct", pct(recipients.stream().filter(r -> r.getDeliveredAt() != null).count(), total));
+            row.put("read_pct", pct(recipients.stream().filter(r -> r.getReadAt() != null).count(), total));
+            row.put("failed_pct", pct(recipients.stream().filter(r -> "failed".equals(r.getStatus())).count(), total));
+            return row;
+        }).toList();
+
+        Map<String, Object> props = Map.of("campaigns", rows);
+        return inertiaRenderer.render("client/Reports/Campaign/Index", props, request);
+    }
+
     @GetMapping("/{uuid}")
     public Object show(
             HttpServletRequest request,

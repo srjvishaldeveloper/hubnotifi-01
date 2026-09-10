@@ -1,5 +1,6 @@
 package com.whatsmine.controller.client;
 
+import com.whatsmine.inertia.Inertia;
 import com.whatsmine.inertia.InertiaRenderer;
 import com.whatsmine.model.AiProviderConfig;
 import com.whatsmine.repository.AiProviderConfigRepository;
@@ -103,8 +104,10 @@ public class AiProviderController {
 
         providerConfigRepository.save(config);
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                .header("Location", "/app/ai/providers")
-                .body(Map.of("message", provider + " configuration saved."));
+        // Inertia.redirect() (not a raw ResponseEntity<Map>) — Inertia's
+        // actual POST requests send "Accept: text/html, application/xhtml+xml",
+        // which Jackson can't satisfy for a JSON body, failing content
+        // negotiation with 406 before the redirect reaches the browser.
+        return Inertia.redirect("/app/ai/providers");
     }
 }

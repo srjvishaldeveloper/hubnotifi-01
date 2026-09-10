@@ -16,6 +16,8 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     List<Campaign> findTop6ByWorkspaceIdOrderByCreatedAtDesc(Long workspaceId);
 
+    List<Campaign> findByWorkspaceIdOrderByCreatedAtDesc(Long workspaceId);
+
     Optional<Campaign> findByWorkspaceIdAndUuid(Long workspaceId, String uuid);
 
     Optional<Campaign> findByWorkspaceIdAndUuidAndStatus(Long workspaceId, String uuid, String status);

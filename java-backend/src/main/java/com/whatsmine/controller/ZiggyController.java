@@ -100,6 +100,7 @@ public class ZiggyController {
                         "client.automations.test": { "uri": "app/automations/{uuid}/test", "methods": ["POST"] },
                         "client.automations.generate-token": { "uri": "app/automations/{uuid}/token", "methods": ["POST"] },
                         "client.reports.automations.index": { "uri": "app/reports/automations", "methods": ["GET", "HEAD"] },
+                        "client.reports.campaigns.index": { "uri": "app/reports/campaigns", "methods": ["GET", "HEAD"] },
                         "client.reports.campaigns.show": { "uri": "app/reports/campaigns/{campaign}", "methods": ["GET", "HEAD"] },
                         "client.reports.inbox.index": { "uri": "app/reports/inbox", "methods": ["GET", "HEAD"] },
                         "client.reports.ai.index": { "uri": "app/reports/ai", "methods": ["GET", "HEAD"] },
