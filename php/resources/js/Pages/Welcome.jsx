@@ -5,6 +5,8 @@ import SeoHead from '@/Components/SeoHead';
 import HeroSection from '@/Components/Hero/HeroSection';
 import { BrandMark } from '@/Components/BrandIcons';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowUpRight } from 'lucide-react';
 
 // ─── Icon map ─────────────────────────────────────────────────────────────────
 
@@ -529,53 +531,203 @@ function TestimonialsSection({ landing }) {
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
     if (s('testimonials_enabled') !== '1') return null;
 
-    const testimonials = [1, 2, 3, 4, 5, 6].map((i) => ({
+    const defaultTestimonials = [
+        {
+            id: 1,
+            quote: "A rare talent who bridges the gap between aesthetics and functionality with remarkable precision.",
+            name: "Sarah Chen",
+            role: "Design Director",
+            company: "Figma",
+            image: "https://cdn.21st.dev/assets/mirror/06/06235f11ff765eb9be6c2f16e42ffc86ee83776111d6cca7c48105129941d691.jpg",
+        },
+        {
+            id: 2,
+            quote: "Every pixel tells a story. Working together elevated our entire brand experience.",
+            name: "Marcus Webb",
+            role: "Creative Lead",
+            company: "Stripe",
+            image: "https://cdn.21st.dev/assets/mirror/09/09915e4fe42f2a51788415e8908529f9bcdbc3bcaa376ef206e8c63481d23eaf.jpg",
+        },
+        {
+            id: 3,
+            quote: "Transforms complex problems into elegant, intuitive solutions that users love.",
+            name: "Elena Voss",
+            role: "Head of Product",
+            company: "Linear",
+            image: "https://cdn.21st.dev/assets/mirror/a7/a72bf64aff154301988321db73d84e0b7c72c82e74a30671ae7008557e80636e.jpg",
+        },
+    ];
+
+    const cmsTestimonials = [1, 2, 3, 4, 5, 6].map((i) => ({
+        id: i,
         name: s(`testimonial_${i}_name`),
         role: s(`testimonial_${i}_role`),
-        text: s(`testimonial_${i}_text`),
-        avatar: s(`testimonial_${i}_avatar`),
-    })).filter((t) => t.name && t.text);
+        quote: s(`testimonial_${i}_text`),
+        company: s(`testimonial_${i}_role`) || 'Hub Notification Customer',
+        image: s(`testimonial_${i}_avatar`),
+    })).filter((t) => t.name && t.quote);
 
-    if (!testimonials.length) return null;
+    const list = cmsTestimonials.length > 0 ? cmsTestimonials : defaultTestimonials;
+
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [isHovering, setIsHovering] = useState(false);
+
+    const active = list[activeIndex] || list[0];
+
+    const nextTestimonial = () => {
+        setActiveIndex((prev) => (prev + 1) % list.length);
+    };
 
     return (
-        <section className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-900/30">
+        <section className="py-20 sm:py-28 bg-[#F8FAFC] dark:bg-neutral-900/50 border-y border-slate-200/80 dark:border-neutral-800">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Section Header */}
                 <div className="text-center mb-16">
-                    <Badge text={s('testimonials_badge')} />
+                    <Badge text={s('testimonials_badge', 'Testimonials')} />
                     <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {s('testimonials_title')}
+                        {s('testimonials_title', 'Loved by modern teams')}
                     </h2>
                     {s('testimonials_subtitle') && (
-                        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">{s('testimonials_subtitle')}</p>
+                        <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+                            {s('testimonials_subtitle')}
+                        </p>
                     )}
                 </div>
 
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {testimonials.map((t, idx) => (
-                        <div
-                            key={idx}
-                            className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 flex flex-col gap-4"
-                        >
-                            <StarRating />
-                            <blockquote className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed flex-1">
-                                &ldquo;{t.text}&rdquo;
-                            </blockquote>
-                            <div className="flex items-center gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-                                {t.avatar ? (
-                                    <img src={t.avatar} alt={t.name} className="h-9 w-9 rounded-full object-cover" />
-                                ) : (
-                                    <div className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ background: '#5a8b38' }}>
-                                        {t.name.charAt(0)}
-                                    </div>
-                                )}
-                                <div>
-                                    <p className="text-sm font-semibold text-neutral-900 dark:text-white">{t.name}</p>
-                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.role}</p>
-                                </div>
+                {/* Interactive Split Testimonial Component */}
+                <div className="w-full max-w-5xl mx-auto px-2 sm:px-4">
+                    <div
+                        className="relative grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 md:gap-12 items-center cursor-pointer group bg-white dark:bg-neutral-900 p-8 sm:p-12 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-xl shadow-slate-900/5"
+                        onClick={nextTestimonial}
+                        onMouseEnter={() => setIsHovering(true)}
+                        onMouseLeave={() => setIsHovering(false)}
+                    >
+                        {/* Left: Quote Content */}
+                        <div className="space-y-6 sm:space-y-8">
+                            {/* Company Tag */}
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={active.company}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-emerald-600 dark:text-emerald-400"
+                                >
+                                    <span className="w-8 h-px bg-emerald-500/50" />
+                                    {active.company}
+                                </motion.div>
+                            </AnimatePresence>
+
+                            {/* Quote */}
+                            <div className="relative overflow-hidden min-h-[110px] sm:min-h-[130px] flex items-center">
+                                <AnimatePresence mode="wait">
+                                    <motion.blockquote
+                                        key={active.id}
+                                        initial={{ opacity: 0, y: 40 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -40 }}
+                                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                        className="text-2xl sm:text-3xl md:text-4xl font-light leading-[1.35] tracking-tight text-slate-900 dark:text-white"
+                                    >
+                                        &ldquo;{active.quote}&rdquo;
+                                    </motion.blockquote>
+                                </AnimatePresence>
                             </div>
+
+                            {/* Author Info */}
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={active.name}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3, delay: 0.2 }}
+                                    className="flex items-center gap-4"
+                                >
+                                    <div className="w-10 h-px bg-slate-400/40" />
+                                    <div>
+                                        <p className="text-base font-semibold text-slate-900 dark:text-white">{active.name}</p>
+                                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{active.role}</p>
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
-                    ))}
+
+                        {/* Right: Visual Element */}
+                        <div className="relative w-full md:w-48 h-56 md:h-64 flex-shrink-0">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={active.id}
+                                    initial={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
+                                    animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
+                                    exit={{ opacity: 0, filter: "blur(20px)", scale: 0.95 }}
+                                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                                    className="absolute inset-0"
+                                >
+                                    <div className="w-full h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-neutral-700 bg-slate-100 shadow-md">
+                                        {active.image ? (
+                                            <img
+                                                src={active.image}
+                                                alt={active.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-emerald-600 text-white font-bold text-3xl">
+                                                {active.name.charAt(0)}
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
+
+                            {/* Click indicator */}
+                            <motion.div
+                                animate={{
+                                    opacity: isHovering ? 1 : 0,
+                                    scale: isHovering ? 1 : 0.8,
+                                }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400"
+                            >
+                                <span>Next</span>
+                                <ArrowUpRight className="w-3.5 h-3.5" />
+                            </motion.div>
+                        </div>
+
+                        {/* Progress Dots */}
+                        <div className="absolute -bottom-12 left-8 sm:left-12 flex items-center gap-3">
+                            {list.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveIndex(index);
+                                    }}
+                                    className="relative p-1 group/dot"
+                                    aria-label={`Go to slide ${index + 1}`}
+                                >
+                                    <span
+                                        className={`
+                                            block w-2.5 h-2.5 rounded-full transition-all duration-300
+                                            ${
+                                                index === activeIndex
+                                                    ? "bg-emerald-600 scale-100"
+                                                    : "bg-slate-300 dark:bg-neutral-700 scale-75 hover:bg-slate-400 hover:scale-100"
+                                            }
+                                        `}
+                                    />
+                                    {index === activeIndex && (
+                                        <motion.span
+                                            layoutId="activeDot"
+                                            className="absolute inset-0 border border-emerald-600/50 rounded-full"
+                                            transition={{ duration: 0.3 }}
+                                        />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
